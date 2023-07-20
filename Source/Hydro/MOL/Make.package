@@ -1,0 +1,14 @@
+CEXE_sources += MOL_umeth.cpp
+CEXE_headers += MOL_umeth.H
+CEXE_headers += MOL_hydro_K.H
+CEXE_headers += MOL_riemann_K.H
+
+ifeq ($(USE_EB),TRUE)
+CEXE_sources += MOL_umeth_eb.cpp
+CEXE_headers += MOL_hydro_eb_K.H
+CEXE_headers += MOL_eb_divu_K.H
+CEXE_headers += MOL_eb_pdivu_K.H
+CEXE_headers += MOL_eb_divop_K.H
+CEXE_headers += MOL_hypflux_K.H
+endif
+

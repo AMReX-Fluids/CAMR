@@ -1,0 +1,4 @@
+CEXE_headers += CAMR_params.H
+CEXE_headers += CAMR_queries.H
+CEXE_headers += CAMR_defaults.H
+

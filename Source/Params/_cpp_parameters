@@ -1,0 +1,189 @@
+# name   type   default
+#
+# note, name can have two values, as (a, b).  a will be the name used
+# in the inputs file, b is the variable name in the C++ class.
+
+@namespace: CAMR CAMR static
+
+#-----------------------------------------------------------------------------
+# category: AMR
+#-----------------------------------------------------------------------------
+
+# if you are using radiation, choosing this to be zero will
+# be overridden since radiation needs at least one ghost zone.
+state_nghost                 int           0
+
+# do we do the hyperbolic reflux at coarse-fine interfaces?
+do_reflux                    int           1
+
+# do we average down the fine data onto the coarse?
+do_avg_down                  int           1
+
+# Should we refine on cut cells?
+refine_cut_cells             int           0
+
+#-----------------------------------------------------------------------------
+# category: hydrodynamics
+#-----------------------------------------------------------------------------
+
+# the coefficient of the artificial viscosity
+difmag                       Real          0.1
+
+# Just a definition of "small"
+small                        Real          1.e-8
+
+# the small density cutoff.  Densities below this value will be reset
+small_dens                   Real          1.e-7
+
+# the small temperature cutoff.  Temperatures below this value will
+# be reset
+small_temp                   Real          1.e2
+
+# the small pressure cutoff.  Pressures below this value will be reset
+small_pres                   Real          1.e-200
+
+# uses MOL aapproach to timestep advection and diffusion
+do_mol                       int          0
+
+# React fuel + air -> product
+do_react                     int          0
+
+# if true, define an additional source term
+add_ext_src                  int           0
+
+# if true, define a gravity source term
+add_grav_src                 int           1
+
+# if true, define a gravity source term
+const_grav                   Real           0.0
+
+# reconstruction type:
+# 0: piecewise linear;
+# 1: classic Colella \& Woodward ppm;
+# 2: extrema-preserving ppm (deprecated in C++)
+ppm_type                     int           0
+
+# to we reconstruct and trace under the parabolas of the source
+# terms to the velocity
+ppm_trace_sources            int           0
+
+# various methods of giving temperature a larger role in the
+# reconstruction---see Zingale \& Katz 2015
+ppm_temp_fix                 int           0
+
+# do we construct $\gamma_e = p/(\rho e) + 1$ and bring it
+# to the interfaces for additional thermodynamic information
+# (this is the Colella \& Glaz technique) or do we use $(\rho e)$.
+# Note this also uses $\tau = 1/\rho$ instead of $\rho$.
+ppm_predict_gammae           int           0
+
+# for piecewise linear, reconstruction order to use
+plm_iorder                   int           2
+
+# flatten the reconstructed profiles around shocks to prevent them
+# from becoming too thin
+use_flattening               int           1
+
+# Allow internal energy resets and temperature flooring to change the
+# total energy variable UEDEN in addition to the internal energy variable
+# UEINT.
+dual_energy_update_E_from_e  int           1
+
+# Threshold value of (E - K) / E such that above eta1, the hydrodynamic
+# pressure is derived from E - K; otherwise, we use the internal energy
+# variable UEINT.
+dual_energy_eta1             Real          1.0e0
+
+# Threshold value of (E - K) / E such that above eta2, we update the
+# internal energy variable UEINT to match E - K. Below this, UEINT
+# remains unchanged.
+dual_energy_eta2             Real          1.0e-4
+
+# for the piecewise linear reconstruction, do we subtract off $(\rho g)$
+# from the pressure before limiting?
+use_pslope                   int           0
+
+fix_mass_flux                int           0
+
+# Should we limit the density fluxes so that we do not create small densities?
+limit_fluxes_on_small_dens   int           0
+
+# Whether or not to allow internal energy to be less than zero
+allow_negative_energy        int           1
+
+# Whether or not to allow the internal energy to be less than the
+# internal energy corresponding to small\_temp
+allow_small_energy           int           1
+
+# Do we reset density inside the hydro update if the transverse contributions
+# make it go negative
+transverse_reset_density     int           1
+
+#-----------------------------------------------------------------------------
+# category: EB
+#-----------------------------------------------------------------------------
+eb_boundary_T                Real         1.0
+eb_isothermal                int          1
+eb_noslip                    int          1
+eb_weights_type              int          2
+redistribution_type          string       "FluxRedist"
+
+#-----------------------------------------------------------------------------
+# category: timestep control
+#-----------------------------------------------------------------------------
+
+# a fixed timestep to use for all steps (negative turns it off)
+fixed_dt                     Real         -1.0
+
+# the initial timestep (negative uses the step returned from the timestep
+# constraints)
+initial_dt                   Real         -1.0
+
+# the smallest valid timestep---if we go below this, we abort
+dt_cutoff                    Real          0.0
+
+# the largest valid timestep---limit all timesteps to be no larger than this
+max_dt                       Real          1.e200
+
+# the effective Courant number to use---we will not allow the hydrodynamic
+# waves to cross more than this fraction of a zone over a single timestep
+cfl                          Real          0.8
+
+# a factor by which to reduce the first timestep from that requested by
+# the timestep estimators
+init_shrink                  Real          1.0
+
+# the maximum factor by which the timestep can increase from one step to
+# the next.
+change_max                   Real          1.1
+
+# If we're doing retries, set the target threshold for changes in density
+# if a retry is triggered by a negative density. If this is set to a negative
+# number then it will disable retries using this criterion.
+retry_neg_dens_factor        Real          1.e-1
+
+#-----------------------------------------------------------------------------
+# category: parallelization
+#-----------------------------------------------------------------------------
+
+bndry_func_thread_safe       int           1
+
+#-----------------------------------------------------------------------------
+# category: diagnostics
+#-----------------------------------------------------------------------------
+
+# how often (number of coarse timesteps) to compute integral sums (for runtime diagnostics)
+sum_interval                 int           -1
+
+# how often (simulation time) to compute integral sums (for runtime diagnostics)
+sum_per                      Real          -1.0e0
+
+# abort if we exceed CFL = 1 over the course of a timestep
+hard_cfl_limit               int           1
+
+# a string describing the simulation that will be copied into the
+# plotfile's {\tt job\_info} file
+job_name                     string        ""
+
+# Should we write the geometry into vtk files?
+write_eb                     int           0
