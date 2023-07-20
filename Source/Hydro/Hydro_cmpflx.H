@@ -127,23 +127,6 @@ CAMR_cmpflx(
 #endif
        q(i, j, k, GDPRES), q(i, j, k, GDGAME));
 
-      if (dir == 0 && i == 16 and j <=3) {
-          amrex::Print() << "X:U INTO   RIE " << j << " " << ul << " " << vl << " " << ur << " " << vr << std::endl;
-          amrex::Print() << "X:P INTO   RIE " << j << " " << ql(i,j,k,QPRES) << " " << qr(i,j,k,QPRES) << std::endl;
-          amrex::Print() << "X:e INTO   RIE " << j << " " << ql(i,j,k,QREINT) << " " << qr(i,j,k,QREINT) << std::endl;
-          amrex::Print() << "FX(U)  OUT OF RIE " << j << " " << flx(i,j,k,f_idx[0]) << std::endl;
-          amrex::Print() << "FX(V)  OUT OF RIE " << j << " " << flx(i,j,k,f_idx[1]) << std::endl;
-          amrex::Print() << " " << std::endl;
-      }
-      if (dir == 1 && i == 16 and j <=3) {
-          amrex::Print() << "Y:U INTO   RIE " << j << " " << ul << " " << vl << " " << ur << " " << vr << std::endl;
-          amrex::Print() << "Y:P INTO   RIE " << j << " " << ql(i,j,k,QPRES) << " " << qr(i,j,k,QPRES) << std::endl;
-          amrex::Print() << "Y:e INTO   RIE " << j << " " << ql(i,j,k,QREINT) << " " << qr(i,j,k,QREINT) << std::endl;
-          amrex::Print() << "FY(U)  OUT OF RIE " << j << " " << flx(i,j,k,f_idx[1]) << std::endl;
-          amrex::Print() << "FY(V)  OUT OF RIE " << j << " " << flx(i,j,k,f_idx[0]) << std::endl;
-          amrex::Print() << " " << std::endl;
-      }
-
     amrex::Real flxrho = flx(i, j, k, URHO);
     for (int ipass = 0; ipass < NPASSIVE; ++ipass) {
       int n = pmap.upassMap[ipass];
