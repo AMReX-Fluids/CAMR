@@ -28,7 +28,7 @@ CAMR_ctoprim(
         AMREX_D_TERM(const amrex::Real vx = u(i, j, k, UMX) * rhoinv;,
                      const amrex::Real vy = u(i, j, k, UMY) * rhoinv;,
                      const amrex::Real vz = u(i, j, k, UMZ) * rhoinv;);
-#if (AMREX_SPACEDIM == 2)        
+#if (AMREX_SPACEDIM == 2)
         const amrex::Real kineng = 0.5 * rho * (vx * vx + vy * vy);
 #else
         const amrex::Real kineng = 0.5 * rho * (vx * vx + vy * vy + vz * vz);

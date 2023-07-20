@@ -92,7 +92,7 @@ trace_ppm(
 #endif
 
   // Trace to left and right edges using upwind PPM
-  amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept 
+  amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
     const amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
     const amrex::IntVect ivm2(

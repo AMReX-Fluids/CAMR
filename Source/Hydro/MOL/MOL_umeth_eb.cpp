@@ -60,7 +60,7 @@ mol_umeth_eb (const Box& bx,
     const Box& bxg_i  = Box(divc_arr);
     const Box& bxg_ii = grow(bxg_i,1);
 
-    GpuArray<Real,AMREX_SPACEDIM> dxinv; 
+    GpuArray<Real,AMREX_SPACEDIM> dxinv;
     AMREX_D_TERM(dxinv[0] = 1./dx[0];,
                  dxinv[1] = 1./dx[1];,
                  dxinv[2] = 1./dx[2];);

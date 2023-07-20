@@ -10,7 +10,7 @@ void
 CAMR::react(MultiFab& S)
 {
     BL_PROFILE("CAMR::react()");
- 
+
     if (do_react) {
         amrex::Print() << "This is a stub for reactions but nothing is happening yet" << std::endl;
     }
