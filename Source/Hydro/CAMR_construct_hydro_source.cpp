@@ -214,9 +214,9 @@ CAMR::construct_hydro_source (const MultiFab& S,
                      dxDp, dt, amrex::RunOn::Device);
 #ifdef AMREX_USE_EB
               } else {
-                  // BEG HACK HACK HACKH 
+                  // BEG HACK HACK HACKH
                   // dm_as_fine.setVal(0.0);
-                  // END HACK HACK HACKH 
+                  // END HACK HACK HACKH
 
                   getFluxReg(level).FineAdd(mfi,
                      {{AMREX_D_DECL(&(flux[0]), &(flux[1]), &(flux[2]))}},

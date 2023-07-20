@@ -376,6 +376,6 @@ namespace EOS{
     dpde = (G - 1.0) * R;
     dpdr_e = P / R;
   }
-} 
+}
 
 #endif

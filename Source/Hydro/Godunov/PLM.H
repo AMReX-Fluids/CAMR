@@ -184,7 +184,7 @@ CAMR_plm_d(
   const amrex::Real rhoe = q(iv, QREINT);
   const amrex::Real enth = ((rhoe + p) / rho) / cs;
   const amrex::Real drho = slope[QRHO];
-  const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> 
+  const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>
      dvel{AMREX_D_DECL(slope[QU], slope[QV], slope[QW])};
   const amrex::Real dp = slope[QPRES];
   const amrex::Real drhoe = slope[QREINT];

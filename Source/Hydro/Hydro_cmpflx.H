@@ -121,7 +121,7 @@ CAMR_cmpflx(
                     flx(i, j, k, f_idx[1]),
                     flx(i, j, k, f_idx[2])),
        flx(i, j, k, UEDEN), flx(i, j, k, UEINT),
-       q(i, j, k, GU), q(i, j, k, GV), 
+       q(i, j, k, GU), q(i, j, k, GV),
 #if (AMREX_SPACEDIM == 3)
        q(i, j, k, GV2),
 #endif
