@@ -17,20 +17,20 @@ amr.n_cell           =    32 32 32
 # 1 = Inflow             4 = SlipWall
 # 2 = Outflow            5 = NoSlipWall
 # >>>>>>>>>>>>>  BC FLAGS <<<<<<<<<<<<<<<<
-camr.lo_bc       =  Outflow  NoSlipWall   SlipWall
-camr.hi_bc       =  Outflow  NoSlipWall   SlipWall
+CAMR.lo_bc       =  Outflow  NoSlipWall   SlipWall
+CAMR.hi_bc       =  Outflow  NoSlipWall   SlipWall
 
-camr.cfl = 0.3  # cfl number for hyperbolic system
+CAMR.cfl = 0.3  # cfl number for hyperbolic system
 
-camr.do_mol = 0
+CAMR.do_mol = 0
 
-camr.v = 2
+CAMR.v = 2
 amr.v = 1
 
-camr.sum_interval = 1
+CAMR.sum_interval = 1
 
-camr.redistribution_type = FluxRedist
-camr.redistribution_type = StateRedist
+CAMR.redistribution_type = FluxRedist
+CAMR.redistribution_type = StateRedist
 
 # LOAD BALANCE
 amr.loadbalance_with_workestimates = 0
@@ -57,7 +57,7 @@ amr.plot_int          = 1       # number of timesteps between plotfiles
 amr.derive_plot_vars  = x_velocity y_velocity z_velocity vfrac
 
 # EB
-camr.geometry = "sphere"
+CAMR.geometry = "sphere"
 sphere.radius        = 0.125
 sphere.center        = 0.6 0.5 0.5
 sphere.center        = 0.7 0.5 0.5
