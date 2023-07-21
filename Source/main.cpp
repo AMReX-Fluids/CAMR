@@ -181,9 +181,8 @@ main(int argc, char* argv[])
     // This'll output total # of bytes of heap space in the Arena.
     // It's actually the high water mark of heap space required by FABs.
     char buf[256];
-
-    sprintf(
-      buf, "CPU(%d): Heap Space (bytes) used by Coalescing FAB Arena: %zu",
+    snprintf(
+      buf, sizeof buf, "CPU(%d): Heap Space (bytes) used by Coalescing FAB Arena: %zu",
       amrex::ParallelDescriptor::MyProc(), arena->heap_space_used());
 
     amrex::Print() << buf << std::endl;

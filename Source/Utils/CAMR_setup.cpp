@@ -64,6 +64,7 @@ set_y_vel_bc(amrex::BCRec& bc, const amrex::BCRec& phys_bc)
     , bc.setLo(2, tang_vel_bc[lo_bc[2]]); bc.setHi(2, tang_vel_bc[hi_bc[2]]););
 }
 
+#if (AMREX_SPACEDIM == 3)
 static void
 set_z_vel_bc(amrex::BCRec& bc, const amrex::BCRec& phys_bc)
 {
@@ -74,6 +75,7 @@ set_z_vel_bc(amrex::BCRec& bc, const amrex::BCRec& phys_bc)
     , bc.setLo(1, tang_vel_bc[lo_bc[1]]); bc.setHi(1, tang_vel_bc[hi_bc[1]]);
     , bc.setLo(2, norm_vel_bc[lo_bc[2]]); bc.setHi(2, norm_vel_bc[hi_bc[2]]););
 }
+#endif
 
 void
 CAMR::variableSetUp()

@@ -13,6 +13,7 @@ CAMR_artif_visc(
     amrex::Real const difmag,
     const int dir)
 {
+    amrex::ignore_unused(k);
     const amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
     const amrex::IntVect ivm(iv - amrex::IntVect::TheDimensionVector(dir));
     const amrex::GpuArray<const int, 3> bdim{{dir == 0, dir == 1, dir == 2}};
@@ -22,10 +23,10 @@ CAMR_artif_visc(
        bdim[0] * 2 + bdim[1] * 2 + bdim[2] * 1}};
 
     const amrex::IntVect ivpj(iv + amrex::IntVect::TheDimensionVector(l_idx[1]));
-    const amrex::IntVect ivpk(iv + amrex::IntVect::TheDimensionVector(l_idx[2]));
-    const amrex::IntVect ivpp(
-      iv + amrex::IntVect::TheDimensionVector(l_idx[1]) +
-      amrex::IntVect::TheDimensionVector(l_idx[2]));
+    AMREX_D_TERM(,,const amrex::IntVect ivpk(iv + amrex::IntVect::TheDimensionVector(l_idx[2]));
+                 const amrex::IntVect ivpp(
+                   iv + amrex::IntVect::TheDimensionVector(l_idx[1]) +
+                   amrex::IntVect::TheDimensionVector(l_idx[2])););
     const amrex::Real div =
       difmag *
       std::min( 0.0, AMREX_D_PICK(

@@ -32,12 +32,12 @@ CAMR_cmpflx(
   const amrex::Real small_pres)
 {
     amrex::ignore_unused(k);
-    amrex::Real cav, ustar;
-    amrex::Real gamcl, gamcr, smallc;
-    amrex::Real ul, ur, vl, vr, v2l, v2r;
+    amrex::Real cav = 0.0, ustar;
+    amrex::Real gamcl, gamcr, smallc = 0.0;
+    amrex::Real ul, ur, vl, vr;
     int idx;
-    int IU, IV;
-    int GU, GV;
+    int IU = 0, IV = 0;
+    int GU = 0, GV = 0;
     int f_idx[2];
     if (dir == 0) {
       IU = QU;
@@ -61,6 +61,9 @@ CAMR_cmpflx(
       gamcr = qa(i,j  ,k,QGAMC);
       f_idx[0] = UMY;
       f_idx[1] = UMX;
+    }
+    else{
+      amrex::Abort();
     }
 
     ul = ql(i, j, k, IU);
@@ -110,10 +113,9 @@ CAMR_cmpflx(
         }
     }
 
-    amrex::Real zero = amrex::Real(0.0);
     riemannus(
-       ql(i, j, k, QRHO), ul, vl, zero, ql(i, j, k, QPRES), ql(i,j,k,QREINT),
-       qr(i, j, k, QRHO), ur, vr, zero, qr(i, j, k, QPRES), qr(i,j,k,QREINT),
+       ql(i, j, k, QRHO), ul, vl, ql(i, j, k, QPRES), ql(i,j,k,QREINT),
+       qr(i, j, k, QRHO), ur, vr, qr(i, j, k, QPRES), qr(i,j,k,QREINT),
        cav, gamcl, gamcr,
        small, smallc, small_dens, small_pres, ustar,
        flx(i, j, k, URHO),
@@ -233,7 +235,7 @@ CAMR_cmpflx(
 
     if ( idx == domlo)
     {
-        if (bclo == Symmetry || bclo == SlipWall || bclo == NoSlipWall))
+        if (bclo == Symmetry || bclo == SlipWall || bclo == NoSlipWall)
         {
             ql(i,j,k,QRHO)   = qr(i,j,k,QRHO);
             ql(i,j,k,QPRES)  = qr(i,j,k,QPRES);
@@ -254,7 +256,7 @@ CAMR_cmpflx(
     }
     if ( idx == domhi+1)
     {
-        if (bchi == Symmetry || bchi == SlipWall || bchi == NoSlipWall))
+        if (bchi == Symmetry || bchi == SlipWall || bchi == NoSlipWall)
         {
             qr(i,j,k,QRHO)   = ql(i,j,k,QRHO);
             qr(i,j,k,QPRES)  = ql(i,j,k,QPRES);

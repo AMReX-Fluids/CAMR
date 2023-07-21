@@ -1284,8 +1284,6 @@ CAMR::expand_state(amrex::MultiFab& S, const amrex::Real time, const int ng)
 
     AmrLevel::FillPatch(*this,S,ng,time,State_Type,0,S.nComp());
 
-    const amrex::MultiFab& S_old = get_old_data(State_Type);
-
     clean_state(S);
 }
 

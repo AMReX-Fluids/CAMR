@@ -12,7 +12,7 @@ void make_eb_cylinder(const Geometry& geom, int required_coarsening_level);
 
 void
 initialize_EB2 (const Geometry& geom, const int required_coarsening_level,
-                const int max_coarsening_level)
+                const int /*max_coarsening_level*/)
 {
    /******************************************************************************
    * camr.geometry=<string> specifies the EB geometry. <string> can be one of    *

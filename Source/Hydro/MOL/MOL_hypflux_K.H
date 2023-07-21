@@ -38,7 +38,10 @@ compute_hyp_wallflux (int i, int j, int k,
 
     Real AMREX_D_DECL(momfluxn, momfluxt1, momfluxt2);
 
-    Real dummy_gu, dummy_gv, dummy_gv2, dummy_gp, dummy_gg;
+    Real dummy_gu, dummy_gv, dummy_gp, dummy_gg;
+#if (AMREX_SPACEDIM == 3)
+    Real dummy_gv2;
+#endif
 
     Real rho = q(i,j,k,QRHO);
     Real p   = q(i,j,k,QPRES);
@@ -49,8 +52,8 @@ compute_hyp_wallflux (int i, int j, int k,
     Real ustar;
 
     riemannus(
-       rho,  un, 0., 0., p, qrei,
-       rho, -un, 0., 0., p, qrei,
+       rho,  AMREX_D_DECL(un, 0., 0.), p, qrei,
+       rho, AMREX_D_DECL(-un, 0., 0.), p, qrei,
        cav, gamc, gamc,
        small, smallc, small_dens, small_pres, ustar,
        fluxw[URHO],  AMREX_D_DECL(momfluxn, momfluxt1, momfluxt2), fluxw[UEDEN],

@@ -54,9 +54,13 @@ mol_slope_eb_x (int i, int j, int k,
 {
     using amrex::Real;
 
-    Real dlft0,dlft1,dlft2,dlft3,dlft4,dlft5;
-    Real drgt0,drgt1,drgt2,drgt3,drgt4,drgt5;
-
+    Real dlft0,dlft1,dlft2,dlft3,dlft5;
+    Real drgt0,drgt1,drgt2,drgt3,drgt5;
+#if (AMREX_SPACEDIM == 3)
+    Real dlft4;
+    Real drgt4;
+#endif
+          
     if(plm_iorder == 1)
     {
       for(int n=0; n<QVAR; n++)
@@ -165,8 +169,12 @@ mol_slope_eb_y (int i, int j, int k,
 {
     using amrex::Real;
 
-    Real dlft0,dlft1,dlft2,dlft3,dlft4,dlft5;
-    Real drgt0,drgt1,drgt2,drgt3,drgt4,drgt5;
+    Real dlft0,dlft1,dlft2,dlft3,dlft5;
+    Real drgt0,drgt1,drgt2,drgt3,drgt5;
+#if (AMREX_SPACEDIM == 3)
+    Real dlft4;
+    Real drgt4;
+#endif
 
     if (plm_iorder == 1)
     {

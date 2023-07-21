@@ -24,7 +24,7 @@ CAMR::sum_integrated_quantities()
   amrex::Real rho_e = 0.0;
   amrex::Real rho_K = 0.0;
   amrex::Real rho_E = 0.0;
-  amrex::Real temp = 0;
+  amrex::Real temp = 0.0;
 
   for (int lev = 0; lev <= finest_level; lev++) {
     CAMR& CAMR_lev = getLevel(lev);
@@ -43,11 +43,12 @@ CAMR::sum_integrated_quantities()
   }
 
   if (verbose > 0) {
-    const int nfoo = 7;
 #if (AMREX_SPACEDIM == 2)
-    amrex::Real foo[nfoo] = {mass, mom[0], mom[1],         rho_e, rho_K, rho_E};
+    const int nfoo = 7;
+    amrex::Real foo[nfoo] = {mass, mom[0], mom[1],         rho_e, rho_K, rho_E, temp};
 #elif (AMREX_SPACEDIM == 3)
-    amrex::Real foo[nfoo] = {mass, mom[0], mom[1], mom[2], rho_e, rho_K, rho_E};
+    const int nfoo = 8;
+    amrex::Real foo[nfoo] = {mass, mom[0], mom[1], mom[2], rho_e, rho_K, rho_E, temp};
 #endif
 
 #ifdef AMREX_LAZY
@@ -66,6 +67,7 @@ CAMR::sum_integrated_quantities()
         rho_e = foo[i++];
         rho_K = foo[i++];
         rho_E = foo[i++];
+        temp = foo[i++];
 
         amrex::Print() << '\n';
         amrex::Print() << "TIME = " << time << " MASS        = " << mass
@@ -101,6 +103,7 @@ CAMR::sum_integrated_quantities()
               data_log1 << std::setw(datwidth) << "         rho_K";
               data_log1 << std::setw(datwidth) << "         rho_e";
               data_log1 << std::setw(datwidth) << "         rho_E";
+              data_log1 << std::setw(datwidth) << "          temp";
               data_log1 << std::endl;
             }
 
@@ -123,6 +126,8 @@ CAMR::sum_integrated_quantities()
                       << rho_e;
             data_log1 << std::setw(datwidth) << std::setprecision(datprecision)
                       << rho_E;
+            data_log1 << std::setw(datwidth) << std::setprecision(datprecision)
+                      << temp;
             data_log1 << std::endl;
           }
         }
