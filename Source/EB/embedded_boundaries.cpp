@@ -15,11 +15,11 @@ initialize_EB2 (const Geometry& geom, const int required_coarsening_level,
                 const int /*max_coarsening_level*/)
 {
    /******************************************************************************
-   * camr.geometry=<string> specifies the EB geometry. <string> can be one of    *
+   * CAMR.geometry=<string> specifies the EB geometry. <string> can be one of    *
    * box, cylinder, sphere, spherecube, twocylinders
    ******************************************************************************/
 
-    ParmParse pp("camr");
+    ParmParse pp("CAMR");
 
     std::string geom_type;
     pp.query("geometry", geom_type);
