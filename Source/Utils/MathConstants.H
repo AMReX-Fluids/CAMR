@@ -1,5 +1,5 @@
-#ifndef _MathConstants_
-#define _MathConstants_
+#ifndef MathConstants
+#define MathConstants
 
 #include <AMReX_REAL.H>
 

@@ -129,7 +129,7 @@ public:
   int okToContinue() override;
 
   // Advance grids at this level in time.
-  virtual amrex::Real
+  amrex::Real
   advance(amrex::Real time, amrex::Real dt, int iteration, int ncycle) override;
 
   amrex::Real mol_advance(
@@ -244,7 +244,7 @@ public:
 
   // This version of derive() fills the dcomp'th component of mf with the
   // derived quantity.
-  virtual void derive(
+  void derive(
     const std::string& name,
     amrex::Real time,
     amrex::MultiFab& mf,
@@ -391,7 +391,7 @@ protected:
 
   void write_info();
 
-  void stopJob();
+  static void stopJob();
 
   // The data.
   amrex::MultiFab volume;
