@@ -7,7 +7,7 @@ using std::string;
 using namespace amrex;
 
 void
-CAMR::react(MultiFab& S)
+CAMR::react(MultiFab& /*S*/)
 {
     BL_PROFILE("CAMR::react()");
 

@@ -19,7 +19,6 @@ CAMR_initdata( int i, int j, int k,
 {
     // Geometry
     const amrex::Real* prob_lo = geomdata.ProbLo();
-    const amrex::Real* prob_hi = geomdata.ProbHi();
     const amrex::Real*      dx = geomdata.CellSize();
 
     amrex::Real x = prob_lo[0] + (i+amrex::Real(0.5))*dx[0];

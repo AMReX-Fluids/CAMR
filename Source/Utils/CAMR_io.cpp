@@ -503,7 +503,7 @@ CAMR::writePlotFile(
   // The name is relative to the directory containing the Header file.
   static const std::string BaseName = "/Cell";
   char buf[64];
-  sprintf(buf, "Level_%d", level);
+  snprintf(buf, sizeof buf, "Level_%d", level);
   std::string LevelStr = buf;
 
   // Now for the full pathname of that directory.
@@ -665,7 +665,7 @@ CAMR::writeSmallPlotFile(
   // The name is relative to the directory containing the Header file.
   static const std::string BaseName = "/Cell";
   char buf[64];
-  sprintf(buf, "Level_%d", level);
+  snprintf(buf, sizeof buf, "Level_%d", level);
   std::string LevelStr = buf;
 
   // Now for the full pathname of that directory.

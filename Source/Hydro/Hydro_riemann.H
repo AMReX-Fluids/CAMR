@@ -11,13 +11,17 @@ riemannus(
   const amrex::Real rl_in,
   const amrex::Real ul,
   const amrex::Real vl,
+#if (AMREX_SPACEDIM == 3)
   const amrex::Real v2l,
+#endif
   const amrex::Real pl_in,
   const amrex::Real rel,
   const amrex::Real rr_in,
   const amrex::Real ur,
   const amrex::Real vr,
+#if (AMREX_SPACEDIM == 3)
   const amrex::Real v2r,
+#endif
   const amrex::Real pr_in,
   const amrex::Real rer,
   const amrex::Real cav,

@@ -595,7 +595,6 @@ CAMR_dersoundspeed(
 #endif
     {
     const amrex::Real rhoInv = 1.0 / rho;
-    const amrex::Real T = dat(i, j, k, UTEMP);
     amrex::Real massfrac[NUM_SPECIES];
     amrex::Real c;
     for (int n = 0; n < NUM_SPECIES; ++n) {
@@ -636,7 +635,6 @@ CAMR_dermachnumber(
 #endif
     {
     const amrex::Real rhoInv = 1.0 / rho;
-    const amrex::Real T = dat(i, j, k, UTEMP);
     amrex::Real massfrac[NUM_SPECIES];
     amrex::Real c;
     for (int n = 0; n < NUM_SPECIES; ++n) {
@@ -732,8 +730,8 @@ CAMR_dercp(
   auto cp_arr = derfab.array();
 
   amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    const amrex::Real rho = dat(i, j, k, URHO);
 #ifdef AMREX_USE_EB
+    const amrex::Real rho = dat(i, j, k, URHO);
     if (rho <= 0.) {
         cp_arr(i, j, k) = 0.;
     } else

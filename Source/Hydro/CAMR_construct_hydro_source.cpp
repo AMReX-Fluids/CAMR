@@ -33,7 +33,6 @@ CAMR::construct_hydro_source (const MultiFab& S,
     int finest_level = parent->finestLevel();
 
     const auto& dx    = geom.CellSizeArray();
-    const auto& dxInv = geom.InvCellSizeArray();
 
     Real dx1 = dx[0];
     for (int dir = 1; dir < AMREX_SPACEDIM; ++dir) {
@@ -163,6 +162,7 @@ CAMR::construct_hydro_source (const MultiFab& S,
               amrex::Gpu::hostToDevice, bcs.begin(), bcs.end(), bcs_d.begin());
 
             // Return hyd_src - centered at old-time
+            const auto& dxInv = geom.InvCellSizeArray();                
             CAMR_umdrv_eb(bx, mfi, geom, &ebfact,
                           phys_bc.lo(), phys_bc.hi(),
                           sarr, qarr, hyd_src, qauxar,

@@ -132,7 +132,7 @@ namespace EOS{
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  void REY2P(amrex::Real R, amrex::Real E, amrex::Real Y[], amrex::Real& P)
+  void REY2P(amrex::Real R, amrex::Real E, amrex::Real* /*Y[]*/, amrex::Real& P)
   {
      P = (gamma-1.0)*R*E;
   }
