@@ -302,10 +302,6 @@ CAMR::init_stuff(amrex::Amr& papa,
   }
 }
 
-CAMR::~CAMR()
-{
-}
-
 void
 CAMR::buildMetrics()
 {

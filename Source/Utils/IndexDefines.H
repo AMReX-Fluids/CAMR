@@ -1,5 +1,5 @@
-#ifndef _INDEX_DEFINES_H_
-#define _INDEX_DEFINES_H_
+#ifndef INDEX_DEFINES_H
+#define INDEX_DEFINES_H
 
 #include <AMReX_REAL.H>
 #include <AMReX_Arena.H>
@@ -80,16 +80,16 @@
 #define NUM_AUX 0
 #endif
 
-#define UFS UFA + NUM_ADV
-#define UFX UFS + NUM_SPECIES
-#define NVAR NTHERM + NUM_ADV + NUM_SPECIES + NUM_AUX
+#define UFS (UFA + NUM_ADV)
+#define UFX (UFS + NUM_SPECIES)
+#define NVAR (NTHERM + NUM_ADV + NUM_SPECIES + NUM_AUX)
 
-#define QFS QFA + NUM_ADV
-#define QFX QFS + NUM_SPECIES
-#define QVAR QTHERM + NUM_ADV + NUM_SPECIES + NUM_AUX
+#define QFS (QFA + NUM_ADV)
+#define QFX (QFS + NUM_SPECIES)
+#define QVAR (QTHERM + NUM_ADV + NUM_SPECIES + NUM_AUX)
 #define NQ QVAR
 
-#define NPASSIVE NUM_SPECIES + NUM_ADV + NUM_AUX
+#define NPASSIVE (NUM_SPECIES + NUM_ADV + NUM_AUX)
 
 struct PassMap
 {

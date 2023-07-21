@@ -1,5 +1,5 @@
-#ifndef _CAMR_CONSTANTS_H_
-#define _CAMR_CONSTANTS_H_
+#ifndef CAMR_CONSTANTS_H
+#define CAMR_CONSTANTS_H
 
 #include <AMReX_REAL.H>
 

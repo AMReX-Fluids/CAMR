@@ -124,7 +124,10 @@ class Param(object):
             ostr += "{} = {};\n".format(tstr, self.default)
             ostr += "#endif\n"
         else:
-            ostr += "{} = {};\n".format(tstr, self.default)
+            if self.dtype == "string" and self.default == '""':
+                ostr += "{};\n".format(tstr)
+            else:
+                ostr += "{} = {};\n".format(tstr, self.default)
 
         if self.ifdef is not None:
             ostr += "#endif\n"

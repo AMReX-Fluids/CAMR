@@ -1,5 +1,5 @@
-#ifndef _CTOPRIM_H
-#define _CTOPRIM_H
+#ifndef CTOPRIM_H
+#define CTOPRIM_H
 
 #include <AMReX_FArrayBox.H>
 #include "CAMR_Constants.H"

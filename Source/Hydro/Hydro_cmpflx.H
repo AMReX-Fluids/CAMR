@@ -1,5 +1,5 @@
-#ifndef _CMPFLXH_
-#define _CMPFLXH_
+#ifndef CMPFLX_H
+#define CMPFLX_H
 
 #include <AMReX_FArrayBox.H>
 #include <AMReX_IArrayBox.H>

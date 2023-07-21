@@ -28,6 +28,7 @@ Checks: >
        -modernize-use-using,
      performance-*,
      readability-*,
+       -readability-avoid-const-params-in-decls,
        -readability-braces-around-statements,
        -readability-container-data-pointer,
        -readability-else-after-return,
@@ -39,6 +40,7 @@ Checks: >
        -readability-magic-numbers,
        -readability-named-parameter,
        -readability-simplify-boolean-expr,
+       -readability-static-accessed-through-instance,
      mpi-*
     '
 

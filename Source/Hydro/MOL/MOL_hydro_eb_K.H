@@ -1,5 +1,5 @@
-#ifndef MOL_HYDRO_EB_K_H_
-#define MOL_HYDRO_EB_K_H_
+#ifndef MOL_HYDRO_EB_K_H
+#define MOL_HYDRO_EB_K_H
 
 #include "CAMR.H"
 #include <AMReX_FArrayBox.H>

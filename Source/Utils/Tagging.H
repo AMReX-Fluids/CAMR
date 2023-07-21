@@ -1,5 +1,5 @@
-#ifndef _TAGGING_H_
-#define _TAGGING_H_
+#ifndef TAGGING_H
+#define TAGGING_H
 
 #include <AMReX_FArrayBox.H>
 #include <AMReX_TagBox.H>
@@ -8,34 +8,29 @@
 struct TaggingParm
 {
   amrex::Real denerr = 1.0e10;
-  int max_denerr_lev = 10;
   amrex::Real dengrad = 1.0e10;
-  int max_dengrad_lev = 10;
-
   amrex::Real presserr = 1.0e10;
-  int max_presserr_lev = 10;
   amrex::Real pressgrad = 1.0e10;
-  int max_pressgrad_lev = 10;
-
   amrex::Real velerr = 1.0e10;
-  int max_velerr_lev = 10;
   amrex::Real velgrad = 1.0e10;
-  int max_velgrad_lev = 10;
-
   amrex::Real vorterr = 1.0e10;
-  int max_vorterr_lev = 10;
-
   amrex::Real temperr = 1.0e10;
-  int max_temperr_lev = 10;
   amrex::Real tempgrad = 1.0e10;
-  int max_tempgrad_lev = 10;
-
   amrex::Real ftracerr = 1.0e10;
-  int max_ftracerr_lev = 10;
   amrex::Real ftracgrad = 1.0e10;
-  int max_ftracgrad_lev = 10;
-
   amrex::Real vfracerr = 1.0e10;
+
+  int max_denerr_lev = 10;
+  int max_dengrad_lev = 10;
+  int max_presserr_lev = 10;
+  int max_pressgrad_lev = 10;
+  int max_velerr_lev = 10;
+  int max_velgrad_lev = 10;
+  int max_vorterr_lev = 10;
+  int max_temperr_lev = 10;
+  int max_tempgrad_lev = 10;
+  int max_ftracerr_lev = 10;
+  int max_ftracgrad_lev = 10;
   int max_vfracerr_lev = 10;
 };
 
