@@ -47,7 +47,7 @@ jobs:
 
         ccache -z
 
-        cd CAMR/Exec/eb_run3d
+        cd CAMR/Exec/SodPlusSphere
         make -j 2 USE_MPI=TRUE USE_OMP=FALSE USE_CCACHE=TRUE USE_ASSERTION=TRUE \
             WARN_ALL=TRUE WARN_ERROR=TRUE EXTRACXXFLAGS="-Wno-null-dereference" \
             KEEP_BUILDINFO_CPP=TRUE
@@ -62,8 +62,8 @@ jobs:
 
     - name: Run
       run: |
-        cd ${{ github.workspace }}/CAMR/Exec/eb_run3d
-        mpiexec -n 2 ./amr3d.gnu.MPI.ex regtest.3d.flow_past_cylinder-z max_step=3 ns.v=1 mac_proj.verbose=1 nodal_proj.verbose=1
+        cd ${{ github.workspace }}/CAMR/Exec/SodPlusSphere
+        mpiexec -n 2 ./CAMR3d.gnu.DEBUG.MPI.EB.ex inputs max_step=3
 
   gcc_no_eb_3d:
     name: GCC NO EB 3D
@@ -100,7 +100,7 @@ jobs:
 
         ccache -z
 
-        cd CAMR/Exec/run3d
+        cd CAMR/Exec/Sod
         make -j 2 USE_MPI=TRUE USE_OMP=FALSE USE_CCACHE=TRUE USE_ASSERTION=TRUE \
             WARN_ALL=TRUE WARN_ERROR=TRUE EXTRACXXFLAGS="-Wno-null-dereference" \
             KEEP_BUILDINFO_CPP=TRUE
@@ -115,8 +115,8 @@ jobs:
 
     - name: Run
       run: |
-        cd ${{ github.workspace }}/CAMR/Exec/run3d
-        mpiexec -n 2 ./amr3d.gnu.MPI.ex regtest.3d.euler max_step=3 ns.v=1 mac_proj.verbose=1 nodal_proj.verbose=1
+        cd ${{ github.workspace }}/CAMR/Exec/Sod
+        mpiexec -n 2 ./CAMR3d.gnu.DEBUG.MPI.ex inputs max_step=3
 
   gcc_eb_2d:
     name: GCC EB 2D
@@ -153,7 +153,7 @@ jobs:
 
         ccache -z
 
-        cd CAMR/Exec/eb_run2d
+        cd CAMR/Exec/SodPlusSphere
         make -j 2 USE_MPI=FALSE USE_OMP=TRUE USE_CCACHE=TRUE USE_ASSERTION=TRUE \
             WARN_ALL=TRUE WARN_ERROR=TRUE EXTRACXXFLAGS="-Wno-null-dereference" \
             KEEP_BUILDINFO_CPP=TRUE
@@ -169,8 +169,8 @@ jobs:
     - name: Run
       run: |
         export OMP_NUM_THREADS=2
-        cd ${{ github.workspace }}/CAMR/Exec/eb_run2d
-        ./amr2d.gnu.OMP.ex regtest.2d.flow_past_cylinder-x max_step=10 ns.v=1 mac_proj.verbose=1 nodal_proj.verbose=1
+        cd ${{ github.workspace }}/CAMR/Exec/SodPlusSphere
+        ./CAMR2d.gnu.OMP.DEBUG.ex inputs max_step=10
 
   gcc_no_eb_2d:
     name: GCC NO EB 2D
@@ -207,7 +207,7 @@ jobs:
 
         ccache -z
 
-        cd CAMR/Exec/run2d
+        cd CAMR/Exec/Sod
         make -j 2 USE_MPI=TRUE USE_OMP=FALSE USE_CCACHE=TRUE USE_ASSERTION=TRUE \
         WARN_ALL=TRUE WARN_ERROR=TRUE EXTRACXXFLAGS="-Wno-null-dereference" \
         KEEP_BUILDINFO_CPP=TRUE
@@ -222,8 +222,8 @@ jobs:
 
     - name: Run
       run: |
-        cd ${{ github.workspace }}/CAMR/Exec/run2d
-        mpiexec -n 2 ./amr2d.gnu.MPI.ex regtest.2d.poiseuille max_step=10 ns.v=1 mac_proj.verbose=1 nodal_proj.verbose=1
+        cd ${{ github.workspace }}/CAMR/Exec/Sod
+        mpiexec -n 2 ./CAMR2d.gnu.DEBUG.MPI.ex inputs max_step=10
 
   save_pr_number:
     if: github.event_name == 'pull_request'
