@@ -40,7 +40,7 @@ adjust_fluxes(
 #ifdef AMREX_USE_EB
 void
 adjust_fluxes_eb(
-              const Box& bx,
+              const Box& /*bx*/,
               Array4<const Real> const& q_arr,
               Array4<const Real> const& u_arr,
               AMREX_D_DECL(
