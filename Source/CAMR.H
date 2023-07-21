@@ -1,5 +1,5 @@
-#ifndef COMPFLO_H
-#define COMPFLO_H
+#ifndef CAMR_H
+#define CAMR_H
 
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_AmrLevel.H>
