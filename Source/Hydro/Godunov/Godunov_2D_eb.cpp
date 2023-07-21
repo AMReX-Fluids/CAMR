@@ -5,7 +5,7 @@
 
 #if (AMREX_SPACEDIM == 2)
 void
-CAMR_umeth_2D(
+CAMR_umeth_2D_eb(
   amrex::Box const& bx,
   const int* bclo,
   const int* bchi,
@@ -18,10 +18,10 @@ CAMR_umeth_2D(
   amrex::Array4<amrex::Real> const& flx2,
   amrex::Array4<amrex::Real> const& q1,
   amrex::Array4<amrex::Real> const& q2,
-  amrex::Array4<const amrex::Real> const& a1,
-  amrex::Array4<const amrex::Real> const& a2,
-  amrex::Array4<amrex::Real> const& pdivu,
-  amrex::Array4<const amrex::Real> const& vol,
+  amrex::Array4<const amrex::Real> const& /*a1*/,
+  amrex::Array4<const amrex::Real> const& /*a2*/,
+  amrex::Array4<const amrex::Real> const& /*vfrac*/,
+  amrex::Array4<amrex::EBCellFlag const> const& /*flag_arr*/,
   const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> del,
   const amrex::Real dt,
   const amrex::Real small,
@@ -33,7 +33,9 @@ CAMR_umeth_2D(
   const int iorder,
   const int l_transverse_reset_density)
 {
-  BL_PROFILE("CAMR::CAMR_umeth_2D()");
+  BL_PROFILE("CAMR::CAMR_umeth_2D_eb()");
+  amrex::Abort("Not implemented yet");
+  
   amrex::Real const dx = del[0];
   amrex::Real const dy = del[1];
   amrex::Real const hdt = 0.5 * dt;
@@ -189,11 +191,6 @@ CAMR_umeth_2D(
   amrex::ParallelFor(yfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
     CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qmarr, qparr, flx2, q2, qaux,
               cdir, *lpmap, small, small_dens, small_pres);
-  });
-
-  // Construct p div{U}
-  amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    CAMR_pdivu(i, j, k, pdivu, q1, q2, a1, a2, vol);
   });
 }
 #endif
