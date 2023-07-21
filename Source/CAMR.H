@@ -65,8 +65,6 @@ public:
     const amrex::DistributionMapping& dm,
     amrex::Real time);
 
-  ~CAMR() override;
-
   // Restart from a checkpoint file.
   void restart(
     amrex::Amr& papa, std::istream& is, bool bReadSpecial = false) override;
