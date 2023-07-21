@@ -60,7 +60,7 @@ mol_slope_eb_x (int i, int j, int k,
     Real dlft4;
     Real drgt4;
 #endif
-          
+
     if(plm_iorder == 1)
     {
       for(int n=0; n<QVAR; n++)
