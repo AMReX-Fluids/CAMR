@@ -41,14 +41,11 @@ CAMR_initdata( int i, int j, int k,
     amrex::Real et = Pt/(EOS::gamma-amrex::Real(1.0));
     state(i,j,k,UEINT) = et;
     state(i,j,k,UEDEN) = et + amrex::Real(0.5)*rhot*uxt*uxt;
-    if (i == 10 and j == 6) amrex::Print() <<" UEDEN " << state(i,j,k,UEDEN) << std::endl;
     state(i,j,k,UTEMP) = amrex::Real(0.0);
 
     state(i,j,k,UFS  ) = amrex::Real(1.0) * state(i,j,k,URHO);
     state(i,j,k,UFS+1) = amrex::Real(0.0) * state(i,j,k,URHO);
     state(i,j,k,UFS+2) = amrex::Real(0.0) * state(i,j,k,URHO);
-
-    if (i == -5 and j == -5) amrex::Print() <<" EINT IN PROB " << state(i,j,k,UEINT) << std::endl;
 }
 
 AMREX_GPU_DEVICE

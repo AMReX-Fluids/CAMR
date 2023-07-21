@@ -152,7 +152,7 @@ CAMR::construct_hydro_source (const MultiFab& S,
 
             if (fr_as_fine) {
                 dm_as_fine.resize(amrex::grow(bx,1),ncomp);
-                dm_as_fine.setVal(0.0);
+                dm_as_fine.setVal<RunOn::Device>(0.0);
             }
 
             const amrex::StateDescriptor* desc = state[State_Type].descriptor();
