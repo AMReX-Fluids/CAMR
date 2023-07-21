@@ -1,5 +1,5 @@
-#ifndef _COMPFLO_H_
-#define _COMPFLO_H_
+#ifndef COMPFLO_H
+#define COMPFLO_H
 
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_AmrLevel.H>
@@ -65,25 +65,25 @@ public:
     const amrex::DistributionMapping& dm,
     amrex::Real time);
 
-  virtual ~CAMR();
+  ~CAMR() override;
 
   // Restart from a checkpoint file.
-  virtual void restart(
+  void restart(
     amrex::Amr& papa, std::istream& is, bool bReadSpecial = false) override;
 
   // Call AmrLevel::checkPoint and then add radiation info
-  virtual void checkPoint(
+  void checkPoint(
     const std::string& dir,
     std::ostream& os,
     amrex::VisMF::How how,
     bool dump_old) override;
 
-  virtual void setPlotVariables() override;
+  void setPlotVariables() override;
 
   // Write a plotfile to specified directory.
-  virtual void writePlotFile(
+  void writePlotFile(
     const std::string& dir, std::ostream& os, amrex::VisMF::How how) override;
-  virtual void writeSmallPlotFile(
+  void writeSmallPlotFile(
     const std::string& dir, std::ostream& os, amrex::VisMF::How how) override;
   void writeJobInfo(const std::string& dir);
   static void writeBuildInfo(std::ostream& os);
@@ -95,7 +95,7 @@ public:
   static void variableCleanUp();
 
   // Initialize grid data at problem start-up.
-  virtual void initData() override;
+  void initData() override;
 
   // Initialize stuff whether from init or from restart
   void init_stuff(amrex::Amr& papa,
@@ -111,22 +111,22 @@ public:
   amrex::MultiFab& Volume();
 
   // Set time levels of state data.
-  virtual void setTimeLevel(
+  void setTimeLevel(
     amrex::Real time, amrex::Real dt_old, amrex::Real dt_new) override;
 
   // Initialize data on this level from another CAMR (during regrid).
-  virtual void init(amrex::AmrLevel& old) override;
+  void init(amrex::AmrLevel& old) override;
 
   // Initialize data on this level after regridding if old level did not
   // previously exist
-  virtual void init() override;
+  void init() override;
 
   // Initialize EB geometry for finest_level and level grids for
   // other levels for the Amr class to do timed load balances.
-  virtual int WorkEstType() override { return Work_Estimate_Type; }
+  int WorkEstType() override { return Work_Estimate_Type; }
 
   // Proceed with next timestep?
-  virtual int okToContinue() override;
+  int okToContinue() override;
 
   // Advance grids at this level in time.
   virtual amrex::Real
@@ -183,7 +183,7 @@ public:
   amrex::Real initialTimeStep();
 
   // Compute initial `dt'.
-  virtual void computeInitialDt(
+  void computeInitialDt(
     int finest_level,
     int sub_cycle,
     amrex::Vector<int>& n_cycle,
@@ -192,7 +192,7 @@ public:
     amrex::Real stop_time) override;
 
   // Compute new `dt'.
-  virtual void computeNewDt(
+  void computeNewDt(
     int finest_level,
     int sub_cycle,
     amrex::Vector<int>& n_cycle,
@@ -203,31 +203,31 @@ public:
     int post_regrid_flag) override;
 
   // Allocate data at old time.
-  virtual void allocOldData() override;
+  void allocOldData() override;
 
   // Remove data at old time.
-  virtual void removeOldData() override;
+  void removeOldData() override;
 
   // Print information about energy budget.
   void do_energy_diagnostics();
 
   // Do work after timestep().
-  virtual void post_timestep(int iteration) override;
+  void post_timestep(int iteration) override;
 
   // Contains operations to be done only after a full coarse timestep.
-  virtual void postCoarseTimeStep(amrex::Real cumtime) override;
+  void postCoarseTimeStep(amrex::Real cumtime) override;
 
   // Do work after regrid().
-  virtual void post_regrid(int lbase, int new_finest) override;
+  void post_regrid(int lbase, int new_finest) override;
 
   // Do work after a restart().
-  virtual void post_restart() override;
+  void post_restart() override;
 
   // Do work after init().
-  virtual void post_init(amrex::Real stop_time) override;
+  void post_init(amrex::Real stop_time) override;
 
   // Error estimation for regridding.
-  virtual void errorEst(
+  void errorEst(
     amrex::TagBoxArray& tags,
     int clearval,
     int tagval,
@@ -239,7 +239,7 @@ public:
   // The user is responsible for deleting this pointer when done
   // with it.  If ngrow>0 the MultiFab is built on the appropriately
   // grown BoxArray.
-  virtual std::unique_ptr<amrex::MultiFab>
+  std::unique_ptr<amrex::MultiFab>
   derive(const std::string& name, amrex::Real time, int ngrow) override;
 
   // This version of derive() fills the dcomp'th component of mf with the
