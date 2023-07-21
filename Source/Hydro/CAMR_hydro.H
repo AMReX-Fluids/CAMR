@@ -270,8 +270,7 @@ CAMR_umdrv_eb( const bool do_mol, amrex::Box const& bx, const amrex::MFIter& mfi
                const int use_pslope,
                const int use_flattening,
                const int transverse_reset_density,
-               const int l_eb_weights_type,
-               amrex::Array4<amrex::Real> const& vol);
+               const int l_eb_weights_type);
 
 void
 CAMR_consup_eb( const amrex::Box& bx,

@@ -43,8 +43,7 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx, const MFIter& mfi,
                const int use_pslope,
                const int use_flattening,
                const int transverse_reset_density,
-               const int l_eb_weights_type,
-               Array4<Real> const& vol)
+               const int l_eb_weights_type)
 {
     BL_PROFILE_VAR("CAMR_umdrv_eb()", CAMR_umdrv_eb);
 
@@ -130,7 +129,7 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx, const MFIter& mfi,
         AMREX_D_DECL(flux_tmp_arr[0], flux_tmp_arr[1], flux_tmp_arr[2]),
         AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
         AMREX_D_DECL(apx, apy, apz),
-        vol, dx, dt,
+        vf_arr, flag_arr, dx, dt,
         small, small_dens, small_pres, ppm_type, use_pslope, use_flattening,
         l_plm_iorder, transverse_reset_density);
       } // end Godunov

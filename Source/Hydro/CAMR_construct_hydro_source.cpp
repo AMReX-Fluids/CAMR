@@ -170,7 +170,7 @@ CAMR::construct_hydro_source (const MultiFab& S,
                           as_crse, p_drho_as_crse->array(), p_rrflag_as_crse->array(),
                           as_fine, dm_as_fine.array(), level_mask.const_array(mfi),
                           difmag, dt, small, small_dens, small_pres, bcs_d.data(),
-                          redistribution_type, plm_iorder, eb_weights_type, ppm_type, use_pslope, use_flattening, transverse_reset_density, volume.array(mfi));
+                          redistribution_type, plm_iorder, eb_weights_type, ppm_type, use_pslope, use_flattening, transverse_reset_density);
         } else {
 #endif
             // Return hyd_src - centered at half-time if using Godunov method

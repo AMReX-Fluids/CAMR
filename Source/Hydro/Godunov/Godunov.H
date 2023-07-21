@@ -6,6 +6,12 @@
 
 #include "IndexDefines.H"
 
+#ifdef AMREX_USE_EB
+#include "AMReX_MultiFabUtil.H"
+#include <AMReX_EBFArrayBox.H>
+#include <AMReX_MultiCutFab.H>
+#endif
+
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 amrex::Real
@@ -673,7 +679,8 @@ void CAMR_umeth_3D_eb(
   amrex::Array4<const amrex::Real> const& a1,
   amrex::Array4<const amrex::Real> const& a2,
   amrex::Array4<const amrex::Real> const& a3,
-  amrex::Array4<const amrex::Real> const& vol,
+  amrex::Array4<const amrex::Real> const& vfrac,
+  amrex::Array4<amrex::EBCellFlag const> const& flag_arr,
   const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> del,
   const amrex::Real dt,
   const amrex::Real small,
@@ -732,7 +739,8 @@ void CAMR_umeth_2D_eb(
   amrex::Array4<amrex::Real> const& q2,
   amrex::Array4<const amrex::Real> const& a1,
   amrex::Array4<const amrex::Real> const& a2,
-  amrex::Array4<const amrex::Real> const& vol,
+  amrex::Array4<const amrex::Real> const& vfrac,
+  amrex::Array4<amrex::EBCellFlag const> const& flag_arr,
   const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> del,
   const amrex::Real dt,
   const amrex::Real small,
