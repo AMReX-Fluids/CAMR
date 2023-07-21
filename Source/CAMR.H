@@ -257,7 +257,7 @@ public:
 
   static int numGrow();
 
-  void reset_internal_energy(amrex::MultiFab& S_new, int ng);
+  static void reset_internal_energy(amrex::MultiFab& S_new, int ng);
 
   void computeTemp(amrex::MultiFab& State, int ng);
 
