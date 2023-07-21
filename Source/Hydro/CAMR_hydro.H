@@ -23,13 +23,13 @@ CAMR_divu(
   const int* domlo, const int* domhi,
   const int* bclo , const int* bchi)
 {
-
-#if (AMREX_SPACEDIM == 2)
-    amrex::Real ux, vy;
     int bclo_x = bclo[0]; int domlo_x = domlo[0];
     int bclo_y = bclo[1]; int domlo_y = domlo[1];
     int bchi_x = bchi[0]; int domhi_x = domhi[0];
     int bchi_y = bchi[1]; int domhi_y = domhi[1];
+
+#if (AMREX_SPACEDIM == 2)
+    amrex::Real ux, vy;
 
     if (j == domlo_y && bclo_y == NoSlipWall) {
         ux = ( q(i,j  ,k,QU) - q(i-1,j  ,k,QU) ) / dx;
@@ -51,6 +51,9 @@ CAMR_divu(
 
 #elif (AMREX_SPACEDIM == 3)
     amrex::Real ux, vy, wz;
+
+    int bclo_z = bclo[2]; int domlo_z = domlo[2];
+    int bchi_z = bchi[2]; int domhi_z = domhi[2];
 
     if (i == domlo_x && bclo_x == NoSlipWall) {
         vy = 0.5 * (
@@ -99,7 +102,7 @@ CAMR_divu(
              q(i, j  , k-1, QU) - q(i-1, j  , k-1, QU) +
              q(i, j-1, k  , QU) - q(i-1, j-1, k  , QU) +
              q(i, j-1, k-1, QU) - q(i-1, j-1, k-1, QU)) / dx;
-        wz = 0.25 * *
+        wz = 0.25 * (
             q(i  , j  , k, QW) - q(i  , j  , k-1, QW) +
             q(i-1, j  , k, QW) - q(i-1, j  , k-1, QW) +
             q(i  , j-1, k, QW) - q(i  , j-1, k-1, QW) +
