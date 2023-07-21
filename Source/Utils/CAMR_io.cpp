@@ -88,7 +88,7 @@ CAMR::setPlotVariables()
 {
   amrex::AmrLevel::setPlotVariables();
 
-  amrex::ParmParse pp("camr");
+  amrex::ParmParse pp("CAMR");
 
   bool plot_cost = true;
   pp.query("plot_cost", plot_cost);
@@ -242,7 +242,7 @@ CAMR::writeJobInfo(const std::string& dir)
   jobInfoFile << " Boundary conditions\n";
   amrex::Vector<std::string> lo_bc_out(AMREX_SPACEDIM);
   amrex::Vector<std::string> hi_bc_out(AMREX_SPACEDIM);
-  amrex::ParmParse pp("camr");
+  amrex::ParmParse pp("CAMR");
   pp.getarr("lo_bc", lo_bc_out, 0, AMREX_SPACEDIM);
   pp.getarr("hi_bc", hi_bc_out, 0, AMREX_SPACEDIM);
 
