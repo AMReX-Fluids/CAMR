@@ -1,3 +1,5 @@
+#ifndef HYDRO_ARTIF_VISC_H
+#define HYDRO_ARTIF_VISC_H
 
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
@@ -61,3 +63,4 @@ CAMR_artif_visc(
     }
     flx(iv, UTEMP) = 0.0;
 }
+#endif

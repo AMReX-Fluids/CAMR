@@ -183,11 +183,12 @@ CAMR_update(
 {
     amrex::Real volinv = 1.0/vol(i, j, k);
     for (int n = 0; n < NVAR; ++n) {
-      update(i, j, k, n) += (AMREX_D_TERM(
-                               flx[0](i, j, k, n) - flx[0](i + 1, j, k, n),
-                              +flx[1](i, j, k, n) - flx[1](i, j + 1, k, n),
-                              +flx[2](i, j, k, n) - flx[2](i, j, k + 1, n))) * volinv;
-
+      update(i, j, k, n) +=
+        (AMREX_D_TERM(flx[0](i, j, k, n) - flx[0](i + 1, j, k, n),
+                      +flx[1](i, j, k, n) - flx[1](i, j + 1, k, n),
+                      +flx[2](i, j, k, n) - flx[2](i, j, k + 1, n))) *
+        volinv;
+    }
     update(i, j, k, UEINT) -= pdivu(i, j, k);
 }
 
