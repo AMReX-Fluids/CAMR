@@ -5,3 +5,6 @@ CEXE_headers += Godunov.H
 CEXE_headers += PLM.H
 CEXE_headers += PPM.H
 
+ifeq ($(USE_EB),TRUE)
+CEXE_sources += Godunov_$(DIM)D_eb.cpp
+endif

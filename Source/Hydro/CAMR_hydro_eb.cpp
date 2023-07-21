@@ -11,7 +11,7 @@ using namespace amrex;
 
 #ifdef AMREX_USE_EB
 void
-CAMR_umdrv_eb( Box const& bx, const MFIter& mfi,
+CAMR_umdrv_eb( const bool do_mol, Box const& bx, const MFIter& mfi,
                Geometry const& geom,
                const EBFArrayBoxFactory* ebfact,
                const int* bclo, const int* bchi,
@@ -19,6 +19,7 @@ CAMR_umdrv_eb( Box const& bx, const MFIter& mfi,
                Array4<const Real> const& q_arr,
                Array4<      Real> const& dsdt_arr,
                Array4<const Real> const& qaux_arr,
+               Array4<const Real> const& src_q,
                Array4<const Real> const& vf_arr,
                Array4<EBCellFlag const> const& flag_arr,
                const GpuArray<Real, AMREX_SPACEDIM> dx,
@@ -37,7 +38,12 @@ CAMR_umdrv_eb( Box const& bx, const MFIter& mfi,
                const BCRec* bcs_d_ptr,
                const std::string& l_redistribution_type,
                const int l_plm_iorder,
-               const int l_eb_weights_type)
+               const int ppm_type,
+               const int use_pslope,
+               const int use_flattening,
+               const int transverse_reset_density,
+               const int l_eb_weights_type,
+               Array4<Real> const& vol)
 {
     BL_PROFILE_VAR("CAMR_umdrv_eb()", CAMR_umdrv_eb);
 
@@ -108,13 +114,27 @@ CAMR_umdrv_eb( Box const& bx, const MFIter& mfi,
     // Define divc, the update before redistribution
     // Also construct the redistribution weights for flux redistribution if necessary
     // ****************************************************************
-    mol_umeth_eb(bx,bclo,bchi,domlo,domhi,
-                 q_arr, qaux_arr, divc_arr,
-                 AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
-                 vf_arr, flag_arr, dx,
-                 flux_tmp_arr,
-                 small, small_dens, small_pres,
-                 l_plm_iorder,l_eb_weights_type);
+    if (do_mol) {
+        mol_umeth_eb(bx, bclo, bchi, domlo, domhi, q_arr, qaux_arr, divc_arr,
+                     AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]), vf_arr,
+                     flag_arr, dx, flux_tmp_arr, small, small_dens, small_pres,
+                     l_plm_iorder, l_eb_weights_type);
+    } else { // if Godunov
+#if AMREX_SPACEDIM == 2
+      CAMR_umeth_2D_eb(
+#elif AMREX_SPACEDIM == 3
+      CAMR_umeth_3D_eb(
+#endif
+        bx, bclo, bchi, domlo, domhi, q_arr, qaux_arr, src_q,
+        AMREX_D_DECL(flux_tmp_arr[0], flux_tmp_arr[1], flux_tmp_arr[2]),
+        AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
+        AMREX_D_DECL(apx, apy, apz),
+        vol, dx, dt,
+        small, small_dens, small_pres, ppm_type, use_pslope, use_flattening,
+        l_plm_iorder, transverse_reset_density);
+
+      amrex::Abort("Not implemented yet");
+      } // end Godunov
 
     adjust_fluxes_eb(bx, q_arr, s_arr,
                      AMREX_D_DECL(apx, apy, apz),

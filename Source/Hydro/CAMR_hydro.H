@@ -238,7 +238,7 @@ void CAMR_consup(
 
 #ifdef AMREX_USE_EB
 void
-CAMR_umdrv_eb( amrex::Box const& bx, const amrex::MFIter& mfi,
+CAMR_umdrv_eb( const bool do_mol, amrex::Box const& bx, const amrex::MFIter& mfi,
                amrex::Geometry const& geom,
                const amrex::EBFArrayBoxFactory* ebfact,
                const int* bclo, const int* bchi,
@@ -246,6 +246,7 @@ CAMR_umdrv_eb( amrex::Box const& bx, const amrex::MFIter& mfi,
                amrex::Array4<const amrex::Real> const& q_arr,
                amrex::Array4<      amrex::Real> const& dsdt_arr,
                amrex::Array4<const amrex::Real> const& qaux,
+               amrex::Array4<const amrex::Real> const& src_q,
                amrex::Array4<const amrex::Real> const& vfrac,
                amrex::Array4<amrex::EBCellFlag const> const& flag_arr,
                const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx,
@@ -265,7 +266,12 @@ CAMR_umdrv_eb( amrex::Box const& bx, const amrex::MFIter& mfi,
                amrex::BCRec const* bcs_d_ptr,
                const std::string& l_redistribution_type,
                const int l_plm_iorder,
-               const int l_eb_weights_type);
+               const int ppm_type,
+               const int use_pslope,
+               const int use_flattening,
+               const int transverse_reset_density,
+               const int l_eb_weights_type,
+               amrex::Array4<amrex::Real> const& vol);
 
 void
 CAMR_consup_eb( const amrex::Box& bx,

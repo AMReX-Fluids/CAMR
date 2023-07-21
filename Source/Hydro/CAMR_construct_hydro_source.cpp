@@ -163,14 +163,14 @@ CAMR::construct_hydro_source (const MultiFab& S,
 
             // Return hyd_src - centered at old-time
             const auto& dxInv = geom.InvCellSizeArray();
-            CAMR_umdrv_eb(bx, mfi, geom, &ebfact,
+            CAMR_umdrv_eb(do_mol, bx, mfi, geom, &ebfact,
                           phys_bc.lo(), phys_bc.hi(),
-                          sarr, qarr, hyd_src, qauxar,
+                          sarr, qarr, srcqarr, hyd_src, qauxar,
                           vfrac_arr, flag, dx, dxInv, flx_arr,
                           as_crse, p_drho_as_crse->array(), p_rrflag_as_crse->array(),
                           as_fine, dm_as_fine.array(), level_mask.const_array(mfi),
                           difmag, dt, small, small_dens, small_pres, bcs_d.data(),
-                          redistribution_type, plm_iorder, eb_weights_type);
+                          redistribution_type, plm_iorder, eb_weights_type, ppm_type, use_pslope, use_flattening, transverse_reset_density, volume.array(mfi));
         } else {
 #endif
             // Return hyd_src - centered at half-time if using Godunov method
@@ -203,6 +203,7 @@ CAMR::construct_hydro_source (const MultiFab& S,
               }
 #endif
           }
+
 
           if (level > 0) {
 #ifdef AMREX_USE_EB
