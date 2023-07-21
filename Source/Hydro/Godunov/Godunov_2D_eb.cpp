@@ -35,7 +35,7 @@ CAMR_umeth_2D_eb(
 {
   BL_PROFILE("CAMR::CAMR_umeth_2D_eb()");
   amrex::Abort("Not implemented yet");
-  
+
   amrex::Real const dx = del[0];
   amrex::Real const dy = del[1];
   amrex::Real const hdt = 0.5 * dt;
