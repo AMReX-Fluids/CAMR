@@ -13,7 +13,7 @@
 
 namespace EOS{
 
-  static amrex::Real gamma = 1.4;
+  static constexpr amrex::Real gamma = 1.4;
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
