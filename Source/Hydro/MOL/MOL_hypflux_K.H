@@ -1,5 +1,5 @@
-#ifndef MOL_HYPFLUX_K_H_
-#define MOL_HYPFLUX_K_H_
+#ifndef MOL_HYPFLUX_K_H
+#define MOL_HYPFLUX_K_H
 
 #include "IndexDefines.H"
 #include <AMReX_FArrayBox.H>

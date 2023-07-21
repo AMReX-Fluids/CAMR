@@ -1,5 +1,5 @@
-#ifndef INCFLO_IF_LIST_
-#define INCFLO_IF_LIST_
+#ifndef INCFLO_IF_LIST
+#define INCFLO_IF_LIST
 
 #include <AMReX_EB2.H>
 #include <AMReX_Vector.H>

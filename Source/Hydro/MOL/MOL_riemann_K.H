@@ -1,5 +1,5 @@
-#ifndef MOL_RIEMANN_K_H_
-#define MOL_RIEMANN_K_H_
+#ifndef MOL_RIEMANN_K_H
+#define MOL_RIEMANN_K_H
 
 #include "IndexDefines.H"
 #include "Hydro_cmpflx.H"
