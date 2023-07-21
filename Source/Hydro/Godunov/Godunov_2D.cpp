@@ -30,8 +30,8 @@ CAMR_umeth_2D(
   const int ppm_type,
   const int use_pslope,
   const int use_flattening,
-  const int l_transverse_reset_density,
-  const int iorder)
+  const int iorder,
+  const int l_transverse_reset_density)
 {
   amrex::Real const dx = del[0];
   amrex::Real const dy = del[1];
