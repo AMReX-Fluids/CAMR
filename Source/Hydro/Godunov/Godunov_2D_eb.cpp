@@ -18,9 +18,9 @@ CAMR_umeth_2D_eb(
   amrex::Array4<amrex::Real> const& flx2,
   amrex::Array4<amrex::Real> const& q1,
   amrex::Array4<amrex::Real> const& q2,
-  amrex::Array4<const amrex::Real> const& a1,
-  amrex::Array4<const amrex::Real> const& a2,
-  amrex::Array4<const amrex::Real> const& vol,
+  amrex::Array4<const amrex::Real> const& /*a1*/,
+  amrex::Array4<const amrex::Real> const& /*a2*/,
+  amrex::Array4<const amrex::Real> const& /*vol*/,
   const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> del,
   const amrex::Real dt,
   const amrex::Real small,
@@ -32,7 +32,9 @@ CAMR_umeth_2D_eb(
   const int iorder,
   const int l_transverse_reset_density)
 {
+  BL_PROFILE("CAMR::CAMR_umeth_2D()");
   amrex::Abort("Not implemented yet");
+  
   amrex::Real const dx = del[0];
   amrex::Real const dy = del[1];
   amrex::Real const hdt = 0.5 * dt;

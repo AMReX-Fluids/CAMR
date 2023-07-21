@@ -1,5 +1,6 @@
 #include "CAMR.H"
 #include "CAMR_hydro.H"
+#include "Godunov.H"
 #include "MOL_umeth.H"
 #include "MOL_hydro_eb_K.H"
 #include "CAMR_Constants.H"
@@ -132,8 +133,6 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx, const MFIter& mfi,
         vol, dx, dt,
         small, small_dens, small_pres, ppm_type, use_pslope, use_flattening,
         l_plm_iorder, transverse_reset_density);
-
-      amrex::Abort("Not implemented yet");
       } // end Godunov
 
     adjust_fluxes_eb(bx, q_arr, s_arr,
