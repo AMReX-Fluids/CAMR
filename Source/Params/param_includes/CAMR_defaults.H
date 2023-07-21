@@ -49,5 +49,5 @@ int CAMR::bndry_func_thread_safe = 1;
 int CAMR::sum_interval = -1;
 amrex::Real CAMR::sum_per = -1.0e0;
 int CAMR::hard_cfl_limit = 1;
-std::string CAMR::job_name = "";
+std::string CAMR::job_name;
 int CAMR::write_eb = 0;
