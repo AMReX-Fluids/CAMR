@@ -58,6 +58,8 @@ adjust_fluxes_eb(
               const GpuArray<amrex::Real, AMREX_SPACEDIM> dx,
               const GpuArray<amrex::Real, AMREX_SPACEDIM> dxinv,
               const GpuArray<const amrex::Array4<amrex::Real>, AMREX_SPACEDIM> flux,
+              const int* domlo, const int* domhi,
+              const int*  bclo, const int*  bchi,
               Real l_difmag)
 {
     Real areafac;
@@ -88,9 +90,16 @@ adjust_fluxes_eb(
 #elif (AMREX_SPACEDIM == 3)
     areafac = dx[1]*dx[2];
 #endif
+
+    int domlo_dir = domlo[0];
+    int domhi_dir = domhi[0];
+    int  bclo_dir =  bclo[0];
+    int  bchi_dir =  bchi[0];
+
     amrex::ParallelFor(fbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
 
-          CAMR_artif_visc(i, j, k, fx_arr, divu_arr, u_arr, dx[0], l_difmag, 0);
+          CAMR_artif_visc(i, j, k, fx_arr, divu_arr, u_arr, dx[0], l_difmag, 0,
+                          domlo_dir, domhi_dir, bclo_dir, bchi_dir);
 
           // Normalize Species Flux
           if(apx(i,j,k) > 0. ) {
@@ -107,9 +116,16 @@ adjust_fluxes_eb(
 #elif (AMREX_SPACEDIM == 3)
     areafac = dx[0]*dx[2];
 #endif
+
+    domlo_dir = domlo[1];
+    domhi_dir = domhi[1];
+     bclo_dir =  bclo[1];
+     bchi_dir =  bchi[1];
+
     amrex::ParallelFor(fby, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
 
-          CAMR_artif_visc(i, j, k, fy_arr, divu_arr, u_arr, dx[1], l_difmag, 1);
+          CAMR_artif_visc(i, j, k, fy_arr, divu_arr, u_arr, dx[1], l_difmag, 1,
+                          domlo_dir, domhi_dir, bclo_dir, bchi_dir);
 
           // Normalize Species Flux
           if(apy(i,j,k) > 0. ) {
@@ -125,9 +141,15 @@ adjust_fluxes_eb(
      Box const& fbz = Box(fz_arr);
      areafac = dx[1]*dx[0];
 
+    domlo_dir = domlo[2];
+    domhi_dir = domhi[2];
+     bclo_dir =  bclo[2];
+     bchi_dir =  bchi[2];
+
     amrex::ParallelFor(fbz, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
 
-          CAMR_artif_visc(i, j, k, fz_arr, divu_arr, u_arr, dx[2], l_difmag, 2);
+          CAMR_artif_visc(i, j, k, fz_arr, divu_arr, u_arr, dx[2], l_difmag, 2,
+                          domlo_dir, domhi_dir, bclo_dir, bchi_dir);
 
           // Normalize Species Flux
           if(apz(i,j,k) > 0. ) {
