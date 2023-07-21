@@ -19,7 +19,7 @@ initialize_EB2 (const Geometry& geom, const int required_coarsening_level,
    * box, cylinder, sphere, spherecube, twocylinders
    ******************************************************************************/
 
-    ParmParse pp("camr");
+    ParmParse pp("CAMR");
 
     std::string geom_type;
     pp.query("geometry", geom_type);
