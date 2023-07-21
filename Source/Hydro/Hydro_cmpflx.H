@@ -235,7 +235,7 @@ CAMR_cmpflx(
 
     if ( idx == domlo)
     {
-        if (bclo == Symmetry || bclo == SlipWall || bclo == NoSlipWall))
+        if (bclo == Symmetry || bclo == SlipWall || bclo == NoSlipWall)
         {
             ql(i,j,k,QRHO)   = qr(i,j,k,QRHO);
             ql(i,j,k,QPRES)  = qr(i,j,k,QPRES);
@@ -256,7 +256,7 @@ CAMR_cmpflx(
     }
     if ( idx == domhi+1)
     {
-        if (bchi == Symmetry || bchi == SlipWall || bchi == NoSlipWall))
+        if (bchi == Symmetry || bchi == SlipWall || bchi == NoSlipWall)
         {
             qr(i,j,k,QRHO)   = ql(i,j,k,QRHO);
             qr(i,j,k,QPRES)  = ql(i,j,k,QPRES);

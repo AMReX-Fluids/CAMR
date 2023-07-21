@@ -43,10 +43,11 @@ CAMR::sum_integrated_quantities()
   }
 
   if (verbose > 0) {
-    const int nfoo = 7;
 #if (AMREX_SPACEDIM == 2)
+    const int nfoo = 7;
     amrex::Real foo[nfoo] = {mass, mom[0], mom[1],         rho_e, rho_K, rho_E, temp};
 #elif (AMREX_SPACEDIM == 3)
+    const int nfoo = 8;
     amrex::Real foo[nfoo] = {mass, mom[0], mom[1], mom[2], rho_e, rho_K, rho_E, temp};
 #endif
 
