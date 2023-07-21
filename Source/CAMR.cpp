@@ -63,7 +63,7 @@ CAMR::read_params()
 
   read_params_done = true;
 
-  amrex::ParmParse pp("CAMR");
+  amrex::ParmParse pp("camr");
 
 #include "CAMR_queries.H"
 
