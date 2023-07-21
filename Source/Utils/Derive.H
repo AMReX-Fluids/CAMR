@@ -208,17 +208,6 @@ void CAMR_derenstrophy(
   const int* bcrec,
   const int level);
 
-void CAMR_dernull(
-  const amrex::Box& bx,
-  amrex::FArrayBox& derfab,
-  int dcomp,
-  int ncomp,
-  const amrex::FArrayBox& datfab,
-  const amrex::Geometry& geomdata,
-  amrex::Real time,
-  const int* bcrec,
-  const int level);
-
 void CAMR_dersoundspeed(
   const amrex::Box& bx,
   amrex::FArrayBox& derfab,
