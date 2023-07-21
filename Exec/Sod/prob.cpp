@@ -13,6 +13,7 @@ extern "C" {
         // Parse params
         amrex::ParmParse pp("prob");
 
+        pp.query("type",  CAMR::h_prob_parm->type);
         pp.query("p_l",   CAMR::h_prob_parm->p_l);
         pp.query("p_r",   CAMR::h_prob_parm->p_r);
         pp.query("rho_l", CAMR::h_prob_parm->rho_l);

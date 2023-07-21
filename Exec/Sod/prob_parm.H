@@ -8,6 +8,7 @@ using namespace amrex::literals;
 
 struct ProbParmDevice
 {
+    int type = 0;
     amrex::Real p_l = 1.0;
     amrex::Real p_r = 0.1;
     amrex::Real rho_l = 1.0;

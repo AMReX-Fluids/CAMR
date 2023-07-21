@@ -83,7 +83,8 @@ CAMR_cmpflx(
             ql(i,j,k,QREINT) = qr(i,j,k,QREINT);
             gamcl = gamcr;
             ul  = -ur;
-            vl  =  vr;
+            vl  =  vr; // Note this is ok for NoSlip because there will be no
+                       // advection velocity through the wall
         } else if (bclo == Outflow) {
             ul = ur;
             vl = vr;
@@ -102,7 +103,8 @@ CAMR_cmpflx(
             qr(i,j,k,QREINT) = ql(i,j,k,QREINT);
             gamcr = gamcl;
             ur    = -ul;
-            vr    =  vl;
+            vr    =  vl; // Note this is ok for NoSlip because there will be no
+                         // advection velocity through the wall
         } else if (bchi == Outflow) {
             qr(i,j,k,QRHO)   = ql(i,j,k,QRHO);
             qr(i,j,k,QPRES)  = ql(i,j,k,QPRES);

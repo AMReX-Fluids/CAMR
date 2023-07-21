@@ -79,11 +79,13 @@ CAMR_umdrv (bool do_mol,
                  const Real dx1 = dx[1];,
                  const Real dx2 = dx[2];);
     ParallelFor(bxg2, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-         CAMR_divu(i, j, k, q_arr, AMREX_D_DECL(dx0, dx1, dx2), divuarr);
+        CAMR_divu(i, j, k, q_arr, AMREX_D_DECL(dx0, dx1, dx2), divuarr, domlo, domhi, bclo, bchi);
     });
 
-    adjust_fluxes(bx, uin_arr,           flx, a,      divuarr,           dx, l_difmag);
-    CAMR_consup  (bx,          dsdt_arr, flx,    vol,          pdivuarr);
+    // Adjust the fluxes with artificial viscosity and area-weight them
+    adjust_fluxes(bx, uin_arr, flx, a, divuarr, dx, domlo, domhi, bclo, bchi, l_difmag);
+
+    CAMR_consup  (bx, dsdt_arr, flx, vol, pdivuarr);
 
     BL_PROFILE_VAR_STOP(umeth);
 }

@@ -16,41 +16,124 @@ CAMR_divu(
   const int j,
   const int k,
   amrex::Array4<const amrex::Real> const& q,
-  AMREX_D_DECL(
-    const amrex::Real dx, const amrex::Real dy, const amrex::Real dz),
-  amrex::Array4<amrex::Real> const& divu)
+  AMREX_D_DECL(const amrex::Real dx,
+               const amrex::Real dy,
+               const amrex::Real dz),
+  amrex::Array4<amrex::Real> const& divu,
+  const int* domlo, const int* domhi,
+  const int* bclo , const int* bchi)
 {
-#if AMREX_SPACEDIM == 1
-  amrex::Real ux = (q(i, j, k, QU) - q(i - 1, j, k, QU)) / dx;
-#elif AMREX_SPACEDIM == 2
-  amrex::Real ux = 0.5 *
-                   (q(i, j, k, QU) - q(i - 1, j, k, QU) + q(i, j - 1, k, QU) -
-                    q(i - 1, j - 1, k, QU)) /
-                   dx;
-  amrex::Real vy = 0.5 *
-                   (q(i, j, k, QV) - q(i, j - 1, k, QV) + q(i - 1, j, k, QV) -
-                    q(i - 1, j - 1, k, QV)) /
-                   dy;
-#elif AMREX_SPACEDIM == 3
-  amrex::Real ux =
-    0.25 *
-    (q(i, j, k, QU) - q(i - 1, j, k, QU) + q(i, j, k - 1, QU) -
-     q(i - 1, j, k - 1, QU) + q(i, j - 1, k, QU) - q(i - 1, j - 1, k, QU) +
-     q(i, j - 1, k - 1, QU) - q(i - 1, j - 1, k - 1, QU)) /
-    dx;
-  amrex::Real vy =
-    0.25 *
-    (q(i, j, k, QV) - q(i, j - 1, k, QV) + q(i, j, k - 1, QV) -
-     q(i, j - 1, k - 1, QV) + q(i - 1, j, k, QV) - q(i - 1, j - 1, k, QV) +
-     q(i - 1, j, k - 1, QV) - q(i - 1, j - 1, k - 1, QV)) /
-    dy;
-  amrex::Real wz =
-    0.25 *
-    (q(i, j, k, QW) - q(i, j, k - 1, QW) + q(i - 1, j, k, QW) -
-     q(i - 1, j, k - 1, QW) + q(i, j - 1, k, QW) - q(i, j - 1, k - 1, QW) +
-     q(i - 1, j - 1, k, QW) - q(i - 1, j - 1, k - 1, QW)) /
-    dz;
+
+#if (AMREX_SPACEDIM == 2)
+    amrex::Real ux, vy;
+    int bclo_x = bclo[0]; int domlo_x = domlo[0];
+    int bclo_y = bclo[1]; int domlo_y = domlo[1];
+    int bchi_x = bchi[0]; int domhi_x = domhi[0];
+    int bchi_y = bchi[1]; int domhi_y = domhi[1];
+
+    if (j == domlo_y && bclo_y == NoSlipWall) {
+        ux = ( q(i,j  ,k,QU) - q(i-1,j  ,k,QU) ) / dx;
+    } else if (j == domhi_y+1 && bchi_y == NoSlipWall) {
+        ux = (q(i,j-1,k,QU) - q(i-1,j-1,k,QU)) / dx;
+    } else {
+        ux = 0.5 * (q(i,j  ,k,QU) - q(i-1,j  ,k,QU)
+                 +  q(i,j-1,k,QU) - q(i-1,j-1,k,QU)) / dx;
+    }
+
+    if (i == domlo_x && bclo_x == NoSlipWall) {
+      vy = ( q(i  ,j,k,QV) - q(i  ,j-1,k,QV) ) / dy;
+    } else if (i == domhi_x+1 && bchi_x == NoSlipWall) {
+      vy = ( q(i-1,j,k,QV) - q(i-1,j-1,k,QV) ) / dy;
+    } else {
+      vy = 0.5 * ( q(i  , j, k, QV) - q(i  ,j-1,k,QV) +
+                   q(i-1, j, k, QV) - q(i-1,j-1,k,QV) ) / dy;
+    }
+
+#elif (AMREX_SPACEDIM == 3)
+    amrex::Real ux, vy, wz;
+
+    if (i == domlo_x && bclo_x == NoSlipWall) {
+        vy = 0.5 * (
+            q(i  , j, k  , QV) - q(i  , j-1, k  , QV) +
+            q(i  , j, k-1, QV) - q(i  , j-1, k-1, QV) ) / dy;
+        wz = 0.5 * (
+            q(i  , j  , k, QW) - q(i  , j  , k-1, QW) +
+            q(i  , j-1, k, QW) - q(i  , j-1, k-1, QW) ) / dz;
+    } else if (i == domhi_x+1 && bchi_x == NoSlipWall) {
+        vy = 0.5 * (
+            q(i-1, j, k  , QV) - q(i-1, j-1, k  , QV) +
+            q(i-1, j, k-1, QV) - q(i-1, j-1, k-1, QV) ) / dy;
+        wz = 0.5 * (
+            q(i  , j  , k, QW) - q(i  , j  , k-1, QW) +
+            q(i  , j-1, k, QW) - q(i  , j-1, k-1, QW) ) / dz;
+    } else {
+        vy = 0.25 * (
+            q(i  , j, k  , QV) - q(i  , j-1, k  , QV) +
+            q(i  , j, k-1, QV) - q(i  , j-1, k-1, QV) +
+            q(i-1, j, k  , QV) - q(i-1, j-1, k  , QV) +
+            q(i-1, j, k-1, QV) - q(i-1, j-1, k-1, QV)) / dy;
+        wz = 0.25 * (
+            q(i  , j  , k, QW) - q(i  , j  , k-1, QW) +
+            q(i-1, j  , k, QW) - q(i-1, j  , k-1, QW) +
+            q(i  , j-1, k, QW) - q(i  , j-1, k-1, QW) +
+            q(i-1, j-1, k, QW) - q(i-1, j-1, k-1, QW)) / dz;
+    }
+
+    if (j == domlo_y && bclo_y == NoSlipWall) {
+        ux = 0.5 * (
+            q(i, j  , k  , QU) - q(i-1, j  , k  , QU) +
+            q(i, j  , k-1, QU) - q(i-1, j  , k-1, QU) ) / dx;
+        wz = 0.5 * (
+            q(i  , j  , k, QW) - q(i  , j  , k-1, QW) +
+            q(i-1, j  , k, QW) - q(i-1, j  , k-1, QW) ) / dz;
+    } else if (j == domhi_y+1 && bchi_y == NoSlipWall) {
+        ux = 0.5 * (
+            q(i, j-1, k  , QU) - q(i-1, j-1, k  , QU) +
+            q(i, j-1, k-1, QU) - q(i-1, j-1, k-1, QU) ) / dx;
+        wz = 0.5 * (
+            q(i  , j-1, k, QW) - q(i  , j-1, k-1, QW) +
+            q(i-1, j-1, k, QW) - q(i-1, j-1, k-1, QW)) / dz;
+    } else {
+         ux = 0.25 * (
+             q(i, j  , k  , QU) - q(i-1, j  , k  , QU) +
+             q(i, j  , k-1, QU) - q(i-1, j  , k-1, QU) +
+             q(i, j-1, k  , QU) - q(i-1, j-1, k  , QU) +
+             q(i, j-1, k-1, QU) - q(i-1, j-1, k-1, QU)) / dx;
+        wz = 0.25 * *
+            q(i  , j  , k, QW) - q(i  , j  , k-1, QW) +
+            q(i-1, j  , k, QW) - q(i-1, j  , k-1, QW) +
+            q(i  , j-1, k, QW) - q(i  , j-1, k-1, QW) +
+            q(i-1, j-1, k, QW) - q(i-1, j-1, k-1, QW)) / dz;
+    }
+
+    if (k == domlo_z && bclo_z == NoSlipWall) {
+        ux = 0.5 * (
+            q(i, j  , k  , QU) - q(i-1, j  , k  , QU) +
+            q(i, j-1, k  , QU) - q(i-1, j-1, k  , QU) ) / dx;
+        vy = 0.5 * (
+            q(i  , j, k  , QV) - q(i  , j-1, k  , QV) +
+            q(i-1, j, k  , QV) - q(i-1, j-1, k  , QV) ) / dy;
+    } else if (k == domhi_z+1 && bchi_z == NoSlipWall) {
+        ux = 0.5 * (
+            q(i, j  , k-1, QU) - q(i-1, j  , k-1, QU) +
+            q(i, j-1, k-1, QU) - q(i-1, j-1, k-1, QU) ) / dx;
+        vy = 0.5 * (
+            q(i  , j, k-1, QV) - q(i  , j-1, k-1, QV) +
+            q(i-1, j, k-1, QV) - q(i-1, j-1, k-1, QV)) / dy;
+    } else {
+        ux = 0.25 * (
+            q(i, j  , k  , QU) - q(i-1, j  , k  , QU) +
+            q(i, j  , k-1, QU) - q(i-1, j  , k-1, QU) +
+            q(i, j-1, k  , QU) - q(i-1, j-1, k  , QU) +
+            q(i, j-1, k-1, QU) - q(i-1, j-1, k-1, QU)) / dx;
+        vy = 0.25 * (
+            q(i  , j, k  , QV) - q(i  , j-1, k  , QV) +
+            q(i  , j, k-1, QV) - q(i  , j-1, k-1, QV) +
+            q(i-1, j, k  , QV) - q(i-1, j-1, k  , QV) +
+            q(i-1, j, k-1, QV) - q(i-1, j-1, k-1, QV)) / dy;
+    }
 #endif
+
   divu(i, j, k) = AMREX_D_TERM(ux, +vy, +wz);
 }
 
@@ -104,7 +187,6 @@ CAMR_update(
                                flx[0](i, j, k, n) - flx[0](i + 1, j, k, n),
                               +flx[1](i, j, k, n) - flx[1](i, j + 1, k, n),
                               +flx[2](i, j, k, n) - flx[2](i, j, k + 1, n))) * volinv;
-    }
 
     update(i, j, k, UEINT) -= pdivu(i, j, k);
 }
@@ -140,6 +222,7 @@ void adjust_fluxes(
   const amrex::GpuArray<const amrex::Array4<const amrex::Real>, AMREX_SPACEDIM> a,
   amrex::Array4<const amrex::Real> const& div,
   const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> del,
+  const int* domlo, const int* domhi, const int* bclo, const int* bchi,
   amrex::Real const difmag);
 
 void CAMR_consup(

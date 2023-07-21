@@ -11,6 +11,8 @@ CAMR_artif_visc(
     amrex::Array4<const amrex::Real> const& u,
     amrex::Real const dx,
     amrex::Real const difmag,
+    const int domlo, const int domhi,
+    const int  bclo, const int  bchi,
     const int dir)
 {
     amrex::ignore_unused(k);
@@ -33,9 +35,28 @@ CAMR_artif_visc(
                divu(iv), 0.5 * (divu(iv) + divu(ivpj)),
                0.25 * (divu(iv) + divu(ivpj) + divu(ivpk) + divu(ivpp))));
 
+    bool at_bndry = ( (dir == 0) && (i == domlo  )  && (bclo == NoSlipWall) ) ||
+                    ( (dir == 0) && (i == domhi+1)  && (bchi == NoSlipWall) ) ||
+                    ( (dir == 1) && (j == domlo  )  && (bclo == NoSlipWall) ) ||
+                    ( (dir == 1) && (j == domhi+1)  && (bchi == NoSlipWall) );
+#if (AMREX_SPACEDIM == 3)
+    at_bndry = at_bndry ||
+                    ( (dir == 2) && (k == domlo  )  && (bclo == NoSlipWall) ) ||
+                    ( (dir == 2) && (k == domhi+1)  && (bchi == NoSlipWall) );
+#endif
+
     for (int n = 0; n < NVAR; ++n) {
       if (n != UTEMP) {
-        flx(iv, n) += dx * div * (u(iv, n) - u(ivm, n));
+#if (AMREX_SPACEDIM == 2)
+          bool is_tang_vel = (dir == 0 && n == UMY) || (dir == 1 && n == UMX);
+#elif (AMREX_SPACEDIM == 3)
+          bool is_tang_vel = (dir == 0 && (n == UMY || n == UMZ) ) ||
+                             (dir == 1 && (n == UMX || n == UMZ) ) ||
+                             (dir == 2 && (n == UMX || n == UMY) );
+#endif
+          if ( !(at_bndry && is_tang_vel) ) {
+              flx(iv, n) += dx * div * (u(iv, n) - u(ivm, n));
+          }
       }
     }
     flx(iv, UTEMP) = 0.0;

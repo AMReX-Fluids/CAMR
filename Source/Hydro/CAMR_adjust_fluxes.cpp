@@ -18,15 +18,22 @@ adjust_fluxes(
     const amrex::GpuArray<const Array4<const Real>, AMREX_SPACEDIM> a,
     Array4<const Real> const& divu,
     const amrex::GpuArray<Real, AMREX_SPACEDIM> del,
+    const int* domlo, const int* domhi,
+    const int*  bclo, const int*  bchi,
     Real const l_difmag)
 {
   // Flux alterations
   for (int dir = 0; dir < AMREX_SPACEDIM; dir++) {
     Box const& fbx = surroundingNodes(bx, dir);
     const Real dx = del[dir];
+    int domlo_dir = domlo[dir];
+    int domhi_dir = domhi[dir];
+    int  bclo_dir =  bclo[dir];
+    int  bchi_dir =  bchi[dir];
     amrex::ParallelFor(fbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
 
-      CAMR_artif_visc(i, j, k, flx[dir], divu, u, dx, l_difmag, dir);
+      CAMR_artif_visc(i, j, k, flx[dir], divu, u, dx, l_difmag, dir,
+                      domlo_dir, domhi_dir, bclo_dir, bchi_dir);
 
       // Normalize Species Flux
       CAMR_norm_spec_flx(i, j, k, flx[dir]);

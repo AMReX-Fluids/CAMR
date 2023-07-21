@@ -7,10 +7,10 @@ stop_time = 0.2
 
 geometry.is_periodic = 0 0 0
 geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
-geometry.prob_lo     =   0.0     0.0     0.0
-geometry.prob_hi     =   1.0     1.0     1.0
-amr.n_cell           =    64      64      64
-amr.n_cell           =    32 32 32
+
+geometry.prob_lo     =   0.0  0.0  0.0
+geometry.prob_hi     =   1.0  1.0  1.0
+amr.n_cell           =    32   32   32
 
 # >>>>>>>>>>>>>  BC FLAGS <<<<<<<<<<<<<<<<
 # 0 = Interior           3 = Symmetry
@@ -22,7 +22,9 @@ CAMR.hi_bc       =  Outflow  NoSlipWall   SlipWall
 
 CAMR.cfl = 0.3  # cfl number for hyperbolic system
 
+# Use Godunov PPM
 CAMR.do_mol = 0
+CAMR.ppm_type = 1
 
 CAMR.v = 2
 amr.v = 1
@@ -56,13 +58,6 @@ amr.plot_file         = plt     # root name of plotfile
 amr.plot_int          = 1       # number of timesteps between plotfiles
 amr.derive_plot_vars  = x_velocity y_velocity z_velocity vfrac
 
-# EB
-CAMR.geometry = "sphere"
-sphere.radius        = 0.125
-sphere.center        = 0.6 0.5 0.5
-sphere.center        = 0.7 0.5 0.5
-sphere.internal_flow = 0
-
 amr.refinement_indicators = box1
 amr.box1.max_level = 1
 amr.box1.in_box_lo =  0.55 0.5  0.3
@@ -72,6 +67,7 @@ amr.blocking_factor = 16
 amr.max_grid_size   = 64
 
 # problem specific parameter
+prob.type  = 0
 prob.p_l   = 1.0 
 prob.p_r   = 0.1
 prob.rho_l = 1.0
