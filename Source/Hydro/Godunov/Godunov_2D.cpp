@@ -33,6 +33,7 @@ CAMR_umeth_2D(
   const int iorder,
   const int l_transverse_reset_density)
 {
+  BL_PROFILE("CAMR::CAMR_umeth_2D()");
   amrex::Real const dx = del[0];
   amrex::Real const dy = del[1];
   amrex::Real const hdt = 0.5 * dt;
