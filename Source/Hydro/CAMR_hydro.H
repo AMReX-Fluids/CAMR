@@ -232,7 +232,7 @@ CAMR_update(
     update(i, j, k, UEINT) -= pdivu(i, j, k);
 }
 
-void CAMR_umdrv( bool is_mol,
+void CAMR_umdrv( bool do_mol,
                  amrex::Box const& bx,
                  amrex::Geometry const& geom,
                  const int* bclo, const int* bchi,
