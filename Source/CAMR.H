@@ -136,7 +136,7 @@ public:
   amrex::Real CAMR_advance(
     amrex::Real time, amrex::Real dt, int amr_iteration, int amr_ncycle);
 
-  void react(amrex::MultiFab& S);
+  static void react(amrex::MultiFab& S);
 
   void construct_hydro_source(
     const amrex::MultiFab& S,
@@ -259,7 +259,7 @@ public:
 
   static void reset_internal_energy(amrex::MultiFab& S_new, int ng);
 
-  void computeTemp(amrex::MultiFab& State, int ng);
+  static void computeTemp(amrex::MultiFab& State, int ng);
 
   static void enforce_consistent_e(amrex::MultiFab& S);
 
