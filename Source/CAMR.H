@@ -374,7 +374,7 @@ protected:
   static void error_setup ();
 
   void expand_state(amrex::MultiFab& S, const amrex::Real time, const int ng);
-  void clean_state(amrex::MultiFab& S);
+  static void clean_state(amrex::MultiFab& S);
 
   void buildMetrics();
 
