@@ -146,11 +146,6 @@ CAMR::errorEst (TagBoxArray& tags,
     if (!errtags[j].Field().empty()) {
       mf = derive(errtags[j].Field(), time, errtags[j].NGrow());
     }
-    //
-    // Create a derive to use ABecLap to compute grad
-    // take level max here
-    // add into errtags info for relative threshold ...
-    //
-    errtags[j](tags,mf.get(),clearval,tagval,time,level,geom);
+    errtags[j](tags,mf.get(),char(clearval),char(tagval),time,level,geom);
   }
 }
