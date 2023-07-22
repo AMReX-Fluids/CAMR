@@ -55,6 +55,22 @@ CAMR_divu(
     int bclo_z = bclo[2]; int domlo_z = domlo[2];
     int bchi_z = bchi[2]; int domhi_z = domhi[2];
 
+    ux = 0.25 * (
+        q(i, j  , k  , QU) - q(i-1, j  , k  , QU) +
+        q(i, j  , k-1, QU) - q(i-1, j  , k-1, QU) +
+        q(i, j-1, k  , QU) - q(i-1, j-1, k  , QU) +
+        q(i, j-1, k-1, QU) - q(i-1, j-1, k-1, QU)) / dx;
+    vy = 0.25 * (
+        q(i  , j, k  , QV) - q(i  , j-1, k  , QV) +
+        q(i  , j, k-1, QV) - q(i  , j-1, k-1, QV) +
+        q(i-1, j, k  , QV) - q(i-1, j-1, k  , QV) +
+        q(i-1, j, k-1, QV) - q(i-1, j-1, k-1, QV)) / dy;
+    wz = 0.25 * (
+        q(i  , j  , k, QW) - q(i  , j  , k-1, QW) +
+        q(i-1, j  , k, QW) - q(i-1, j  , k-1, QW) +
+        q(i  , j-1, k, QW) - q(i  , j-1, k-1, QW) +
+        q(i-1, j-1, k, QW) - q(i-1, j-1, k-1, QW)) / dz;
+
     if (i == domlo_x && bclo_x == NoSlipWall) {
         vy = 0.5 * (
             q(i  , j, k  , QV) - q(i  , j-1, k  , QV) +
@@ -67,19 +83,8 @@ CAMR_divu(
             q(i-1, j, k  , QV) - q(i-1, j-1, k  , QV) +
             q(i-1, j, k-1, QV) - q(i-1, j-1, k-1, QV) ) / dy;
         wz = 0.5 * (
-            q(i  , j  , k, QW) - q(i  , j  , k-1, QW) +
-            q(i  , j-1, k, QW) - q(i  , j-1, k-1, QW) ) / dz;
-    } else {
-        vy = 0.25 * (
-            q(i  , j, k  , QV) - q(i  , j-1, k  , QV) +
-            q(i  , j, k-1, QV) - q(i  , j-1, k-1, QV) +
-            q(i-1, j, k  , QV) - q(i-1, j-1, k  , QV) +
-            q(i-1, j, k-1, QV) - q(i-1, j-1, k-1, QV)) / dy;
-        wz = 0.25 * (
-            q(i  , j  , k, QW) - q(i  , j  , k-1, QW) +
             q(i-1, j  , k, QW) - q(i-1, j  , k-1, QW) +
-            q(i  , j-1, k, QW) - q(i  , j-1, k-1, QW) +
-            q(i-1, j-1, k, QW) - q(i-1, j-1, k-1, QW)) / dz;
+            q(i-1, j-1, k, QW) - q(i-1, j-1, k-1, QW) ) / dz;
     }
 
     if (j == domlo_y && bclo_y == NoSlipWall) {
@@ -94,17 +99,6 @@ CAMR_divu(
             q(i, j-1, k  , QU) - q(i-1, j-1, k  , QU) +
             q(i, j-1, k-1, QU) - q(i-1, j-1, k-1, QU) ) / dx;
         wz = 0.5 * (
-            q(i  , j-1, k, QW) - q(i  , j-1, k-1, QW) +
-            q(i-1, j-1, k, QW) - q(i-1, j-1, k-1, QW)) / dz;
-    } else {
-         ux = 0.25 * (
-             q(i, j  , k  , QU) - q(i-1, j  , k  , QU) +
-             q(i, j  , k-1, QU) - q(i-1, j  , k-1, QU) +
-             q(i, j-1, k  , QU) - q(i-1, j-1, k  , QU) +
-             q(i, j-1, k-1, QU) - q(i-1, j-1, k-1, QU)) / dx;
-        wz = 0.25 * (
-            q(i  , j  , k, QW) - q(i  , j  , k-1, QW) +
-            q(i-1, j  , k, QW) - q(i-1, j  , k-1, QW) +
             q(i  , j-1, k, QW) - q(i  , j-1, k-1, QW) +
             q(i-1, j-1, k, QW) - q(i-1, j-1, k-1, QW)) / dz;
     }
@@ -123,17 +117,60 @@ CAMR_divu(
         vy = 0.5 * (
             q(i  , j, k-1, QV) - q(i  , j-1, k-1, QV) +
             q(i-1, j, k-1, QV) - q(i-1, j-1, k-1, QV)) / dy;
-    } else {
-        ux = 0.25 * (
-            q(i, j  , k  , QU) - q(i-1, j  , k  , QU) +
-            q(i, j  , k-1, QU) - q(i-1, j  , k-1, QU) +
-            q(i, j-1, k  , QU) - q(i-1, j-1, k  , QU) +
-            q(i, j-1, k-1, QU) - q(i-1, j-1, k-1, QU)) / dx;
-        vy = 0.25 * (
-            q(i  , j, k  , QV) - q(i  , j-1, k  , QV) +
-            q(i  , j, k-1, QV) - q(i  , j-1, k-1, QV) +
-            q(i-1, j, k  , QV) - q(i-1, j-1, k  , QV) +
-            q(i-1, j, k-1, QV) - q(i-1, j-1, k-1, QV)) / dy;
+    }
+
+    // Fix ux at y-z corners
+    if ( (j == domlo_y && bclo_y == NoSlipWall) &&
+         (k == domlo_z && bclo_z == NoSlipWall) ) {
+        ux = ( q(i  , j  , k, QU) - q(i-1, j  , k  , QU) ) / dx;
+    } else
+    if ( (j == domhi_y+1 && bchi_y == NoSlipWall) &&
+         (k == domlo_z   && bclo_z == NoSlipWall) ) {
+        ux = ( q(i  , j-1, k, QU) - q(i-1, j-1, k  , QU) ) / dx;
+    } else
+    if ( (j == domlo_y   && bclo_y == NoSlipWall) &&
+         (k == domhi_z+1 && bchi_z == NoSlipWall) ) {
+        ux = ( q(i  , j  , k-1, QU) - q(i-1, j  , k-1, QU) )/ dx;
+    } else
+    if ( (j == domhi_y+1 && bchi_y == NoSlipWall) &&
+         (k == domhi_z+1 && bchi_z == NoSlipWall) ) {
+        ux = ( q(i  , j-1, k-1, QU) - q(i-1, j-1, k-1, QU) )/ dx;
+    }
+
+    // Fix vy at x-z corners
+    if ( (i == domlo_x && bclo_x == NoSlipWall) &&
+         (k == domlo_z && bclo_z == NoSlipWall) ) {
+        vy = ( q(i  , j  , k, QV) - q(i  , j-1, k  , QV) ) / dy;
+    } else
+    if ( (i == domhi_x+1 && bchi_x == NoSlipWall) &&
+         (k == domlo_z   && bclo_z == NoSlipWall) ) {
+        vy = ( q(i-1, j  , k, QV) - q(i-1, j-1, k  , QV) ) / dy;
+    } else
+    if ( (i == domlo_x   && bclo_x == NoSlipWall) &&
+         (k == domhi_z+1 && bchi_z == NoSlipWall) ) {
+        vy = ( q(i  , j  , k-1, QV) - q(i  , j-1, k-1, QV) )/ dy;
+    } else
+    if ( (i == domhi_x+1 && bchi_x == NoSlipWall) &&
+         (k == domhi_z+1 && bchi_z == NoSlipWall) ) {
+        vy = ( q(i-1, j  , k-1, QV) - q(i-1, j-1, k-1, QV) )/ dy;
+    }
+
+    // Fix wz at x-y corners
+    if ( (i == domlo_x && bclo_x == NoSlipWall) &&
+         (j == domlo_y && bclo_y == NoSlipWall) ) {
+        wz = ( q(i  , j  , k, QW) - q(i  , j  , k-1, QW) ) / dz;
+    } else
+    if ( (i == domhi_x+1 && bchi_x == NoSlipWall) &&
+         (j == domlo_y   && bclo_y == NoSlipWall) ) {
+        wz = ( q(i-1, j  , k, QW) - q(i-1, j  , k-1, QW) ) / dz;
+    } else
+    if ( (i == domlo_x   && bclo_x == NoSlipWall) &&
+         (j == domhi_y+1 && bchi_y == NoSlipWall) ) {
+        wz = ( q(i  , j-1, k, QW) - q(i  , j-1, k-1, QW) )/ dz;
+    } else
+    if ( (i == domhi_x+1 && bchi_x == NoSlipWall) &&
+         (j == domhi_y+1 && bchi_y == NoSlipWall) ) {
+        wz = ( q(i-1, j-1, k, QW) - q(i-1, j-1, k-1, QW) )/ dz;
     }
 #endif
 
