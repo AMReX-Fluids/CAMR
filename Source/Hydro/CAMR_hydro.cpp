@@ -14,7 +14,7 @@ CAMR_umdrv (bool do_mol,
             Array4<const Real> const& uin_arr,
             Array4<      Real> const& dsdt_arr,
             Array4<const Real> const& q_arr,
-            Array4<const Real> const& qaux,
+            Array4<const Real> const& qaux_arr,
             Array4<const Real> const& src_q,
             const amrex::GpuArray<Real, AMREX_SPACEDIM> dx,
             const Real dt,
@@ -52,7 +52,7 @@ CAMR_umdrv (bool do_mol,
 
     BL_PROFILE_VAR("CAMR::umeth()", umeth);
     if (do_mol) {
-        mol_umeth(bx, bclo, bchi, domlo, domhi, q_arr, qaux,
+        mol_umeth(bx, bclo, bchi, domlo, domhi, q_arr, qaux_arr,
                   AMREX_D_DECL(flx[0], flx[1], flx[2]),
                   AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
                   AMREX_D_DECL(a[0], a[1], a[2]), pdivuarr, vol,
@@ -64,7 +64,7 @@ CAMR_umdrv (bool do_mol,
 #elif AMREX_SPACEDIM == 3
     CAMR_umeth_3D(
 #endif
-        bx, bclo, bchi, domlo, domhi, q_arr, qaux, src_q,
+        bx, bclo, bchi, domlo, domhi, q_arr, qaux_arr, src_q,
         AMREX_D_DECL(flx[0], flx[1], flx[2]),
         AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
         AMREX_D_DECL(a[0], a[1], a[2]),
