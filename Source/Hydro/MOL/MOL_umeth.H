@@ -60,9 +60,9 @@ void adjust_fluxes_eb (
                amrex::Array4<const amrex::Real> const& vfrac,
                const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx,
                const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dxInv,
-               const amrex::GpuArray<const amrex::Array4<amrex::Real>, AMREX_SPACEDIM> flx,
+               const amrex::GpuArray<const amrex::Array4<amrex::Real>, AMREX_SPACEDIM> flux,
                const int* domlo, const int* domhi,
-               const int* bclo, const int* bchi,
-               const amrex::Real difmag);
+               const int*  bclo, const int*  bchi,
+               const amrex::Real l_difmag);
 #endif
 #endif
