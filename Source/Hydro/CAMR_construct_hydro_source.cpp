@@ -129,7 +129,14 @@ CAMR::construct_hydro_source (const MultiFab& S,
         }
 
 #ifdef AMREX_USE_EB
-        if (flagfab.getType(bx) != FabType::regular) {
+        int ngrow_bx;
+        if (redistribution_type == "StateRedist") {
+           ngrow_bx = 3;
+        } else {
+           ngrow_bx = 2;
+        }
+        const Box& bxg_i  = grow(bx,ngrow_bx);
+        if (flagfab.getType(bxg_i) != FabType::regular) {
 
             EBFluxRegister* fr_as_crse = nullptr;
             if (do_reflux && level < parent->finestLevel()) {
@@ -151,7 +158,9 @@ CAMR::construct_hydro_source (const MultiFab& S,
                    fr_as_crse->getCrseFlag(mfi) : &fab_rrflag_as_crse;
 
             if (fr_as_fine) {
-                dm_as_fine.resize(amrex::grow(bx,1),ncomp);
+                const Box dbox1 = geom.growPeriodicDomain(1);
+                Box bx_for_dm(amrex::grow(bx,1) & dbox1);
+                dm_as_fine.resize(bx_for_dm,ncomp);
                 dm_as_fine.setVal<RunOn::Device>(0.0);
             }
 
@@ -163,7 +172,7 @@ CAMR::construct_hydro_source (const MultiFab& S,
 
             // Return hyd_src - centered at old-time
             const auto& dxInv = geom.InvCellSizeArray();
-            CAMR_umdrv_eb(do_mol, bx, mfi, geom, &ebfact,
+            CAMR_umdrv_eb(do_mol, bx, bxg_i, mfi, geom, &ebfact,
                           phys_bc.lo(), phys_bc.hi(),
                           sarr, hyd_src, qarr, qauxar, srcqarr,
                           vfrac_arr, flag, dx, dxInv, flx_arr,

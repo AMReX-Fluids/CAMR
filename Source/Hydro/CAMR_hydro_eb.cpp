@@ -12,7 +12,8 @@ using namespace amrex;
 
 #ifdef AMREX_USE_EB
 void
-CAMR_umdrv_eb( const bool do_mol, Box const& bx, const MFIter& mfi,
+CAMR_umdrv_eb( const bool do_mol, Box const& bx,
+               Box const& bxg_i, const MFIter& mfi,
                Geometry const& geom,
                const EBFArrayBoxFactory* ebfact,
                const int* bclo, const int* bchi,
@@ -47,14 +48,7 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx, const MFIter& mfi,
 {
     BL_PROFILE_VAR("CAMR_umdrv_eb()", CAMR_umdrv_eb);
 
-    int ngrow_bx;
-    if (l_redistribution_type == "StateRedist") {
-       ngrow_bx = 3;
-    } else {
-       ngrow_bx = 2;
-    }
-    const Box& bxg_i  = grow(bx,ngrow_bx);
-    const Box& bxg_ii = grow(bx,ngrow_bx+1);
+    const Box& bxg_ii = grow(bxg_i,1);
 
     Array4<Real const> AMREX_D_DECL(fcx, fcy, fcz), AMREX_D_DECL(apx, apy, apz), ccc;
     AMREX_D_TERM(fcx = ebfact->getFaceCent()[0]->const_array(mfi);,
