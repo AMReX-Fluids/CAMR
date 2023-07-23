@@ -165,7 +165,7 @@ CAMR::construct_hydro_source (const MultiFab& S,
             const auto& dxInv = geom.InvCellSizeArray();
             CAMR_umdrv_eb(do_mol, bx, mfi, geom, &ebfact,
                           phys_bc.lo(), phys_bc.hi(),
-                          sarr, qarr, srcqarr, hyd_src, qauxar,
+                          sarr, hyd_src, qarr, qauxar, srcqarr,
                           vfrac_arr, flag, dx, dxInv, flx_arr,
                           as_crse, p_drho_as_crse->array(), p_rrflag_as_crse->array(),
                           as_fine, dm_as_fine.array(), level_mask.const_array(mfi),

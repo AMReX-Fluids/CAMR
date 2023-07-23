@@ -16,9 +16,9 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx, const MFIter& mfi,
                Geometry const& geom,
                const EBFArrayBoxFactory* ebfact,
                const int* bclo, const int* bchi,
-               Array4<const Real> const& s_arr,
-               Array4<const Real> const& q_arr,
+               Array4<const Real> const& uin_arr,
                Array4<      Real> const& dsdt_arr,
+               Array4<const Real> const& q_arr,
                Array4<const Real> const& qaux_arr,
                Array4<const Real> const& src_q,
                Array4<const Real> const& vf_arr,
@@ -134,7 +134,7 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx, const MFIter& mfi,
         l_plm_iorder, transverse_reset_density);
       } // end Godunov
 
-    adjust_fluxes_eb(bx, q_arr, s_arr,
+    adjust_fluxes_eb(bx, q_arr, uin_arr,
                      AMREX_D_DECL(apx, apy, apz),
                      vf_arr, dx, dxinv, flux_tmp_arr,
                      domlo, domhi, bclo, bchi, difmag);
@@ -153,7 +153,7 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx, const MFIter& mfi,
     int level_mask_not_covered = CAMRConstants::level_mask_notcovered;
     bool use_wts_in_divnc = false;
     ApplyMLRedistribution(bx, l_ncomp,
-                          dsdt_arr, divc_arr, s_arr, redistwgt_arr,
+                          dsdt_arr, divc_arr, uin_arr, redistwgt_arr,
                           flag_arr,
                           AMREX_D_DECL(apx, apy, apz),
                           vf_arr,

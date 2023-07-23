@@ -6,11 +6,9 @@
 using namespace amrex;
 
 void
-CAMR_umdrv (bool do_mol,
-            Box const& bx,
+CAMR_umdrv (bool do_mol, Box const& bx,
             amrex::Geometry const& geom,
-            const int* bclo,
-            const int* bchi,
+            const int* bclo, const int* bchi,
             Array4<const Real> const& uin_arr,
             Array4<      Real> const& dsdt_arr,
             Array4<const Real> const& q_arr,
