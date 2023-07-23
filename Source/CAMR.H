@@ -87,69 +87,68 @@ public:
   static void writeBuildInfo(std::ostream& os);
 
   // Define data descriptors.
-  static void variableSetUp();
+  static void variableSetUp ();
 
   // Cleanup data descriptors at end of run.
-  static void variableCleanUp();
+  static void variableCleanUp ();
 
   // Initialize grid data at problem start-up.
-  void initData() override;
+  void initData () override;
 
   // Initialize stuff whether from init or from restart
-  void init_stuff(amrex::Amr& papa,
-                  const amrex::Geometry& level_geom,
-                  const amrex::BoxArray& bl,
-                  const amrex::DistributionMapping& dm);
+  void init_stuff (amrex::Amr& papa,
+                   const amrex::Geometry& level_geom,
+                   const amrex::BoxArray& bl,
+                   const amrex::DistributionMapping& dm);
 
   // Get problem metrics.
-  amrex::MultiFab* Area();
-  amrex::MultiFab& Area(int dir);
+  amrex::MultiFab* Area ();
+  amrex::MultiFab& Area (int dir);
 
   // The volume of the multifab.
-  amrex::MultiFab& Volume();
+  amrex::MultiFab& Volume ();
 
   // Set time levels of state data.
-  void setTimeLevel(
+  void setTimeLevel (
     amrex::Real time, amrex::Real dt_old, amrex::Real dt_new) override;
 
   // Initialize data on this level from another CAMR (during regrid).
-  void init(amrex::AmrLevel& old) override;
+  void init (amrex::AmrLevel& old) override;
 
   // Initialize data on this level after regridding if old level did not
   // previously exist
-  void init() override;
+  void init () override;
 
   // Initialize EB geometry for finest_level and level grids for
   // other levels for the Amr class to do timed load balances.
-  int WorkEstType() override { return Work_Estimate_Type; }
+  int WorkEstType () override { return Work_Estimate_Type; }
 
   // Proceed with next timestep?
-  int okToContinue() override;
+  int okToContinue () override;
 
   // Advance grids at this level in time.
   amrex::Real
-  advance(amrex::Real time, amrex::Real dt, int iteration, int ncycle) override;
+  advance (amrex::Real time, amrex::Real dt, int iteration, int ncycle) override;
 
-  amrex::Real mol_advance(
+  amrex::Real mol_advance (
     amrex::Real time, amrex::Real dt, int amr_iteration, int amr_ncycle);
 
-  amrex::Real CAMR_advance(
+  amrex::Real CAMR_advance (
     amrex::Real time, amrex::Real dt, int amr_iteration, int amr_ncycle);
 
-  void react(amrex::MultiFab& S);
+  static void react (amrex::MultiFab& S);
 
-  void construct_hydro_source(
-    const amrex::MultiFab& S,
-          amrex::MultiFab& src,
-    amrex::Real time,
-    amrex::Real dt);
+  void construct_hydro_source ( const amrex::MultiFab& S,
+                                      amrex::MultiFab& src,
+                                      amrex::Real time,
+                                      amrex::Real dt);
 
-  void construct_old_source(
+  void construct_old_source (
     int src,
     amrex::Real time,
     amrex::Real dt);
 
-  void construct_new_source(
+  void construct_new_source (
     int src,
     amrex::Real time,
     amrex::Real dt);
@@ -157,7 +156,7 @@ public:
   void construct_old_ext_source(amrex::Real time, amrex::Real dt);
   void construct_new_ext_source(amrex::Real time, amrex::Real dt);
 
-  static void fill_ext_source(
+  static void fill_ext_source (
     amrex::Real time,
     amrex::Real dt,
     const amrex::MultiFab& state_old,
@@ -165,23 +164,23 @@ public:
     amrex::MultiFab& ext_src,
     int ng);
 
-  void construct_old_grav_source(amrex::Real time, amrex::Real dt);
-  void construct_new_grav_source(amrex::Real time, amrex::Real dt);
+  void construct_old_grav_source (amrex::Real time, amrex::Real dt);
+  void construct_new_grav_source (amrex::Real time, amrex::Real dt);
 
-  static void fill_grav_source( const amrex::MultiFab& S_new, amrex::MultiFab& grav_src, int ng);
-  static void fill_gravcorr_source( const amrex::MultiFab& S_old, const amrex::MultiFab& S_new,
+  static void fill_grav_source (const amrex::MultiFab& S, amrex::MultiFab& grav_src, int ng);
+  static void fill_gravcorr_source (const amrex::MultiFab& S_old, const amrex::MultiFab& S_new,
                                     amrex::MultiFab& grav_src, int ng);
 
   static void set_active_sources();
 
   // Estimate time step.
-  amrex::Real estTimeStep(amrex::Real dt_old);
+  amrex::Real estTimeStep (amrex::Real dt_old);
 
   // Compute initial time step.
-  amrex::Real initialTimeStep();
+  amrex::Real initialTimeStep ();
 
   // Compute initial `dt'.
-  void computeInitialDt(
+  void computeInitialDt (
     int finest_level,
     int sub_cycle,
     amrex::Vector<int>& n_cycle,
@@ -190,7 +189,7 @@ public:
     amrex::Real stop_time) override;
 
   // Compute new `dt'.
-  void computeNewDt(
+  void computeNewDt (
     int finest_level,
     int sub_cycle,
     amrex::Vector<int>& n_cycle,
@@ -201,31 +200,31 @@ public:
     int post_regrid_flag) override;
 
   // Allocate data at old time.
-  void allocOldData() override;
+  void allocOldData () override;
 
   // Remove data at old time.
-  void removeOldData() override;
+  void removeOldData () override;
 
   // Print information about energy budget.
-  void do_energy_diagnostics();
+  void do_energy_diagnostics ();
 
-  // Do work after timestep().
+  // Do work after timestep ().
   void post_timestep(int iteration) override;
 
   // Contains operations to be done only after a full coarse timestep.
-  void postCoarseTimeStep(amrex::Real cumtime) override;
+  void postCoarseTimeStep (amrex::Real cumtime) override;
 
   // Do work after regrid().
-  void post_regrid(int lbase, int new_finest) override;
+  void post_regrid (int lbase, int new_finest) override;
 
   // Do work after a restart().
-  void post_restart() override;
+  void post_restart () override;
 
   // Do work after init().
-  void post_init(amrex::Real stop_time) override;
+  void post_init (amrex::Real stop_time) override;
 
   // Error estimation for regridding.
-  void errorEst(
+  void errorEst (
     amrex::TagBoxArray& tags,
     int clearval,
     int tagval,
@@ -238,11 +237,11 @@ public:
   // with it.  If ngrow>0 the MultiFab is built on the appropriately
   // grown BoxArray.
   std::unique_ptr<amrex::MultiFab>
-  derive(const std::string& name, amrex::Real time, int ngrow) override;
+  derive (const std::string& name, amrex::Real time, int ngrow) override;
 
   // This version of derive() fills the dcomp'th component of mf with the
   // derived quantity.
-  void derive(
+  void derive (
     const std::string& name,
     amrex::Real time,
     amrex::MultiFab& mf,
@@ -259,7 +258,7 @@ public:
 
   static void reset_internal_energy(amrex::MultiFab& S_new, int ng);
 
-  void computeTemp(amrex::MultiFab& State, int ng);
+  static void computeTemp(amrex::MultiFab& State, int ng);
 
   static void enforce_consistent_e(amrex::MultiFab& S);
 
@@ -374,7 +373,7 @@ protected:
   static void error_setup ();
 
   void expand_state(amrex::MultiFab& S, const amrex::Real time, const int ng);
-  void clean_state(amrex::MultiFab& S);
+  static void clean_state(amrex::MultiFab& S);
 
   void buildMetrics();
 

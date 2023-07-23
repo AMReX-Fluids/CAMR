@@ -435,7 +435,7 @@ CAMR::writePlotFile(
     }
   }
 
-  const auto n_data_items = plot_var_map.size() + num_derive;
+  const auto n_data_items = static_cast<int>(plot_var_map.size()) + num_derive;
 
   amrex::Real cur_time = state[State_Type].curTime();
 
@@ -450,7 +450,8 @@ CAMR::writePlotFile(
     os << n_data_items << '\n';
 
     // Names of variables -- first state, then derived
-    for (int i = 0; i < plot_var_map.size(); i++) {
+    const auto pvmap_size = static_cast<int>(plot_var_map.size());
+    for (int i = 0; i < pvmap_size; i++) {
       int typ = plot_var_map[i].first;
       int comp = plot_var_map[i].second;
       os << desc_lst[typ].name(comp) << '\n';
@@ -603,7 +604,7 @@ CAMR::writeSmallPlotFile(
     }
   }
 
-  int n_data_items = plot_var_map.size();
+  const auto n_data_items = static_cast<int>(plot_var_map.size());
 
   amrex::Real cur_time = state[State_Type].curTime();
 

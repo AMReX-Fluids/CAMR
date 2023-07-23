@@ -13,9 +13,9 @@ CAMR_artif_visc(
     amrex::Array4<const amrex::Real> const& u,
     amrex::Real const dx,
     amrex::Real const difmag,
+    const int dir,
     const int domlo, const int domhi,
-    const int  bclo, const int  bchi,
-    const int dir)
+    const int  bclo, const int  bchi)
 {
     amrex::ignore_unused(k);
     const amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
@@ -28,9 +28,8 @@ CAMR_artif_visc(
 
     const amrex::IntVect ivpj(iv + amrex::IntVect::TheDimensionVector(l_idx[1]));
     AMREX_D_TERM(,,const amrex::IntVect ivpk(iv + amrex::IntVect::TheDimensionVector(l_idx[2]));
-                 const amrex::IntVect ivpp(
-                   iv + amrex::IntVect::TheDimensionVector(l_idx[1]) +
-                   amrex::IntVect::TheDimensionVector(l_idx[2])););
+                   const amrex::IntVect ivpp(iv + amrex::IntVect::TheDimensionVector(l_idx[1]) +
+                                                  amrex::IntVect::TheDimensionVector(l_idx[2])););
     const amrex::Real div =
       difmag *
       std::min( 0.0, AMREX_D_PICK(

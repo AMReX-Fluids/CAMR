@@ -28,9 +28,9 @@ CAMR::error_setup()
         ParmParse ppr(ref_prefix);
         RealBox realbox;
         if (ppr.countval("in_box_lo")) {
-            std::vector<Real> box_lo(BL_SPACEDIM), box_hi(BL_SPACEDIM);
-            ppr.getarr("in_box_lo",box_lo,0,box_lo.size());
-            ppr.getarr("in_box_hi",box_hi,0,box_hi.size());
+            std::vector<Real> box_lo(AMREX_SPACEDIM), box_hi(AMREX_SPACEDIM);
+            ppr.getarr("in_box_lo",box_lo,0,AMREX_SPACEDIM);
+            ppr.getarr("in_box_hi",box_hi,0,AMREX_SPACEDIM);
             realbox = RealBox(&(box_lo[0]),&(box_hi[0]));
         }
 
@@ -121,11 +121,11 @@ CAMR::error_setup()
 
 void
 CAMR::errorEst (TagBoxArray& tags,
-                   int          clearval,
-                   int          tagval,
-                   Real         time,
-                   int          /*n_error_buf*/,
-                   int          /*ngrow*/)
+                int          clearval,
+                int          tagval,
+                Real         time,
+                int          /*n_error_buf*/,
+                int          /*ngrow*/)
 {
 #ifdef AMREX_USE_EB
     // Enforce that the EB not cross the coarse-fine boundary
@@ -143,14 +143,9 @@ CAMR::errorEst (TagBoxArray& tags,
 
   for (int j=0; j<errtags.size(); ++j) {
     std::unique_ptr<MultiFab> mf;
-    if (errtags[j].Field() != std::string()) {
+    if (!errtags[j].Field().empty()) {
       mf = derive(errtags[j].Field(), time, errtags[j].NGrow());
     }
-    //
-    // Create a derive to use ABecLap to compute grad
-    // take level max here
-    // add into errtags info for relative threshold ...
-    //
-    errtags[j](tags,mf.get(),clearval,tagval,time,level,geom);
+    errtags[j](tags,mf.get(),char(clearval),char(tagval),time,level,geom);
   }
 }
