@@ -48,7 +48,7 @@ jobs:
         ccache -z
 
         cd CAMR/Exec/SodPlusSphere
-        make -j 2 USE_MPI=TRUE USE_OMP=FALSE USE_CCACHE=TRUE USE_ASSERTION=TRUE \
+        make -j 2 DIM=3 USE_MPI=TRUE USE_OMP=FALSE USE_CCACHE=TRUE USE_ASSERTION=TRUE \
             WARN_ALL=TRUE WARN_ERROR=TRUE EXTRACXXFLAGS="-Wno-null-dereference" \
             KEEP_BUILDINFO_CPP=TRUE
 
@@ -101,7 +101,7 @@ jobs:
         ccache -z
 
         cd CAMR/Exec/Sod
-        make -j 2 USE_MPI=TRUE USE_OMP=FALSE USE_CCACHE=TRUE USE_ASSERTION=TRUE \
+        make -j 2 DIM=3 USE_MPI=TRUE USE_OMP=FALSE USE_CCACHE=TRUE USE_ASSERTION=TRUE \
             WARN_ALL=TRUE WARN_ERROR=TRUE EXTRACXXFLAGS="-Wno-null-dereference" \
             KEEP_BUILDINFO_CPP=TRUE
 
@@ -154,7 +154,7 @@ jobs:
         ccache -z
 
         cd CAMR/Exec/SodPlusSphere
-        make -j 2 USE_MPI=FALSE USE_OMP=TRUE USE_CCACHE=TRUE USE_ASSERTION=TRUE \
+        make -j 2 DIM=2 USE_MPI=FALSE USE_OMP=TRUE USE_CCACHE=TRUE USE_ASSERTION=TRUE \
             WARN_ALL=TRUE WARN_ERROR=TRUE EXTRACXXFLAGS="-Wno-null-dereference" \
             KEEP_BUILDINFO_CPP=TRUE
 
@@ -208,7 +208,7 @@ jobs:
         ccache -z
 
         cd CAMR/Exec/Sod
-        make -j 2 USE_MPI=TRUE USE_OMP=FALSE USE_CCACHE=TRUE USE_ASSERTION=TRUE \
+        make -j 2 DIM=2 USE_MPI=TRUE USE_OMP=FALSE USE_CCACHE=TRUE USE_ASSERTION=TRUE \
         WARN_ALL=TRUE WARN_ERROR=TRUE EXTRACXXFLAGS="-Wno-null-dereference" \
         KEEP_BUILDINFO_CPP=TRUE
 
