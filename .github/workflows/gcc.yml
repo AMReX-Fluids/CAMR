@@ -116,7 +116,7 @@ jobs:
     - name: Run
       run: |
         cd ${{ github.workspace }}/CAMR/Exec/Sod
-        mpiexec -n 2 ./CAMR3d.gnu.DEBUG.MPI.ex inputs max_step=3
+        mpiexec -n 2 ./CAMR3d.gnu.DEBUG.MPI.ex inputs-x max_step=3
 
   gcc_eb_2d:
     name: GCC EB 2D
@@ -223,7 +223,7 @@ jobs:
     - name: Run
       run: |
         cd ${{ github.workspace }}/CAMR/Exec/Sod
-        mpiexec -n 2 ./CAMR2d.gnu.DEBUG.MPI.ex inputs max_step=10
+        mpiexec -n 2 ./CAMR2d.gnu.DEBUG.MPI.ex inputs-x max_step=10
 
   save_pr_number:
     if: github.event_name == 'pull_request'
