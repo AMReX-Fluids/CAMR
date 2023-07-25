@@ -12,13 +12,14 @@ using namespace amrex;
 
 #ifdef AMREX_USE_EB
 void
-CAMR_umdrv_eb( const bool do_mol, Box const& bx, const MFIter& mfi,
+CAMR_umdrv_eb( const bool do_mol, Box const& bx,
+               Box const& bxg_i, const MFIter& mfi,
                Geometry const& geom,
                const EBFArrayBoxFactory* ebfact,
                const int* bclo, const int* bchi,
-               Array4<const Real> const& s_arr,
-               Array4<const Real> const& q_arr,
+               Array4<const Real> const& uin_arr,
                Array4<      Real> const& dsdt_arr,
+               Array4<const Real> const& q_arr,
                Array4<const Real> const& qaux_arr,
                Array4<const Real> const& src_q,
                Array4<const Real> const& vf_arr,
@@ -32,29 +33,23 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx, const MFIter& mfi,
                int as_fine,
                Array4<Real> const& dm_as_fine,
                Array4<int const> const& lev_mask,
-               const  Real difmag, const  Real dt,
-               const Real small,
-               const Real small_dens,
-               const Real small_pres,
-               const BCRec* bcs_d_ptr,
-               const std::string& l_redistribution_type,
-               const int l_plm_iorder,
+               const  Real dt,
                const int ppm_type,
+               const int plm_iorder,
                const int use_pslope,
                const int use_flattening,
                const int transverse_reset_density,
+               const Real small,
+               const Real small_dens,
+               const Real small_pres,
+               const  Real difmag,
+               const BCRec* bcs_d_ptr,
+               const std::string& l_redistribution_type,
                const int l_eb_weights_type)
 {
     BL_PROFILE_VAR("CAMR_umdrv_eb()", CAMR_umdrv_eb);
 
-    int ngrow_bx;
-    if (l_redistribution_type == "StateRedist") {
-       ngrow_bx = 3;
-    } else {
-       ngrow_bx = 2;
-    }
-    const Box& bxg_i  = grow(bx,ngrow_bx);
-    const Box& bxg_ii = grow(bx,ngrow_bx+1);
+    const Box& bxg_ii = grow(bxg_i,1);
 
     Array4<Real const> AMREX_D_DECL(fcx, fcy, fcz), AMREX_D_DECL(apx, apy, apz), ccc;
     AMREX_D_TERM(fcx = ebfact->getFaceCent()[0]->const_array(mfi);,
@@ -118,7 +113,7 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx, const MFIter& mfi,
         mol_umeth_eb(bx, bclo, bchi, domlo, domhi, q_arr, qaux_arr, divc_arr,
                      AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]), vf_arr,
                      flag_arr, dx, flux_tmp_arr, small, small_dens, small_pres,
-                     l_plm_iorder, l_eb_weights_type);
+                     plm_iorder, l_eb_weights_type);
     } else { // if Godunov
 #if AMREX_SPACEDIM == 2
       CAMR_umeth_2D_eb(
@@ -131,10 +126,10 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx, const MFIter& mfi,
         AMREX_D_DECL(apx, apy, apz),
         vf_arr, flag_arr, dx, dt,
         small, small_dens, small_pres, ppm_type, use_pslope, use_flattening,
-        l_plm_iorder, transverse_reset_density);
+        plm_iorder, transverse_reset_density);
       } // end Godunov
 
-    adjust_fluxes_eb(bx, q_arr, s_arr,
+    adjust_fluxes_eb(bx, q_arr, uin_arr,
                      AMREX_D_DECL(apx, apy, apz),
                      vf_arr, dx, dxinv, flux_tmp_arr,
                      domlo, domhi, bclo, bchi, difmag);
@@ -153,7 +148,7 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx, const MFIter& mfi,
     int level_mask_not_covered = CAMRConstants::level_mask_notcovered;
     bool use_wts_in_divnc = false;
     ApplyMLRedistribution(bx, l_ncomp,
-                          dsdt_arr, divc_arr, s_arr, redistwgt_arr,
+                          dsdt_arr, divc_arr, uin_arr, redistwgt_arr,
                           flag_arr,
                           AMREX_D_DECL(apx, apy, apz),
                           vf_arr,
