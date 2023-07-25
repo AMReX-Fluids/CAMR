@@ -19,21 +19,19 @@ class UnionListIF
 
 public:
     UnionListIF(const amrex::Vector<F>& a_ifs)
-        : m_ifs(a_ifs)
+      : m_ifs(a_ifs),
+        empty(!a_ifs.empty())
     {
-        empty = !a_ifs.empty();
     }
 
-    ~UnionListIF()
-    {
-    }
+    ~UnionListIF() = default;
 
     UnionListIF(const UnionListIF& rhs) = default;
-    UnionListIF(UnionListIF&& rhs) = default;
+    UnionListIF(UnionListIF&& rhs) noexcept = default;
     UnionListIF& operator=(const UnionListIF& rhs) = default;
-    UnionListIF& operator=(UnionListIF&& rhs) = default;
+    UnionListIF& operator=(UnionListIF&& rhs) noexcept = default;
 
-    bool is_empty() const
+    [[nodiscard]] bool is_empty() const
     {
         return empty;
     }
@@ -94,20 +92,18 @@ public:
     {
     }
 
-    ~CIF()
-    {
-    }
+    ~CIF() = default;
 
     CIF(const CIF& rhs) = default;
-    CIF(CIF&& rhs) = default;
+    CIF(CIF&& rhs) noexcept = default;
     CIF& operator=(const CIF& rhs) = default;
-    CIF& operator=(CIF&& rhs) = default;
+    CIF& operator=(CIF&& rhs) noexcept = default;
 
     void set_active(bool a_active)
     {
         m_active = a_active;
     }
-    bool is_active() const
+    [[nodiscard]] bool is_active() const
     {
         return m_active;
     }
@@ -139,16 +135,14 @@ public:
                                          "You must specify at least one active implicit function.");
     }
 
-    ~UnionCIF()
-    {
-    }
+    ~UnionCIF() = default;
 
     UnionCIF(const UnionCIF& rhs) = default;
-    UnionCIF(UnionCIF&& rhs) = default;
+    UnionCIF(UnionCIF&& rhs) noexcept = default;
     UnionCIF& operator=(const UnionCIF& rhs) = default;
-    UnionCIF& operator=(UnionCIF&& rhs) = default;
+    UnionCIF& operator=(UnionCIF&& rhs) noexcept = default;
 
-    bool is_active() const
+    [[nodiscard]] bool is_active() const
     {
         return true;
     }
@@ -194,16 +188,14 @@ public:
                                          "You must specify at least one active implicit function.");
     }
 
-    ~IntersectionCIF()
-    {
-    }
+    ~IntersectionCIF() = default;
 
     IntersectionCIF(const IntersectionCIF& rhs) = default;
-    IntersectionCIF(IntersectionCIF&& rhs) = default;
+    IntersectionCIF(IntersectionCIF&& rhs) noexcept = default;
     IntersectionCIF& operator=(const IntersectionCIF& rhs) = default;
-    IntersectionCIF& operator=(IntersectionCIF&& rhs) = default;
+    IntersectionCIF& operator=(IntersectionCIF&& rhs) noexcept = default;
 
-    bool is_active() const
+    [[nodiscard]] bool is_active() const
     {
         return true;
     }
