@@ -177,17 +177,20 @@ CAMR::construct_hydro_source (const MultiFab& S,
                           sarr, hyd_src, qarr, qauxar, srcqarr,
                           vfrac_arr, flag, dx, dxInv, flx_arr,
                           as_crse, p_drho_as_crse->array(), p_rrflag_as_crse->array(),
-                          as_fine, dm_as_fine.array(), level_mask.const_array(mfi),
-                          difmag, dt, small, small_dens, small_pres, bcs_d.data(),
-                          redistribution_type, plm_iorder, eb_weights_type, ppm_type, use_pslope, use_flattening, transverse_reset_density);
+                          as_fine, dm_as_fine.array(), level_mask.const_array(mfi), dt,
+                          ppm_type, plm_iorder, use_pslope,
+                          use_flattening, transverse_reset_density,
+                          small, small_dens, small_pres, difmag,
+                          bcs_d.data(), redistribution_type, eb_weights_type);
         } else {
 #endif
             // Return hyd_src - centered at half-time if using Godunov method
             //                - centered at  old-time if using MOL method
             CAMR_umdrv(do_mol, bx, geom, phys_bc.lo(), phys_bc.hi(),
                        sarr, hyd_src, qarr, qauxar, srcqarr, dx, dt,
-                       ppm_type, use_pslope, use_flattening, transverse_reset_density,
-                       small, small_dens, small_pres, difmag, plm_iorder,
+                       ppm_type, plm_iorder, use_pslope,
+                       use_flattening, transverse_reset_density,
+                       small, small_dens, small_pres, difmag,
                        flx_arr, a, volume.array(mfi));
 #ifdef AMREX_USE_EB
         } // regular

@@ -33,17 +33,18 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
                int as_fine,
                Array4<Real> const& dm_as_fine,
                Array4<int const> const& lev_mask,
-               const  Real difmag, const  Real dt,
-               const Real small,
-               const Real small_dens,
-               const Real small_pres,
-               const BCRec* bcs_d_ptr,
-               const std::string& l_redistribution_type,
-               const int l_plm_iorder,
+               const  Real dt,
                const int ppm_type,
+               const int plm_iorder,
                const int use_pslope,
                const int use_flattening,
                const int transverse_reset_density,
+               const Real small,
+               const Real small_dens,
+               const Real small_pres,
+               const  Real difmag,
+               const BCRec* bcs_d_ptr,
+               const std::string& l_redistribution_type,
                const int l_eb_weights_type)
 {
     BL_PROFILE_VAR("CAMR_umdrv_eb()", CAMR_umdrv_eb);
@@ -112,7 +113,7 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
         mol_umeth_eb(bx, bclo, bchi, domlo, domhi, q_arr, qaux_arr, divc_arr,
                      AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]), vf_arr,
                      flag_arr, dx, flux_tmp_arr, small, small_dens, small_pres,
-                     l_plm_iorder, l_eb_weights_type);
+                     plm_iorder, l_eb_weights_type);
     } else { // if Godunov
 #if AMREX_SPACEDIM == 2
       CAMR_umeth_2D_eb(
@@ -125,7 +126,7 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
         AMREX_D_DECL(apx, apy, apz),
         vf_arr, flag_arr, dx, dt,
         small, small_dens, small_pres, ppm_type, use_pslope, use_flattening,
-        l_plm_iorder, transverse_reset_density);
+        plm_iorder, transverse_reset_density);
       } // end Godunov
 
     adjust_fluxes_eb(bx, q_arr, uin_arr,

@@ -17,6 +17,7 @@ CAMR_umdrv (bool do_mol, Box const& bx,
             const amrex::GpuArray<Real, AMREX_SPACEDIM> dx,
             const Real dt,
             const int ppm_type,
+            const int plm_iorder,
             const int use_pslope,
             const int use_flattening,
             const int transverse_reset_density,
@@ -24,7 +25,6 @@ CAMR_umdrv (bool do_mol, Box const& bx,
             const Real small_dens,
             const Real small_pres,
             const Real l_difmag,
-            const int slope_order,
             const amrex::GpuArray<const Array4<Real>, AMREX_SPACEDIM> flx,
             const amrex::GpuArray<const Array4<const Real>, AMREX_SPACEDIM> a,
             Array4<Real> const& vol)
@@ -54,7 +54,7 @@ CAMR_umdrv (bool do_mol, Box const& bx,
                   AMREX_D_DECL(flx[0], flx[1], flx[2]),
                   AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
                   AMREX_D_DECL(a[0], a[1], a[2]), pdivuarr, vol,
-                  small, small_dens, small_pres, slope_order);
+                  small, small_dens, small_pres, plm_iorder);
 } else { // if Godunov
 
 #if AMREX_SPACEDIM == 2
@@ -68,7 +68,7 @@ CAMR_umdrv (bool do_mol, Box const& bx,
         AMREX_D_DECL(a[0], a[1], a[2]),
         pdivuarr, vol, dx, dt,
         small, small_dens, small_pres, ppm_type, use_pslope, use_flattening,
-        slope_order, transverse_reset_density);
+        plm_iorder, transverse_reset_density);
 
     } // end Godunov
 
