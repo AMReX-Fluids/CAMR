@@ -55,7 +55,7 @@ jobs:
         ${{github.workspace}}/amrex/Tools/C_scripts/mmclt.py --input ${{github.workspace}}/ccache.log.txt --identifier Source
         make -j2 -f clang-tidy-ccache-misses.mak \
             CLANG_TIDY=clang-tidy-14 \
-            CLANG_TIDY_ARGS="--config-file=${{github.workspace}}/CAMR/.clang-tidy"
+            CLANG_TIDY_ARGS="--config-file=${{github.workspace}}/CAMR/.clang-tidy --warnings-as-errors=*"
 
         ccache -s
         du -hs ~/.cache/ccache
