@@ -1,42 +1,38 @@
 amrex.fpe_trap_invalid = 1
 
 max_step  = 10
-stop_time = 0.2
 
-geometry.is_periodic = 0 0 0
+geometry.is_periodic = 0 1 0
 geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
-
-geometry.prob_lo     =   0.0  0.0  0.0
-geometry.prob_hi     =   1.0  1.0  1.0
-amr.n_cell           =    32   32   32
+geometry.prob_lo     =   0.0     0.0 
+geometry.prob_hi     =    32.     32.
+amr.n_cell           =    32      32 
 
 # >>>>>>>>>>>>>  BC FLAGS <<<<<<<<<<<<<<<<
 # 0 = Interior           3 = Symmetry
 # 1 = Inflow             4 = SlipWall
 # 2 = Outflow            5 = NoSlipWall
 # >>>>>>>>>>>>>  BC FLAGS <<<<<<<<<<<<<<<<
-CAMR.lo_bc       = NoSlipWall NoSlipWall Outflow  
-CAMR.hi_bc       = NoSlipWall NoSlipWall Outflow  
+CAMR.lo_bc       =  Outflow  Interior   SlipWall
+CAMR.hi_bc       =  Outflow  Interior   SlipWall
 
 CAMR.cfl = 0.3  # cfl number for hyperbolic system
 
-# Use Godunov PPM
-CAMR.do_mol = 0
-CAMR.ppm_type = 1
+CAMR.do_mol = 1
 
 CAMR.v = 2
 amr.v = 1
 
 CAMR.sum_interval = 1
 
-CAMR.redistribution_type = FluxRedist
 CAMR.redistribution_type = StateRedist
+CAMR.redistribution_type = FluxRedist
 
 # LOAD BALANCE
 amr.loadbalance_with_workestimates = 0
 
 # REFINEMENT / REGRIDDING 
-amr.max_level       = 0       # maximum level number allowed
+amr.max_level       = 1       # maximum level number allowed
 
 amr.ref_ratio       = 2 2 2 2 # refinement ratio
 amr.regrid_int      = 2 2 2 2 # how often to regrid
@@ -53,22 +49,34 @@ amr.check_int               = 100    # number of timesteps between checkpoints
 # PLOTFILES
 amr.plot_files_output = 1
 amr.plot_file         = plt     # root name of plotfile
-amr.plot_int          = 1       # number of timesteps between plotfiles
+amr.plot_int          = 10      # number of timesteps between plotfiles
 amr.derive_plot_vars  = x_velocity y_velocity z_velocity vfrac
+
+# EB
+#CAMR.geometry = "sphere"
+#sphere.radius        = 0.125
+#sphere.center        = 0.6 0.5 0.5
+#sphere.center        = 0.7 0.5 0.5
+#sphere.internal_flow = 0
+
+CAMR.geometry = "box"
+# Note: flow is internal to box specified
+box.Lo = -10.0    -8.
+box.Hi =  16.125  40.
 
 amr.refinement_indicators = box1
 amr.box1.max_level = 1
-amr.box1.in_box_lo =  0.55 0.5  0.3
-amr.box1.in_box_hi =  0.85 0.65 0.7
+amr.box1.in_box_lo =  16.  0.
+amr.box1.in_box_hi =  32. 32.
 
-amr.blocking_factor = 16
+amr.blocking_factor = 8
 amr.max_grid_size   = 64
 
 # problem specific parameter
-prob.type  = 2
 prob.p_l   = 1.0 
 prob.p_r   = 0.1
 prob.rho_l = 1.0
 prob.rho_r = 0.125
 prob.u_l   = 0.0
 prob.u_r   = 0.0
+

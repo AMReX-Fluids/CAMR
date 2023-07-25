@@ -123,14 +123,14 @@ CAMR_divu(
     if (j == domlo_y && bclo_y == NoSlipWall &&
         k == domlo_z && bclo_z == NoSlipWall) {
         ux = ( q(i  , j  , k, QU) - q(i-1, j  , k  , QU) ) / dx;
-    } else if (j == domhi_y+1 && bchi_y == NoSlipWall  &&
-        k == domlo_z   && bclo_z == NoSlipWall) {
+    } else if ( (j == domhi_y+1 && bchi_y == NoSlipWall) &&
+                (k == domlo_z   && bclo_z == NoSlipWall) ) {
         ux = ( q(i  , j-1, k, QU) - q(i-1, j-1, k  , QU) ) / dx;
-    } else if (j == domlo_y   && bclo_y == NoSlipWall &&
-        k == domhi_z+1 && bchi_z == NoSlipWall) {
+    } else if ( (j == domlo_y   && bclo_y == NoSlipWall) &&
+                (k == domhi_z+1 && bchi_z == NoSlipWall) ) {
         ux = ( q(i  , j  , k-1, QU) - q(i-1, j  , k-1, QU) )/ dx;
-    } else if (j == domhi_y+1 && bchi_y == NoSlipWall &&
-        k == domhi_z+1 && bchi_z == NoSlipWall) {
+    } else if ( (j == domhi_y+1 && bchi_y == NoSlipWall) &&
+                (k == domhi_z+1 && bchi_z == NoSlipWall) ) {
         ux = ( q(i  , j-1, k-1, QU) - q(i-1, j-1, k-1, QU) )/ dx;
     }
 
@@ -138,14 +138,14 @@ CAMR_divu(
     if (i == domlo_x && bclo_x == NoSlipWall &&
         k == domlo_z && bclo_z == NoSlipWall) {
         vy = ( q(i  , j  , k, QV) - q(i  , j-1, k  , QV) ) / dy;
-    } else if (i == domhi_x+1 && bchi_x == NoSlipWall &&
-        k == domlo_z   && bclo_z == NoSlipWall) {
+    } else if ( (i == domhi_x+1 && bchi_x == NoSlipWall) &&
+                (k == domlo_z   && bclo_z == NoSlipWall) ) {
         vy = ( q(i-1, j  , k, QV) - q(i-1, j-1, k  , QV) ) / dy;
-    } else if (i == domlo_x   && bclo_x == NoSlipWall &&
-        k == domhi_z+1 && bchi_z == NoSlipWall) {
+    } else if ( (i == domlo_x   && bclo_x == NoSlipWall) &&
+                (k == domhi_z+1 && bchi_z == NoSlipWall) ) {
         vy = ( q(i  , j  , k-1, QV) - q(i  , j-1, k-1, QV) )/ dy;
-    } else if (i == domhi_x+1 && bchi_x == NoSlipWall &&
-        k == domhi_z+1 && bchi_z == NoSlipWall) {
+    } else if ( (i == domhi_x+1 && bchi_x == NoSlipWall) &&
+                (k == domhi_z+1 && bchi_z == NoSlipWall) ) {
         vy = ( q(i-1, j  , k-1, QV) - q(i-1, j-1, k-1, QV) )/ dy;
     }
 
@@ -153,14 +153,14 @@ CAMR_divu(
     if (i == domlo_x && bclo_x == NoSlipWall &&
         j == domlo_y && bclo_y == NoSlipWall) {
         wz = ( q(i  , j  , k, QW) - q(i  , j  , k-1, QW) ) / dz;
-    } else if (i == domhi_x+1 && bchi_x == NoSlipWall &&
-        j == domlo_y   && bclo_y == NoSlipWall) {
+    } else if ( (i == domhi_x+1 && bchi_x == NoSlipWall) &&
+                (j == domlo_y   && bclo_y == NoSlipWall) ) {
         wz = ( q(i-1, j  , k, QW) - q(i-1, j  , k-1, QW) ) / dz;
-    } else if (i == domlo_x   && bclo_x == NoSlipWall &&
-        j == domhi_y+1 && bchi_y == NoSlipWall) {
+    } else if ( (i == domlo_x   && bclo_x == NoSlipWall) &&
+                (j == domhi_y+1 && bchi_y == NoSlipWall) ) {
         wz = ( q(i  , j-1, k, QW) - q(i  , j-1, k-1, QW) )/ dz;
-    } else if (i == domhi_x+1 && bchi_x == NoSlipWall &&
-        j == domhi_y+1 && bchi_y == NoSlipWall) {
+    } else if ( (i == domhi_x+1 && bchi_x == NoSlipWall) &&
+                (j == domhi_y+1 && bchi_y == NoSlipWall) ) {
         wz = ( q(i-1, j-1, k, QW) - q(i-1, j-1, k-1, QW) )/ dz;
     }
 #endif
@@ -235,6 +235,7 @@ void CAMR_umdrv( bool do_mol,
                  const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx,
                  const amrex::Real dt,
                  const int ppm_type,
+                 const int plm_iorder,
                  const int use_pslope,
                  const int use_flattening,
                  const int transverse_reset_density,
@@ -242,7 +243,6 @@ void CAMR_umdrv( bool do_mol,
                  const amrex::Real small_dens,
                  const amrex::Real small_pres,
                  const amrex::Real l_difmag,
-                 const int slope_order,
                  const amrex::GpuArray<const amrex::Array4<amrex::Real>, AMREX_SPACEDIM> flx,
                  const amrex::GpuArray<const amrex::Array4<const amrex::Real>, AMREX_SPACEDIM> a,
                  amrex::Array4<amrex::Real> const& vol);
@@ -266,13 +266,14 @@ void CAMR_consup(
 
 #ifdef AMREX_USE_EB
 void
-CAMR_umdrv_eb( const bool do_mol, amrex::Box const& bx, const amrex::MFIter& mfi,
+CAMR_umdrv_eb( const bool do_mol, amrex::Box const& bx,
+               amrex::Box const& bxg_i, const amrex::MFIter& mfi,
                amrex::Geometry const& geom,
                const amrex::EBFArrayBoxFactory* ebfact,
                const int* bclo, const int* bchi,
-               amrex::Array4<const amrex::Real> const& s_arr,
-               amrex::Array4<const amrex::Real> const& q_arr,
+               amrex::Array4<const amrex::Real> const& uin_arr,
                amrex::Array4<      amrex::Real> const& dsdt_arr,
+               amrex::Array4<const amrex::Real> const& q_arr,
                amrex::Array4<const amrex::Real> const& qaux_arr,
                amrex::Array4<const amrex::Real> const& src_q,
                amrex::Array4<const amrex::Real> const& vf_arr,
@@ -286,18 +287,18 @@ CAMR_umdrv_eb( const bool do_mol, amrex::Box const& bx, const amrex::MFIter& mfi
                int as_fine,
                amrex::Array4<amrex::Real> const& dm_as_fine,
                amrex::Array4<int const> const& lev_mask,
-               const amrex::Real difmag,
                const amrex::Real dt,
-               const amrex::Real small,
-               const amrex::Real small_dens,
-               const amrex::Real small_pres,
-               amrex::BCRec const* bcs_d_ptr,
-               const std::string& l_redistribution_type,
-               const int l_plm_iorder,
                const int ppm_type,
+               const int plm_iorder,
                const int use_pslope,
                const int use_flattening,
                const int transverse_reset_density,
+               const amrex::Real small,
+               const amrex::Real small_dens,
+               const amrex::Real small_pres,
+               const amrex::Real difmag,
+               amrex::BCRec const* bcs_d_ptr,
+               const std::string& l_redistribution_type,
                const int l_eb_weights_type);
 
 void

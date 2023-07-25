@@ -278,8 +278,8 @@ CAMR_transdd(
   amrex::Array4<const amrex::Real> const& qa,
   amrex::Array4<const amrex::Real> const& srcq,
   const amrex::Real hdt,
-  const amrex::Real cdtdx,
-  const amrex::Real cdtdy,
+  const amrex::Real cdtdx0,
+  const amrex::Real cdtdx1,
   PassMap const& pmap,
   int transverse_reset_density,
   amrex::Real small_pres)
@@ -297,16 +297,16 @@ CAMR_transdd(
   const amrex::IntVect ivp1(iv + amrex::IntVect::TheDimensionVector(l_idx[2]));
   const amrex::IntVect ivp2(iv + amrex::IntVect::TheDimensionVector(dir));
 
-  const amrex::Real flxrho = cdtdx * (flxx(ivp0, URHO) - flxx(iv, URHO)) +
-                             cdtdy * (flxy(ivp1, URHO) - flxy(iv, URHO));
-  const amrex::Real flxu = cdtdx * (flxx(ivp0, UMX) - flxx(iv, UMX)) +
-                           cdtdy * (flxy(ivp1, UMX) - flxy(iv, UMX));
-  const amrex::Real flxv = cdtdx * (flxx(ivp0, UMY) - flxx(iv, UMY)) +
-                           cdtdy * (flxy(ivp1, UMY) - flxy(iv, UMY));
-  const amrex::Real flxw = cdtdx * (flxx(ivp0, UMZ) - flxx(iv, UMZ)) +
-                           cdtdy * (flxy(ivp1, UMZ) - flxy(iv, UMZ));
-  const amrex::Real flxe = cdtdx * (flxx(ivp0, UEDEN) - flxx(iv, UEDEN)) +
-                           cdtdy * (flxy(ivp1, UEDEN) - flxy(iv, UEDEN));
+  const amrex::Real flxrho = cdtdx0 * (flxx(ivp0, URHO) - flxx(iv, URHO)) +
+                             cdtdx1 * (flxy(ivp1, URHO) - flxy(iv, URHO));
+  const amrex::Real flxu = cdtdx0 * (flxx(ivp0, UMX) - flxx(iv, UMX)) +
+                           cdtdx1 * (flxy(ivp1, UMX) - flxy(iv, UMX));
+  const amrex::Real flxv = cdtdx0 * (flxx(ivp0, UMY) - flxx(iv, UMY)) +
+                           cdtdx1 * (flxy(ivp1, UMY) - flxy(iv, UMY));
+  const amrex::Real flxw = cdtdx0 * (flxx(ivp0, UMZ) - flxx(iv, UMZ)) +
+                           cdtdx1 * (flxy(ivp1, UMZ) - flxy(iv, UMZ));
+  const amrex::Real flxe = cdtdx0 * (flxx(ivp0, UEDEN) - flxx(iv, UEDEN)) +
+                           cdtdx1 * (flxy(ivp1, UEDEN) - flxy(iv, UEDEN));
   const amrex::Real c = qa(iv, QGAMC);
   const amrex::Real srcrho = srcq(iv, QRHO);
   const amrex::Real srcu = srcq(iv, QU);
@@ -325,8 +325,8 @@ CAMR_transdd(
     const int n = pmap.upassMap[ipass];
     const int nqp = pmap.qpassMap[ipass];
     const amrex::Real srcpass = srcq(iv, nqp);
-    const amrex::Real compn = cdtdx * (flxx(ivp0, n) - flxx(iv, n)) +
-                              cdtdy * (flxy(ivp1, n) - flxy(iv, n));
+    const amrex::Real compn = cdtdx0 * (flxx(ivp0, n) - flxx(iv, n)) +
+                              cdtdx1 * (flxy(ivp1, n) - flxy(iv, n));
     // qp
     amrex::Real compo = rrr * qzp(iv, nqp) - compn;
     qp(iv, nqp) = compo / rrnewr + hdt * srcpass;
@@ -354,8 +354,8 @@ CAMR_transdd(
   const amrex::Real dAupy = pggpy * ugpy - pggmy * ugmy;
   const amrex::Real pavy = 0.5 * (pggpy + pggmy);
   const amrex::Real dAuy = ugpy - ugmy;
-  const amrex::Real pxnew = cdtdx * (dAupx + pavx * dAux * (c - 1.0));
-  const amrex::Real pynew = cdtdy * (dAupy + pavy * dAuy * (c - 1.0));
+  const amrex::Real pxnew = cdtdx0 * (dAupx + pavx * dAux * (c - 1.0));
+  const amrex::Real pynew = cdtdx1 * (dAupy + pavy * dAuy * (c - 1.0));
 
   // qp state
   const amrex::Real rur = rrr * qzp(iv, QU);

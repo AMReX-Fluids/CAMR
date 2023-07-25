@@ -21,7 +21,9 @@ ifeq ($(USE_EB), TRUE)
 endif
 
 all: $(executable)
+ifneq ($(KEEP_BUILDINFO_CPP),TRUE)
 	$(SILENT) $(RM) AMReX_buildInfo.cpp
+endif
 	@echo SUCCESS
 
 ifeq ($(USE_CUDA),TRUE)
