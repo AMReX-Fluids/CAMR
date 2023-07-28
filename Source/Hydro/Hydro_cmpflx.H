@@ -50,7 +50,7 @@ CAMR_cmpflx(
       gamcr = qa(i  ,j,k,QGAMC);
       f_idx[0] = UMX;
       f_idx[1] = UMY;
-    } else if (dir == 1) {
+    } else {
       IU = QV;
       IV = QU;
       GU = GDV;
@@ -62,9 +62,7 @@ CAMR_cmpflx(
       f_idx[0] = UMY;
       f_idx[1] = UMX;
     }
-    else{
-      amrex::Abort();
-    }
+    AMREX_ASSERT(dir >= 0 && dir < 2);
 
     ul = ql(i, j, k, IU);
     vl = ql(i, j, k, IV);
