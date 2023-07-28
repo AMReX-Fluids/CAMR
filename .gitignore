@@ -12,3 +12,4 @@ plt?????.old*
 tmp_build_dir
 .ccls-cache
 Backtrace.*
+AMReX_buildInfo.cpp

@@ -30,7 +30,7 @@ void make_eb_sphere(const Geometry& geom, int required_coarsening_level)
     amrex::Print() << " " << std::endl;
     amrex::Print() << " Internal Flow: " << inside << std::endl;
     amrex::Print() << " Radius:    " << radius << std::endl;
-    amrex::Print() << " Center:    " << center[0] << ", " << center[1] << ", " << center[2]
+    amrex::Print() << " Center:    " << centervec[0] << ", " << centervec[1] << ", " << centervec[2]
                    << std::endl;
 
     // Build the sphere implicit function
