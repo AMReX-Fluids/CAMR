@@ -63,7 +63,7 @@ jobs:
     - name: Run
       run: |
         cd ${{ github.workspace }}/CAMR/Exec/SodPlusSphere
-        mpiexec -n 2 ./CAMR3d.gnu.DEBUG.MPI.EB.ex inputs max_step=3
+        mpiexec -n 2 ./CAMR3d.gnu.MPI.EB.ex inputs max_step=3
 
   gcc_no_eb_3d:
     name: GCC NO EB 3D
@@ -116,7 +116,7 @@ jobs:
     - name: Run
       run: |
         cd ${{ github.workspace }}/CAMR/Exec/Sod
-        mpiexec -n 2 ./CAMR3d.gnu.DEBUG.MPI.ex inputs-x max_step=3
+        mpiexec -n 2 ./CAMR3d.gnu.MPI.ex inputs-x max_step=3
 
   gcc_eb_2d:
     name: GCC EB 2D
@@ -170,7 +170,7 @@ jobs:
       run: |
         export OMP_NUM_THREADS=2
         cd ${{ github.workspace }}/CAMR/Exec/SodPlusSphere
-        ./CAMR2d.gnu.DEBUG.OMP.EB.ex inputs max_step=10
+        ./CAMR2d.gnu.OMP.EB.ex inputs max_step=10
 
   gcc_no_eb_2d:
     name: GCC NO EB 2D
@@ -223,7 +223,7 @@ jobs:
     - name: Run
       run: |
         cd ${{ github.workspace }}/CAMR/Exec/Sod
-        mpiexec -n 2 ./CAMR2d.gnu.DEBUG.MPI.ex inputs-x max_step=10
+        mpiexec -n 2 ./CAMR2d.gnu.MPI.ex inputs-x max_step=10
 
   save_pr_number:
     if: github.event_name == 'pull_request'

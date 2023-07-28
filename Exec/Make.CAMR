@@ -2,18 +2,10 @@ TOP ?= $(CAMR_HOME)
 
 EBASE = CAMR
 
-# EXTERN_CORE is simply a list of the directories we use in Eos, Util
-# this list will be searched for runtime parameters
-EXTERN_CORE ?=
-
 #Turn off all fortran in amrex
 BL_NO_FORT = TRUE
 
 include $(AMREX_HOME)/Tools/GNUMake/Make.defs
-
-ifeq ($(USE_FORCING), TRUE)
-  DEFINES += -DCAMR_USE_FORCING
-endif
 
 ifeq ($(USE_EB), TRUE)
   DEFINES += -DAMREX_USE_EB
@@ -25,10 +17,6 @@ ifneq ($(KEEP_BUILDINFO_CPP),TRUE)
 	$(SILENT) $(RM) AMReX_buildInfo.cpp
 endif
 	@echo SUCCESS
-
-ifeq ($(USE_CUDA),TRUE)
-   CXXFLAGS+=-Xptxas --disable-optimizer-constants
-endif
 
 ifeq ($(Eos_Model),$(filter $(Eos_Model),GammaLaw))
    DEFINES += -DUSE_GAMMALAW_EOS
