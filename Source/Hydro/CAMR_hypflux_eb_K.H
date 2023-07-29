@@ -1,8 +1,9 @@
-#ifndef MOL_HYPFLUX_K_H
-#define MOL_HYPFLUX_K_H
+#ifndef CAMR_HYPFLUX_K_H
+#define CAMR_HYPFLUX_K_H
 
 #include "IndexDefines.H"
 #include <AMReX_FArrayBox.H>
+#include <Hydro_riemann.H>
 #include <cmath>
 
 #ifdef AMREX_USE_EB

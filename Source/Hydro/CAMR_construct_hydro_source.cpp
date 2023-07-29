@@ -6,9 +6,9 @@ using namespace amrex;
 
 void
 CAMR::construct_hydro_source (const MultiFab& S,
-                                 MultiFab& src_to_fill,
-                                 Real /*time*/,
-                                 Real dt)
+                              MultiFab& src_to_fill,
+                              Real /*time*/,
+                              Real dt)
 {
     src_to_fill.setVal(0);
 
@@ -19,6 +19,8 @@ CAMR::construct_hydro_source (const MultiFab& S,
             amrex::Print() << "... Computing Godunov-based hydro advance" << std::endl;
         }
     }
+
+    Real fac_for_reflux = (do_mol) ? Real(0.5) : Real(1.0);
 
     AMREX_ASSERT(S.nGrow() == numGrow());
 
@@ -170,76 +172,78 @@ CAMR::construct_hydro_source (const MultiFab& S,
             amrex::Gpu::copy(
               amrex::Gpu::hostToDevice, bcs.begin(), bcs.end(), bcs_d.begin());
 
-            // Return hyd_src - centered at old-time
             const auto& dxInv = geom.InvCellSizeArray();
+
+            // Return hyd_src - centered at half-time if using Godunov method
+            //                - centered at  old-time if using MOL method
+            //
+            // The dt we pass in here is used if (do_mol == 0), i.e.
+            //      in the Godunov prediction, but also if we do StateRedistribution
+            //
             CAMR_umdrv_eb(do_mol, bx, bxg_i, mfi, geom, &ebfact,
                           phys_bc.lo(), phys_bc.hi(),
                           sarr, hyd_src, qarr, qauxar, srcqarr,
                           vfrac_arr, flag, dx, dxInv, flx_arr,
                           as_crse, p_drho_as_crse->array(), p_rrflag_as_crse->array(),
-                          as_fine, dm_as_fine.array(), level_mask.const_array(mfi), dt,
-                          ppm_type, plm_iorder, use_pslope,
+                          as_fine, dm_as_fine.array(), level_mask.const_array(mfi),
+                          dt, ppm_type, plm_iorder, use_pslope,
                           use_flattening, transverse_reset_density,
                           small, small_dens, small_pres, difmag,
                           bcs_d.data(), redistribution_type, eb_weights_type);
+
+            //
+            // Here fac_for_reflux = 1.0 if doing Godunov, 0.5 if doing MOL
+            //
+            if (do_reflux) {
+                if (level < finest_level) {
+                     getFluxReg(level + 1).CrseAdd(mfi,
+                        {{AMREX_D_DECL(&(flux[0]), &(flux[1]), &(flux[2]))}},
+                        dxDp, fac_for_reflux*dt, (*volfrac)[mfi],
+                        {AMREX_D_DECL(&(*areafrac[0])[mfi], &(*areafrac[1])[mfi], &(*areafrac[2])[mfi])},
+                        amrex::RunOn::Device);
+                }
+                if (level > 0) {
+                    getFluxReg(level).FineAdd(mfi,
+                       {{AMREX_D_DECL(&(flux[0]), &(flux[1]), &(flux[2]))}},
+                       dxDp, fac_for_reflux*dt, (*volfrac)[mfi],
+                       {AMREX_D_DECL(&(*areafrac[0])[mfi], &(*areafrac[1])[mfi], &(*areafrac[2])[mfi])},
+                       dm_as_fine, amrex::RunOn::Device);
+                } // level > 0
+            } // do_reflux
         } else {
 #endif
             // Return hyd_src - centered at half-time if using Godunov method
             //                - centered at  old-time if using MOL method
+            //
+            // Note that the dt here is only used if (do_mol == 0), i.e.
+            //      in the Godunov prediction
+            //
             CAMR_umdrv(do_mol, bx, geom, phys_bc.lo(), phys_bc.hi(),
-                       sarr, hyd_src, qarr, qauxar, srcqarr, dx, dt,
-                       ppm_type, plm_iorder, use_pslope,
+                       sarr, hyd_src, qarr, qauxar, srcqarr, dx,
+                       dt, ppm_type, plm_iorder, use_pslope,
                        use_flattening, transverse_reset_density,
                        small, small_dens, small_pres, difmag,
                        flx_arr, a, volume.array(mfi));
+
+            //
+            // Here fac_for_reflux = 1.0 if doing Godunov, 0.5 if doing MOL
+            //
+            if (do_reflux) {
+                if (level < finest_level) {
+                    getFluxReg(level + 1).CrseAdd(mfi,
+                        {{AMREX_D_DECL(&(flux[0]), &(flux[1]), &(flux[2]))}},
+                        dxDp, fac_for_reflux*dt, amrex::RunOn::Device);
+                }
+                if (level > 0) {
+                    getFluxReg(level).FineAdd(mfi,
+                       {{AMREX_D_DECL(&(flux[0]), &(flux[1]), &(flux[2]))}},
+                       dxDp, fac_for_reflux*dt, amrex::RunOn::Device);
+                }
+            } // do_reflux
+
 #ifdef AMREX_USE_EB
         } // regular
 #endif
-
-        if (do_reflux) {
-          if (level < finest_level) {
-#ifdef AMREX_USE_EB
-              if (flagfab.getType(amrex::grow(bx,1)) == FabType::regular)
-              {
-#endif
-                   getFluxReg(level + 1).CrseAdd(mfi,
-                       {{AMREX_D_DECL(&(flux[0]), &(flux[1]), &(flux[2]))}},
-                       dxDp, dt, amrex::RunOn::Device);
-#ifdef AMREX_USE_EB
-              } else {
-                   getFluxReg(level + 1).CrseAdd(mfi,
-                      {{AMREX_D_DECL(&(flux[0]), &(flux[1]), &(flux[2]))}},
-                      dxDp, dt, (*volfrac)[mfi],
-                      {AMREX_D_DECL(&(*areafrac[0])[mfi], &(*areafrac[1])[mfi], &(*areafrac[2])[mfi])},
-                      amrex::RunOn::Device);
-              }
-#endif
-          }
-
-
-          if (level > 0) {
-#ifdef AMREX_USE_EB
-              if (flagfab.getType(amrex::grow(bx,1)) == FabType::regular)
-              {
-#endif
-                  getFluxReg(level).FineAdd(mfi,
-                     {{AMREX_D_DECL(&(flux[0]), &(flux[1]), &(flux[2]))}},
-                     dxDp, dt, amrex::RunOn::Device);
-#ifdef AMREX_USE_EB
-              } else {
-                  // BEG HACK HACK HACKH
-                  // dm_as_fine.setVal(0.0);
-                  // END HACK HACK HACKH
-
-                  getFluxReg(level).FineAdd(mfi,
-                     {{AMREX_D_DECL(&(flux[0]), &(flux[1]), &(flux[2]))}},
-                     dxDp, dt, (*volfrac)[mfi],
-                     {AMREX_D_DECL(&(*areafrac[0])[mfi], &(*areafrac[1])[mfi], &(*areafrac[2])[mfi])},
-                     dm_as_fine, amrex::RunOn::Device);
-              }
-#endif
-          } // level > 0
-        } // do_reflux
 
 #ifdef AMREX_USE_EB
         } // not covered

@@ -1,6 +1,7 @@
 #include "CAMR.H"
 #include "Godunov.H"
 #include "CAMR_hydro.H"
+#include "CAMR_utils_K.H"
 #include "MOL_umeth.H"
 
 using namespace amrex;
@@ -29,6 +30,8 @@ CAMR_umdrv (bool do_mol, Box const& bx,
             const amrex::GpuArray<const Array4<const Real>, AMREX_SPACEDIM> a,
             Array4<Real> const& vol)
 {
+    BL_PROFILE_VAR("CAMR::umdrv()", umdrv);
+
     // Set Up for Hydro Flux Calculations
     auto const& bxg2 = grow(bx, 2);
     FArrayBox qec[AMREX_SPACEDIM];
@@ -48,31 +51,24 @@ CAMR_umdrv (bool do_mol, Box const& bx,
     auto const& divuarr = divu.array();
     auto const& pdivuarr = pdivu.array();
 
-    BL_PROFILE_VAR("CAMR::umeth()", umeth);
     if (do_mol) {
-        mol_umeth(bx, bclo, bchi, domlo, domhi, q_arr, qaux_arr,
+        MOL_umeth(bx, bclo, bchi, domlo, domhi, q_arr, qaux_arr,
                   AMREX_D_DECL(flx[0], flx[1], flx[2]),
                   AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
                   AMREX_D_DECL(a[0], a[1], a[2]), pdivuarr, vol,
                   small, small_dens, small_pres, plm_iorder);
-} else { // if Godunov
 
-#if AMREX_SPACEDIM == 2
-    CAMR_umeth_2D(
-#elif AMREX_SPACEDIM == 3
-    CAMR_umeth_3D(
-#endif
-        bx, bclo, bchi, domlo, domhi, q_arr, qaux_arr, src_q,
-        AMREX_D_DECL(flx[0], flx[1], flx[2]),
-        AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
-        AMREX_D_DECL(a[0], a[1], a[2]),
-        pdivuarr, vol, dx, dt,
-        small, small_dens, small_pres, ppm_type, use_pslope, use_flattening,
-        plm_iorder, transverse_reset_density);
+    } else {
+        Godunov_umeth(bx, bclo, bchi, domlo, domhi, q_arr, qaux_arr, src_q,
+                      AMREX_D_DECL(flx[0], flx[1], flx[2]),
+                      AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
+                      AMREX_D_DECL(a[0], a[1], a[2]),
+                      pdivuarr, vol, dx, dt,
+                      small, small_dens, small_pres, ppm_type, use_pslope, use_flattening,
+                      plm_iorder, transverse_reset_density);
+    }
 
-    } // end Godunov
-
-    // divu
+    // Construct divu
     AMREX_D_TERM(const Real dx0 = dx[0];,
                  const Real dx1 = dx[1];,
                  const Real dx2 = dx[2];);
@@ -85,5 +81,5 @@ CAMR_umdrv (bool do_mol, Box const& bx,
 
     CAMR_consup  (bx, dsdt_arr, flx, vol, pdivuarr);
 
-    BL_PROFILE_VAR_STOP(umeth);
+    BL_PROFILE_VAR_STOP(umdrv);
 }

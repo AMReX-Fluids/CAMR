@@ -121,17 +121,21 @@ CAMR::CAMR_advance (Real time,
 
     // Now build and add the hydro source term to S_new
     if (!do_mol) {
-       construct_hydro_source(Sborder, hydro_source, time, dt);
-       MultiFab::Saxpy(S_new, dt, hydro_source, 0, 0, NVAR, 0);
+        construct_hydro_source(Sborder, hydro_source, time, dt);
+
+        // S^{n+1} = S^n + dt * dSdt^{n+1/2}
+        MultiFab::Saxpy(S_new, dt, hydro_source, 0, 0, NVAR, 0);
 
     } else {
-        construct_hydro_source(Sborder, hydro_source, time, 0.5*dt);
+        construct_hydro_source(Sborder, hydro_source, time, dt);
+
+        // S^{n+1,*} = S^n + dt * dSdt^{n}
         MultiFab::Saxpy(S_new, dt, hydro_source, 0, 0, NVAR, 0);
 
         expand_state(Sborder, cur_time, numGrow());
-        construct_hydro_source(Sborder, new_hydro_source, cur_time, 0.5*dt);
+        construct_hydro_source(Sborder, new_hydro_source, cur_time, dt);
 
-        // S_new = 0.5*(Sborder+S_old) = U^n + 0.5*dt*dUdt^n
+        // S^{n+1} = 0.5 * (S^{n} + S^{n+1,*}) + 0.5 * dt * dSdt^{n+1,*}
         MultiFab::LinComb(S_new, 0.5, Sborder, 0, 0.5, S_old, 0, 0, NVAR, 0);
         MultiFab::Saxpy  (S_new, 0.5*dt, new_hydro_source, 0, 0, NVAR, 0);
     }

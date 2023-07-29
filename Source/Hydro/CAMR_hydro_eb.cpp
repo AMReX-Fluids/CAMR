@@ -2,7 +2,6 @@
 #include "CAMR_hydro.H"
 #include "Godunov.H"
 #include "MOL_umeth.H"
-#include "MOL_hydro_eb_K.H"
 #include "CAMR_Constants.H"
 
 #include <AMReX_EB_Redistribution.H>
@@ -33,7 +32,7 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
                int as_fine,
                Array4<Real> const& dm_as_fine,
                Array4<int const> const& lev_mask,
-               const  Real dt,
+               const Real dt,
                const int ppm_type,
                const int plm_iorder,
                const int use_pslope,
@@ -110,24 +109,19 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
     // Also construct the redistribution weights for flux redistribution if necessary
     // ****************************************************************
     if (do_mol) {
-        mol_umeth_eb(bx, bclo, bchi, domlo, domhi, q_arr, qaux_arr, divc_arr,
+        MOL_umeth_eb(bx, bclo, bchi, domlo, domhi, q_arr, qaux_arr, divc_arr,
                      AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]), vf_arr,
                      flag_arr, dx, flux_tmp_arr, small, small_dens, small_pres,
                      plm_iorder, l_eb_weights_type);
-    } else { // if Godunov
-#if AMREX_SPACEDIM == 2
-      CAMR_umeth_2D_eb(
-#elif AMREX_SPACEDIM == 3
-      CAMR_umeth_3D_eb(
-#endif
-        bx, bclo, bchi, domlo, domhi, q_arr, qaux_arr, src_q,
-        AMREX_D_DECL(flux_tmp_arr[0], flux_tmp_arr[1], flux_tmp_arr[2]),
-        AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
-        AMREX_D_DECL(apx, apy, apz),
-        vf_arr, flag_arr, dx, dt,
-        small, small_dens, small_pres, ppm_type, use_pslope, use_flattening,
-        plm_iorder, transverse_reset_density);
-      } // end Godunov
+    } else {
+        Godunov_umeth_eb(bx, bclo, bchi, domlo, domhi, q_arr, qaux_arr, src_q,
+                         AMREX_D_DECL(flux_tmp_arr[0], flux_tmp_arr[1], flux_tmp_arr[2]),
+                         AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
+                         AMREX_D_DECL(apx, apy, apz),
+                         vf_arr, flag_arr, dx, dt,
+                         small, small_dens, small_pres, ppm_type, use_pslope, use_flattening,
+                         plm_iorder, transverse_reset_density);
+    }
 
     adjust_fluxes_eb(bx, q_arr, uin_arr,
                      AMREX_D_DECL(apx, apy, apz),
@@ -147,6 +141,8 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
     int l_ncomp = dsdt_arr.nComp();
     int level_mask_not_covered = CAMRConstants::level_mask_notcovered;
     bool use_wts_in_divnc = false;
+
+    Real fac_for_redist = (do_mol) ? Real(0.5) : Real(1.0);
     ApplyMLRedistribution(bx, l_ncomp,
                           dsdt_arr, divc_arr, uin_arr, redistwgt_arr,
                           flag_arr,
@@ -158,6 +154,7 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
                           as_crse, drho_as_crse, rrflag_as_crse,
                           as_fine, dm_as_fine, lev_mask,
                           level_mask_not_covered,
+                          fac_for_redist,
                           use_wts_in_divnc);
 
   BL_PROFILE_VAR_STOP(CAMR_umdrv_eb);

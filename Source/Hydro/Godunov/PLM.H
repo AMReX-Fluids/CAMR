@@ -16,7 +16,7 @@
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 amrex::Real
-plm_slope(
+plm_slope (
   const int i,
   const int j,
   const int k,
@@ -77,7 +77,7 @@ plm_slope(
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 amrex::Real
-plm_pslope(
+plm_pslope (
   const int i,
   const int j,
   const int k,
@@ -150,7 +150,7 @@ plm_pslope(
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 void
-CAMR_plm_d(
+CAMR_plm_d (
   const int i,
   const int j,
   const int k,

@@ -4,7 +4,7 @@
 #include "CAMR.H"
 #include "IndexDefines.H"
 
-void mol_umeth (
+void MOL_umeth (
                const amrex::Box& bx,
                const int* bclo, const int* bchi,
                const int* domlo, const int* domhi,
@@ -30,7 +30,7 @@ void mol_umeth (
                const int slope_order);
 
 #ifdef AMREX_USE_EB
-void mol_umeth_eb (
+void MOL_umeth_eb (
                const amrex::Box& bx,
                const int* bclo, const int* bchi,
                const int* domlo, const int* domhi,
@@ -49,20 +49,5 @@ void mol_umeth_eb (
                const amrex::Real small_pres,
                const int l_plm_iorder,
                const int l_eb_weights_type);
-
-void adjust_fluxes_eb (
-               const amrex::Box& bx,
-               amrex::Array4<const amrex::Real> const& q_arr,
-               amrex::Array4<const amrex::Real> const& u_arr,
-               AMREX_D_DECL(amrex::Array4<amrex::Real const> const& apx,
-                            amrex::Array4<amrex::Real const> const& apy,
-                            amrex::Array4<amrex::Real const> const& apz ),
-               amrex::Array4<const amrex::Real> const& vfrac,
-               const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx,
-               const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dxInv,
-               const amrex::GpuArray<const amrex::Array4<amrex::Real>, AMREX_SPACEDIM> flux,
-               const int* domlo, const int* domhi,
-               const int*  bclo, const int*  bchi,
-               const amrex::Real l_difmag);
 #endif
 #endif

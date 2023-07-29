@@ -1,12 +1,14 @@
 #include <AMReX_GpuAllocators.H>
 #include "Godunov.H"
+#include "Godunov_utils.H"
+#include "CAMR_utils_K.H"
 #include "Hydro_cmpflx.H"
 #include "PLM.H"
 #include "PPM.H"
 
 #if (AMREX_SPACEDIM == 3)
 void
-CAMR_umeth_3D(
+Godunov_umeth (
   amrex::Box const& bx,
   const int* bclo,
   const int* bchi,
@@ -37,7 +39,7 @@ CAMR_umeth_3D(
   const int iorder,
   const int l_transverse_reset_density)
 {
-  BL_PROFILE("CAMR::CAMR_umeth_3D()");
+  BL_PROFILE("CAMR::Godunov_umeth()");
 
   amrex::Real const dx = del[0];
   amrex::Real const dy = del[1];
