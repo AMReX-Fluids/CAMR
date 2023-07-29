@@ -241,6 +241,6 @@ void trace_ppm (
   const int use_flattening,
   const amrex::Real small_dens,
   const amrex::Real small_pres,
-  PassMap const& pmap);
+  PassMap const* pmap);
 
 #endif

@@ -158,17 +158,17 @@ Godunov_umeth_eb (
     int idir = 0;
     trace_ppm(
       bxg2, idir, q, qaux, srcQ, qxmarr, qxparr, bxg2, dt, del, use_flattening,
-      l_small_dens, l_small_pres, *lpmap);
+      l_small_dens, l_small_pres, lpmap);
 
     idir = 1;
     trace_ppm(
       bxg2, idir, q, qaux, srcQ, qymarr, qyparr, bxg2, dt, del, use_flattening,
-      l_small_dens, l_small_pres, *lpmap);
+      l_small_dens, l_small_pres, lpmap);
 
     idir = 2;
     trace_ppm(
       bxg2, idir, q, qaux, srcQ, qzmarr, qzparr, bxg2, dt, del, use_flattening,
-      l_small_dens, l_small_pres, *lpmap);
+      l_small_dens, l_small_pres, lpmap);
 
   } else {
     amrex::Error("CAMR::ppm_type must be 0 (PLM) or 1 (PPM)");
