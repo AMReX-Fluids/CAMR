@@ -7,6 +7,8 @@ CEXE_sources += CAMR_hydro.cpp
 
 ifeq ($(USE_EB), TRUE)
 CEXE_sources += CAMR_hydro_eb.cpp
+CEXE_headers += CAMR_utils_eb_K.H
+CEXE_headers += CAMR_hypflux_eb_K.H
 endif
 
 #C++ headers
@@ -15,4 +17,5 @@ CEXE_headers += Hydro_cmpflx.H
 CEXE_headers += Hydro_riemann.H
 CEXE_headers += CAMR_ctoprim.H
 CEXE_headers += CAMR_hydro.H
+CEXE_headers += CAMR_utils_K.H
 

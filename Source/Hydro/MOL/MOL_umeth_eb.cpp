@@ -19,7 +19,7 @@
 using namespace amrex;
 
 void
-mol_umeth_eb (const Box& /*bx*/,
+MOL_umeth_eb (const Box& /*bx*/,
               const int*  bclo, const int*  bchi,
               const int* domlo, const int* domhi,
               Array4<const Real> const& q_arr,
@@ -38,7 +38,7 @@ mol_umeth_eb (const Box& /*bx*/,
               const int l_plm_iorder,
               const int /*l_eb_weights_type*/)
 {
-    BL_PROFILE("mol_umeth_eb()");
+    BL_PROFILE("MOL_umeth_eb()");
 
     AMREX_D_TERM(const int bclx = bclo[0];,
                  const int bcly = bclo[1];,

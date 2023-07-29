@@ -1,11 +1,12 @@
 #include "Godunov.H"
+#include "Godunov_utils.H"
 #include "Hydro_cmpflx.H"
 #include "PLM.H"
 #include "PPM.H"
 
 #if (AMREX_SPACEDIM == 2)
 void
-CAMR_umeth_2D_eb(
+Godunov_umeth_eb (
   amrex::Box const& bx,
   const int* bclo,
   const int* bchi,
@@ -33,7 +34,7 @@ CAMR_umeth_2D_eb(
   const int iorder,
   const int l_transverse_reset_density)
 {
-  BL_PROFILE("CAMR::CAMR_umeth_2D_eb()");
+  BL_PROFILE("CAMR::Godunov_umeth_2D_eb()");
   amrex::Abort("Not implemented yet");
 
   amrex::Real const dx = del[0];

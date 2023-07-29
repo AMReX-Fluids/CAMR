@@ -9,26 +9,6 @@
 namespace {
 
 AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-void
-CAMR_ext_flx_eb(
-  const int i,
-  const int j,
-  const int k,
-  amrex::Array4<amrex::Real> const& flx,
-  amrex::Real area,
-  amrex::Array4<const amrex::Real> const& aper)
-{
-  // The fluxes are multiplied by area fractions inside amrex
-  //  so here we just weight them by the regular areas
-  if (aper(i,j,k) > 0.) {
-    for (int n = 0; n < NVAR; ++n) {
-       flx(i, j, k, n) *= area;
-    }
-  }
-}
-
-
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE
 amrex::Real limiter_eb (amrex::Real dlft, amrex::Real drgt, amrex::Real plm_theta) noexcept
 {
     using amrex::Real;

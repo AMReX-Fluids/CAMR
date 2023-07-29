@@ -12,7 +12,7 @@ using namespace amrex;
  * Function to create a simple cylinder EB.                                     *
  *                                                                              *
  ********************************************************************************/
-void make_eb_cylinder(const Geometry& geom, int required_coarsening_level)
+void make_eb_cylinder (const Geometry& geom, int required_coarsening_level)
 {
     // Initialise cylinder parameters
     bool inside = true;
@@ -41,7 +41,7 @@ void make_eb_cylinder(const Geometry& geom, int required_coarsening_level)
     amrex::Print() << " Radius:    " << radius << std::endl;
     amrex::Print() << " Direction: " << direction << std::endl;
     amrex::Print() << " Rotation angle(rad): " << rotation << std::endl;
-    amrex::Print() << " Rotation axe: " << rotation_axe << std::endl;
+    amrex::Print() << " Rotation axis: " << rotation_axe << std::endl;
 #if (AMREX_SPACDEIM == 3)
     amrex::Print() << " Center:    " << center[0] << ", " << center[1] << ", " << center[2]
                    << std::endl;

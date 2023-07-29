@@ -23,7 +23,7 @@ constexpr int ip2 = 4;
 // @param sm     The value of the parabola on the left edge of the zone
 // @param sp     The value of the parabola on the right edge of the zone
 AMREX_GPU_DEVICE AMREX_FORCE_INLINE void
-ppm_reconstruct(
+ppm_reconstruct (
   const amrex::Real* s,
   const amrex::Real flatn,
   amrex::Real& sm,
@@ -124,7 +124,7 @@ ppm_reconstruct(
 // @param Im    amrex::Real[3], the integrals under the parabola over
 //              the 3 waves from the left zone edge
 AMREX_GPU_DEVICE AMREX_FORCE_INLINE void
-ppm_int_profile(
+ppm_int_profile (
   const amrex::Real sm,
   const amrex::Real sp,
   const amrex::Real sc,
@@ -134,7 +134,6 @@ ppm_int_profile(
   amrex::Real* Ip,
   amrex::Real* Im)
 {
-
   // Integrate the parabolic profile to the edge of the cell.
 
   // compute x-component of Ip and Im
@@ -195,7 +194,7 @@ ppm_int_profile(
 // @param Ip    integral under the parabola from the right zone edge
 // @param Im    integral under the parabola from the left zone edge
 AMREX_GPU_DEVICE AMREX_FORCE_INLINE void
-ppm_int_profile_single(
+ppm_int_profile_single (
   const amrex::Real sm,
   const amrex::Real sp,
   const amrex::Real sc,
@@ -204,7 +203,6 @@ ppm_int_profile_single(
   amrex::Real& Ip,
   amrex::Real& Im)
 {
-
   // Integrate the parabolic profile to the edge of the cell.
   // This is the MHD version.  We come in already with the eigenvalues.
 
@@ -229,7 +227,7 @@ ppm_int_profile_single(
 }
 
 // Host Functions
-void trace_ppm(
+void trace_ppm (
   const amrex::Box& bx,
   const int idir,
   amrex::Array4<amrex::Real const> const& q_arr,

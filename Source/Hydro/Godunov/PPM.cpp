@@ -1,4 +1,5 @@
 #include "Godunov.H"
+#include "Godunov_utils.H"
 #include "PPM.H"
 
 void
