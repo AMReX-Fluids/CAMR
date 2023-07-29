@@ -16,8 +16,10 @@ CAMR_divu (
                const amrex::Real dy,
                const amrex::Real dz),
   amrex::Array4<amrex::Real> const& divu,
-  const int* domlo, const int* domhi,
-  const int* bclo , const int* bchi)
+  amrex::GpuArray<int,AMREX_SPACEDIM> const& domlo,
+  amrex::GpuArray<int,AMREX_SPACEDIM> const& domhi,
+  amrex::GpuArray<int,AMREX_SPACEDIM> const& bclo,
+  amrex::GpuArray<int,AMREX_SPACEDIM> const& bchi)
 {
     int bclo_x = bclo[0]; int domlo_x = domlo[0];
     int bclo_y = bclo[1]; int domlo_y = domlo[1];

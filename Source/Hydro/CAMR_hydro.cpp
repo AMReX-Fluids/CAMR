@@ -72,8 +72,12 @@ CAMR_umdrv (bool do_mol, Box const& bx,
     AMREX_D_TERM(const Real dx0 = dx[0];,
                  const Real dx1 = dx[1];,
                  const Real dx2 = dx[2];);
+    GpuArray<int,AMREX_SPACEDIM> ldomlo{AMREX_D_DECL(domlo[0],domlo[1],domlo[2])};
+    GpuArray<int,AMREX_SPACEDIM> ldomhi{AMREX_D_DECL(domhi[0],domhi[1],domhi[2])};
+    GpuArray<int,AMREX_SPACEDIM> lbclo{AMREX_D_DECL(bclo[0],bclo[1],bclo[2])};
+    GpuArray<int,AMREX_SPACEDIM> lbchi{AMREX_D_DECL(bchi[0],bchi[1],bchi[2])};
     ParallelFor(bxg2, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-        CAMR_divu(i, j, k, q_arr, AMREX_D_DECL(dx0, dx1, dx2), divuarr, domlo, domhi, bclo, bchi);
+        CAMR_divu(i, j, k, q_arr, AMREX_D_DECL(dx0, dx1, dx2), divuarr, ldomlo, ldomhi, lbclo, lbchi);
     });
 
     // Adjust the fluxes with artificial viscosity and area-weight them

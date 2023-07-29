@@ -17,7 +17,7 @@ trace_ppm(
   const int use_flattening,
   const amrex::Real small_dens,
   const amrex::Real small_pres,
-  PassMap const& pmap)
+  PassMap const* pmap)
 {
   // here, lo and hi are the range we loop over -- this can include ghost cells
   // vlo and vhi are the bounds of the valid box (no ghost cells)
@@ -138,6 +138,7 @@ trace_ppm(
     }
 
 //  bit of a hack here.  keeping gamrc tracing in qvar
+    {
         amrex::Real s[5];
         s[im2] = q_aux(ivm2, QGAMC);
         s[im1] = q_aux(ivm1, QGAMC);
@@ -148,7 +149,7 @@ trace_ppm(
         amrex::Real sp;
         ppm_reconstruct(s, flat, sm, sp);
         ppm_int_profile(sm, sp, s[2], un, cc, dtdx, Ip[QVAR], Im[QVAR]);
-
+    }
 
     // CAMR does source term tracing in CAMR_transx, CAMR_transy, and
     // CAMR_transz. So to be consistent we remove the source term
@@ -177,7 +178,7 @@ trace_ppm(
 
     // Upwind the passive variables
     for (int ipassive = 0; ipassive < NPASSIVE; ++ipassive) {
-        const int n = pmap.qpassMap[ipassive];
+        const int n = pmap->qpassMap[ipassive];
 
        // Plus state on face i
        if (

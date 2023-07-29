@@ -121,12 +121,12 @@ Godunov_umeth (
     int idir = 0;
     trace_ppm(
       bxg2, idir, q, qaux, srcQ, qxmarr, qxparr, bxg2, dt, del, use_flattening,
-      small_dens, small_pres, *lpmap);
+      small_dens, small_pres, lpmap);
 
     idir = 1;
     trace_ppm(
       bxg2, idir, q, qaux, srcQ, qymarr, qyparr, bxg2, dt, del, use_flattening,
-      small_dens, small_pres, *lpmap);
+      small_dens, small_pres, lpmap);
 
   } else {
     amrex::Error("CAMR::ppm_type must be 0 (PLM) or 1 (PPM)");
