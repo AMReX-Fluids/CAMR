@@ -9,7 +9,7 @@
 using namespace amrex;
 
 void
-adjust_fluxes(
+adjust_fluxes (
     const Box& bx,
     Array4<const Real> const& u,
     const amrex::GpuArray<const Array4<     Real>, AMREX_SPACEDIM> flx,
@@ -44,7 +44,7 @@ adjust_fluxes(
 
 #ifdef AMREX_USE_EB
 void
-adjust_fluxes_eb(
+adjust_fluxes_eb (
               const Box& /*bx*/,
               Array4<const Real> const& q_arr,
               Array4<const Real> const& u_arr,
@@ -94,17 +94,18 @@ adjust_fluxes_eb(
     int  bclo_dir =  bclo[0];
     int  bchi_dir =  bchi[0];
 
-    amrex::ParallelFor(fbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+    amrex::ParallelFor(fbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+    {
+        CAMR_artif_visc(i, j, k, fx_arr, divu_arr, u_arr, dx[0], l_difmag, 0,
+                        domlo_dir, domhi_dir, bclo_dir, bchi_dir);
 
-          CAMR_artif_visc(i, j, k, fx_arr, divu_arr, u_arr, dx[0], l_difmag, 0,
-                          domlo_dir, domhi_dir, bclo_dir, bchi_dir);
+        // Normalize Species Flux
+        if (apx(i,j,k) > 0. ) {
+          CAMR_norm_spec_flx(i, j, k, fx_arr);
+        }
 
-          // Normalize Species Flux
-          if(apx(i,j,k) > 0. ) {
-            CAMR_norm_spec_flx(i, j, k, fx_arr);
-          }
-          // Make flux extensive
-          CAMR_ext_flx_eb(i, j, k, fx_arr, areafac, apx);
+        // Make flux extensive
+        CAMR_ext_flx_eb(i, j, k, fx_arr, areafac, apx);
     });
 
     // Flux alterations

@@ -25,11 +25,8 @@ amr.v = 1
 
 CAMR.sum_interval = 1
 
-CAMR.redistribution_type = StateRedist
 CAMR.redistribution_type = FluxRedist
-
-# LOAD BALANCE
-amr.loadbalance_with_workestimates = 0
+CAMR.redistribution_type = StateRedist
 
 # REFINEMENT / REGRIDDING 
 amr.max_level       = 1       # maximum level number allowed
@@ -62,7 +59,7 @@ amr.derive_plot_vars  = x_velocity y_velocity z_velocity vfrac
 CAMR.geometry = "box"
 # Note: flow is internal to box specified
 box.Lo = -10.0    -8.
-box.Hi =  16.25   40.
+box.Hi =  16.2    40.
 
 amr.refinement_indicators = box1
 amr.box1.max_level = 1
