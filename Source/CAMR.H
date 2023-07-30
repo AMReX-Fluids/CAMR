@@ -323,7 +323,7 @@ public:
 
 // public for CUDA
 
-  static void normalize_species(amrex::MultiFab& S_new);
+  void normalize_species(amrex::MultiFab& S_new);
 
   static void enforce_min_density(amrex::MultiFab& S_new);
 
@@ -373,7 +373,7 @@ protected:
   static void error_setup ();
 
   void expand_state(amrex::MultiFab& S, const amrex::Real time, const int ng);
-  static void clean_state(amrex::MultiFab& S);
+  void clean_state(amrex::MultiFab& S);
 
   void buildMetrics();
 
