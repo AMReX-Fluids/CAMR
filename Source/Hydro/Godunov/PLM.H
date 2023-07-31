@@ -9,6 +9,7 @@
 #include "CAMR_Constants.H"
 #include "IndexDefines.H"
 
+
 // This header file contains functions and declarations for the 3D hydro portion
 // of CAMR on the GPU. As per the convention of AMReX, inlined functions are
 // defined here, whereas non-inline functions are declared here.
@@ -32,34 +33,38 @@ plm_slope (
   } else {
       amrex::ignore_unused(k);
       const amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
-      const amrex::IntVect ivm2(iv - 2 * amrex::IntVect::TheDimensionVector(dir));
-      const amrex::IntVect ivm(iv - amrex::IntVect::TheDimensionVector(dir));
-      const amrex::IntVect ivp(iv + amrex::IntVect::TheDimensionVector(dir));
-      const amrex::IntVect ivp2(iv + 2 * amrex::IntVect::TheDimensionVector(dir));
+      const amrex::IntVect dvec(amrex::IntVect::TheDimensionVector(dir));
+      const amrex::IntVect ivm2(iv - 2 * dvec);
+      const amrex::IntVect ivm(iv - dvec);
+      const amrex::IntVect ivp(iv + dvec);
+      const amrex::IntVect ivp2(iv + 2 * dvec);
 
-      amrex::Real dlft, drgt, dcen, dfm, dfp, dlim, dsgn, dtemp;
+      amrex::Real dlft, drgt, dcen, dfm = 0.0, dfp = 0.0, dlim, dsgn, dtemp;
       const amrex::Real qc = q(iv, n);
       const amrex::Real qm2 = q(ivm2, n);
       const amrex::Real qm = q(ivm, n);
       const amrex::Real qp = q(ivp, n);
       const amrex::Real qp2 = q(ivp2, n);
 
-      dlft = qm - qm2;
-      drgt = qc - qm;
-      dcen = 0.5 * (dlft + drgt);
-      dsgn = amrex::Math::copysign(1.0, dcen);
-      dlim = (dlft * drgt >= 0.0)
-               ? 2.0 * std::min(std::abs(dlft), std::abs(drgt))
-               : 0.0;
-      dfm = dsgn * std::min(dlim, std::abs(dcen));
+      if (order == 4) {
+        dlft = qm - qm2;
+        drgt = qc - qm;
+        dcen = 0.5 * (dlft + drgt);
+        dsgn = amrex::Math::copysign(1.0, dcen);
+        dlim = (dlft * drgt >= 0.0)
+                   ? 2.0 * std::min(std::abs(dlft), std::abs(drgt))
+                   : 0.0;
+        dfm = dsgn * std::min(dlim, std::abs(dcen));
 
-      dlft = qp - qc;
-      drgt = qp2 - qp;
-      dcen = 0.5 * (dlft + drgt);
-      dsgn = amrex::Math::copysign(1.0, dcen);
-      dlim = (dlft * drgt >= 0.0)
-               ? 2.0 * std::min(std::abs(dlft), std::abs(drgt)) : 0.0;
-      dfp = dsgn * std::min(dlim, std::abs(dcen));
+        dlft = qp - qc;
+        drgt = (order == 4) ? qp2 - qp : 0.0;
+        dcen = 0.5 * (dlft + drgt);
+        dsgn = amrex::Math::copysign(1.0, dcen);
+        dlim = (dlft * drgt >= 0.0)
+                   ? 2.0 * std::min(std::abs(dlft), std::abs(drgt))
+                   : 0.0;
+        dfp = dsgn * std::min(dlim, std::abs(dcen));
+      }
 
       dlft = qc - qm;
       drgt = qp - qc;
@@ -96,12 +101,13 @@ plm_pslope (
 
       amrex::ignore_unused(k);
       const amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
-      const amrex::IntVect ivm2(iv - 2 * amrex::IntVect::TheDimensionVector(dir));
-      const amrex::IntVect ivm(iv - amrex::IntVect::TheDimensionVector(dir));
-      const amrex::IntVect ivp(iv + amrex::IntVect::TheDimensionVector(dir));
-      const amrex::IntVect ivp2(iv + 2 * amrex::IntVect::TheDimensionVector(dir));
+      const amrex::IntVect dvec(amrex::IntVect::TheDimensionVector(dir));
+      const amrex::IntVect ivm2(iv - 2 * dvec);
+      const amrex::IntVect ivm(iv - dvec);
+      const amrex::IntVect ivp(iv + dvec);
+      const amrex::IntVect ivp2(iv + 2 * dvec);
 
-      amrex::Real dlft, drgt, dcen, dfm, dfp, dlim, dsgn, dtemp;
+      amrex::Real dlft, drgt, dcen, dfm = 0.0, dfp = 0.0, dlim, dsgn, dtemp;
       const amrex::Real qc  = q(iv  , n);
       const amrex::Real qm2 = q(ivm2, n);
       const amrex::Real qm  = q(ivm , n);
@@ -115,21 +121,33 @@ plm_pslope (
       if (dir == 2) QIU = QW;
 #endif
 
-      dlft = qm - qm2 - 0.25 * dx * (q(ivm,QRHO)+q(ivm2,QRHO)) * (srcQ(ivm,QIU)+srcQ(ivm2,QIU));
-      drgt = qc - qm  - 0.25 * dx * (q(ivm,QRHO)+q(iv  ,QRHO)) * (srcQ(ivm,QIU)+srcQ(iv  ,QIU));
-      dcen = 0.5 * (dlft + drgt);
-      dsgn = amrex::Math::copysign(1.0, dcen);
-      dlim = (dlft * drgt >= 0.0)
-               ? 2.0 * std::min( std::abs(dlft), std::abs(drgt)) : 0.0;
-      dfm = dsgn * std::min<amrex::Real>(dlim, std::abs(dcen));
+      if (order == 4) {
+        dlft = qm - qm2 -
+               0.25 * dx * (q(ivm, QRHO) + q(ivm2, QRHO)) *
+                   (srcQ(ivm, QIU) + srcQ(ivm2, QIU));
+        drgt = qc - qm -
+               0.25 * dx * (q(ivm, QRHO) + q(iv, QRHO)) *
+                   (srcQ(ivm, QIU) + srcQ(iv, QIU));
+        dcen = 0.5 * (dlft + drgt);
+        dsgn = amrex::Math::copysign(1.0, dcen);
+        dlim = (dlft * drgt >= 0.0)
+                   ? 2.0 * std::min(std::abs(dlft), std::abs(drgt))
+                   : 0.0;
+        dfm = dsgn * std::min<amrex::Real>(dlim, std::abs(dcen));
 
-      dlft = qp - qc  - 0.25 * dx * (q(ivp,QRHO)+q(iv  ,QRHO)) * (srcQ(ivp,QIU)+srcQ(iv  ,QIU));
-      drgt = qp2 - qp - 0.25 * dx * (q(ivp,QRHO)+q(ivp2,QRHO)) * (srcQ(ivp,QIU)+srcQ(ivp2,QIU));
-      dcen = 0.5 * (dlft + drgt);
-      dsgn = amrex::Math::copysign(1.0, dcen);
-      dlim = (dlft * drgt >= 0.0)
-               ? 2.0 * std::min(std::abs(dlft), std::abs(drgt)) : 0.0;
-      dfp = dsgn * std::min(dlim, std::abs(dcen));
+        dlft = qp - qc -
+               0.25 * dx * (q(ivp, QRHO) + q(iv, QRHO)) *
+                   (srcQ(ivp, QIU) + srcQ(iv, QIU));
+        drgt = qp2 - qp -
+               0.25 * dx * (q(ivp, QRHO) + q(ivp2, QRHO)) *
+                   (srcQ(ivp, QIU) + srcQ(ivp2, QIU));
+        dcen = 0.5 * (dlft + drgt);
+        dsgn = amrex::Math::copysign(1.0, dcen);
+        dlim = (dlft * drgt >= 0.0)
+                   ? 2.0 * std::min(std::abs(dlft), std::abs(drgt))
+                   : 0.0;
+        dfp = dsgn * std::min(dlim, std::abs(dcen));
+      }
 
       dlft = qc - qm - 0.25 * dx * (q(iv,QRHO)+q(ivm,QRHO)) * (srcQ(iv,QIU)+srcQ(ivm,QIU));
       drgt = qp - qc - 0.25 * dx * (q(iv,QRHO)+q(ivp,QRHO)) * (srcQ(iv,QIU)+srcQ(ivp,QIU));
@@ -146,6 +164,97 @@ plm_pslope (
       return dp;
   }
 }
+
+
+#ifdef AMREX_USE_EB
+AMREX_GPU_DEVICE
+AMREX_FORCE_INLINE
+amrex::Real
+plm_slope_eb (
+  const int i,
+  const int j,
+  const int k,
+  const int n,
+  const int dir,
+  amrex::Array4<amrex::EBCellFlag const> const& flags,
+  amrex::Array4<const amrex::Real> const& q,
+  amrex::Real flat,
+  const int order)
+{
+  const amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
+  const amrex::IntVect dvec(amrex::IntVect::TheDimensionVector(dir));
+  const amrex::IntVect ivm2(iv - 2 * dvec);
+  const amrex::IntVect ivm(iv - dvec);
+  const amrex::IntVect ivp(iv + dvec);
+  const amrex::IntVect ivp2(iv + 2 * dvec);
+
+  // We have enough cells in the x-direction to do 4th order slopes
+  // centered on (i,j,k) with all values at cell centers
+  if ((order == 4) &&
+      flags(iv).isSingleValued() &&
+      flags(ivm).isSingleValued() &&
+      flags(ivm2).isSingleValued() &&
+      flags(ivp).isSingleValued() &&
+      flags(ivp2).isSingleValued()){
+    return plm_slope(i, j, k, n, dir, q, flat, order);
+  }
+  // We have enough cells in the x-direction to do 2nd order slopes
+  // centered on (i,j,k) with all values at cell centers
+  else if ((order > 1) &&
+           flags(iv).isSingleValued() &&
+           flags(ivm).isSingleValued() &&
+           flags(ivp).isSingleValued()){
+    return plm_slope(i, j, k, n, dir, q, flat, 2);
+  } else {
+    return 0.0;
+  }
+}
+
+AMREX_GPU_DEVICE
+AMREX_FORCE_INLINE
+amrex::Real
+plm_pslope_eb (
+  const int i,
+  const int j,
+  const int k,
+  const int n,
+  const int dir,
+  amrex::Array4<amrex::EBCellFlag const> const& flags,
+  amrex::Array4<const amrex::Real> const& q,
+  const amrex::Real dx,
+  amrex::Array4<const amrex::Real> const& srcQ,
+  amrex::Real flat,
+  const int order)
+{
+  const amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
+  const amrex::IntVect dvec(amrex::IntVect::TheDimensionVector(dir));
+  const amrex::IntVect ivm2(iv - 2 * dvec);
+  const amrex::IntVect ivm(iv - dvec);
+  const amrex::IntVect ivp(iv + dvec);
+  const amrex::IntVect ivp2(iv + 2 * dvec);
+
+  // We have enough cells in the x-direction to do 4th order slopes
+  // centered on (i,j,k) with all values at cell centers
+  if ((order == 4) &&
+      flags(iv).isSingleValued() &&
+      flags(ivm).isSingleValued() &&
+      flags(ivm2).isSingleValued() &&
+      flags(ivp).isSingleValued() &&
+      flags(ivp2).isSingleValued()){
+    return plm_pslope(i, j, k, n, dir, q, dx, srcQ, flat, order);
+  }
+  // We have enough cells in the x-direction to do 2nd order slopes
+  // centered on (i,j,k) with all values at cell centers
+  else if ((order > 1) &&
+           flags(iv).isSingleValued() &&
+           flags(ivm).isSingleValued() &&
+           flags(ivp).isSingleValued()){
+    return plm_pslope(i, j, k, n, dir, q, dx, srcQ, flat, 2);
+  } else {
+    return 0.0;
+  }
+}
+#endif
 
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE

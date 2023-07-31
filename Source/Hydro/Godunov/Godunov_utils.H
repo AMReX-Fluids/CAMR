@@ -10,6 +10,7 @@
 #include "AMReX_MultiFabUtil.H"
 #include <AMReX_EBFArrayBox.H>
 #include <AMReX_MultiCutFab.H>
+#include "eb_utils.H"
 #endif
 
 AMREX_GPU_DEVICE
@@ -110,20 +111,8 @@ amrex::Real flatten_eb(const int i,
 
   const amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
   const amrex::IntVect dvec(amrex::IntVect::TheDimensionVector(dir));
-  const amrex::IntVect ivm3(iv - 3 * dvec);
-  const amrex::IntVect ivm2(iv - 2 * dvec);
-  const amrex::IntVect ivm(iv - dvec);
-  const amrex::IntVect ivp(iv + dvec);
-  const amrex::IntVect ivp2(iv + 2 * dvec);
-  const amrex::IntVect ivp3(iv + 3 * dvec);
-
-  if(flags(iv).isCovered() ||
-     flags(ivp).isCovered() ||
-     flags(ivm).isCovered() ||
-     flags(ivp2).isCovered() ||
-     flags(ivm2).isCovered() ||
-     flags(ivp3).isCovered() ||
-     flags(ivm3).isCovered()){
+  const amrex::IntVect ng(3 * dvec);
+  if(is_cut_neighborhood(iv, flags, ng)){
     return 1.0;
   }
   return flatten(i, j, k, dir, q);

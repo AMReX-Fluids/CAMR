@@ -6,3 +6,4 @@ CEXE_sources += eb_sphere.cpp
 CEXE_sources += writeEBsurface.cpp
 
 CEXE_headers += eb_if.H
+CEXE_headers += eb_utils.H
