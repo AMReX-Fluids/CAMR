@@ -22,7 +22,7 @@ Godunov_umeth_eb (
   amrex::Array4<const amrex::Real> const& /*a1*/,
   amrex::Array4<const amrex::Real> const& /*a2*/,
   amrex::Array4<const amrex::Real> const& /*vfrac*/,
-  amrex::Array4<amrex::EBCellFlag const> const& /*flag_arr*/,
+  amrex::Array4<amrex::EBCellFlag const> const& flag_arr,
   const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> del,
   const amrex::Real dt,
   const amrex::Real small,
@@ -84,7 +84,7 @@ Godunov_umeth_eb (
        // Calculate flattening in-place
        if (use_flattening == 1) {
          for (int dir_flat = 0; dir_flat < AMREX_SPACEDIM; dir_flat++) {
-           flat = std::min(flat, flatten(i, j, k, dir_flat, q));
+           flat = std::min(flat, flatten_eb(i, j, k, dir_flat, flag_arr, q));
          }
        }
 

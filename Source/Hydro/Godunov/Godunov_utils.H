@@ -98,6 +98,38 @@ flatten (
   return 1.0 - std::max(chi2 * z2, chi * z);
 }
 
+#ifdef AMREX_USE_EB
+AMREX_GPU_DEVICE
+AMREX_FORCE_INLINE
+amrex::Real flatten_eb(const int i,
+                       const int j,
+                       const int k,
+                       const int dir,
+                       amrex::Array4<amrex::EBCellFlag const> const& flags,
+                       amrex::Array4<const amrex::Real> const &q) {
+
+  const amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
+  const amrex::IntVect dvec(amrex::IntVect::TheDimensionVector(dir));
+  const amrex::IntVect ivm3(iv - 3 * dvec);
+  const amrex::IntVect ivm2(iv - 2 * dvec);
+  const amrex::IntVect ivm(iv - dvec);
+  const amrex::IntVect ivp(iv + dvec);
+  const amrex::IntVect ivp2(iv + 2 * dvec);
+  const amrex::IntVect ivp3(iv + 3 * dvec);
+
+  if(flags(iv).isCovered() ||
+     flags(ivp).isCovered() ||
+     flags(ivm).isCovered() ||
+     flags(ivp2).isCovered() ||
+     flags(ivm2).isCovered() ||
+     flags(ivp3).isCovered() ||
+     flags(ivm3).isCovered()){
+    return 1.0;
+  }
+  return flatten(i, j, k, dir, q);
+}
+#endif
+
 #if (AMREX_SPACEDIM == 3)
 // Transverse Correction for Predicted dir-states, using other_dir-Flux
 AMREX_GPU_DEVICE
