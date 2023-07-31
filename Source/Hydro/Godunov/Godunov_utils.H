@@ -10,6 +10,7 @@
 #include "AMReX_MultiFabUtil.H"
 #include <AMReX_EBFArrayBox.H>
 #include <AMReX_MultiCutFab.H>
+#include "eb_utils.H"
 #endif
 
 AMREX_GPU_DEVICE
@@ -97,6 +98,26 @@ flatten (
 
   return 1.0 - std::max(chi2 * z2, chi * z);
 }
+
+#ifdef AMREX_USE_EB
+AMREX_GPU_DEVICE
+AMREX_FORCE_INLINE
+amrex::Real flatten_eb(const int i,
+                       const int j,
+                       const int k,
+                       const int dir,
+                       amrex::Array4<amrex::EBCellFlag const> const& flags,
+                       amrex::Array4<const amrex::Real> const &q) {
+
+  const amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
+  const amrex::IntVect dvec(amrex::IntVect::TheDimensionVector(dir));
+  const amrex::IntVect ng(3 * dvec);
+  if(is_cut_neighborhood(iv, flags, ng)){
+    return 1.0;
+  }
+  return flatten(i, j, k, dir, q);
+}
+#endif
 
 #if (AMREX_SPACEDIM == 3)
 // Transverse Correction for Predicted dir-states, using other_dir-Flux

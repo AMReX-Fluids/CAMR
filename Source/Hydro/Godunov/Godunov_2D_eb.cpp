@@ -22,7 +22,7 @@ Godunov_umeth_eb (
   amrex::Array4<const amrex::Real> const& /*a1*/,
   amrex::Array4<const amrex::Real> const& /*a2*/,
   amrex::Array4<const amrex::Real> const& /*vfrac*/,
-  amrex::Array4<amrex::EBCellFlag const> const& /*flag_arr*/,
+  amrex::Array4<amrex::EBCellFlag const> const& flag_arr,
   const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> del,
   const amrex::Real dt,
   const amrex::Real small,
@@ -84,7 +84,7 @@ Godunov_umeth_eb (
        // Calculate flattening in-place
        if (use_flattening == 1) {
          for (int dir_flat = 0; dir_flat < AMREX_SPACEDIM; dir_flat++) {
-           flat = std::min(flat, flatten(i, j, k, dir_flat, q));
+           flat = std::min(flat, flatten_eb(i, j, k, dir_flat, flag_arr, q));
          }
        }
 
@@ -93,9 +93,9 @@ Godunov_umeth_eb (
         for (int n = 0; n < QVAR; ++n)
         {
           if (n == QPRES && use_pslope)
-              slope[n] = plm_pslope(i, j, k, n, 0, q, dx, srcQ, flat, iorder);
+              slope[n] = plm_pslope_eb(i, j, k, n, 0, flag_arr, q, dx, srcQ, flat, iorder);
           else
-              slope[n] = plm_slope(i, j, k, n, 0, q, flat, iorder);
+              slope[n] = plm_slope_eb(i, j, k, n, 0, flag_arr, q, flat, iorder);
         }
         CAMR_plm_d(
           i, j, k, 0, qxmarr, qxparr, slope, q, qaux(i, j, k, QC), dx, dt,
@@ -105,9 +105,9 @@ Godunov_umeth_eb (
         for (int n = 0; n < QVAR; n++)
         {
           if (n == QPRES && use_pslope)
-              slope[n] = plm_pslope(i, j, k, n, 1, q, dy, srcQ, flat, iorder);
+              slope[n] = plm_pslope_eb(i, j, k, n, 1, flag_arr, q, dy, srcQ, flat, iorder);
           else
-              slope[n] = plm_slope(i, j, k, n, 1, q, flat, iorder);
+              slope[n] = plm_slope_eb(i, j, k, n, 1, flag_arr, q, flat, iorder);
         }
         CAMR_plm_d(
           i, j, k, 1, qymarr, qyparr, slope, q, qaux(i, j, k, QC), dy, dt,
