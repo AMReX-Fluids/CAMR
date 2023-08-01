@@ -1294,3 +1294,46 @@ CAMR::clean_state(amrex::MultiFab& S)
   int ng = S.nGrow();
   computeTemp(S,ng);
 }
+
+void
+CAMR::ZeroOutSolidWalls(amrex::MultiFab& S)
+{
+
+  auto const& fact =
+    dynamic_cast<amrex::EBFArrayBoxFactory const&>(S.Factory());
+  auto const& vfrac = fact.getVolFrac();
+
+#ifdef _OPENMP
+#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
+#endif
+  for (amrex::MFIter mfi(S, amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+    const amrex::Box& bx = mfi.tilebox();
+
+    //const auto& flag_fab = flags[mfi];
+    //amrex::FabType typ = flag_fab.getType(bx);
+    //if (typ == amrex::FabType::covered) {
+    //  continue;
+   // }
+
+	int ncomp = S.nComp();
+
+    const auto& Sarr = S.array(mfi);
+    const auto& vfrac_arr = vfrac.array(mfi);
+    amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+		if (vfrac_arr(i,j,k) == 0.0) 
+		{
+       		for (int n = 0; n < ncomp; ++n) {
+         		Sarr(i, j, k, n) = 0.0;
+			}
+       }
+	   {
+			for (int n = 0; n < ncomp; ++n) {
+				if(Sarr(i, j, k, n) < 1e-12){
+					Sarr(i, j, k, n) = 0.0;
+				}
+			}
+		}	
+
+    });
+  }
+}
