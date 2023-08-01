@@ -313,7 +313,7 @@ CAMR_plm_d (
 
   //  Construct the right state on the i-1/2 interface
 #ifdef AMREX_USE_EB
-  if(area(iv) == 1.0) {
+  if(area(iv) > 0.0) {
 #endif
   const amrex::Real rho_ref =
     rho - 0.5 * (1.0 + dtdx * std::min(wv[0], 0.0)) * drho;
@@ -367,7 +367,7 @@ CAMR_plm_d (
 
   //  Construct the left state on the i+1/2 interface
 #ifdef AMREX_USE_EB
-  if(area(ivp) == 1.0) {
+  if(area(ivp) > 0.0) {
 #endif
   const amrex::Real rho_ref =
     rho + 0.5 * (1.0 - dtdx * std::max(wv[2], 0.0)) * drho;
