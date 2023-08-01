@@ -313,8 +313,9 @@ CAMR_plm_d (
 
   //  Construct the right state on the i-1/2 interface
 #ifdef AMREX_USE_EB
-  if(area(iv) > 0.0) {
+  if(area(iv) > 0.0)
 #endif
+  {
   const amrex::Real rho_ref =
     rho - 0.5 * (1.0 + dtdx * std::min(wv[0], 0.0)) * drho;
   amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> vel_ref{
@@ -357,8 +358,9 @@ CAMR_plm_d (
   qp(iv, QPRES) = p_ref + (apright + amright) * cs;
   qp(iv, QPRES) = std::max( qp(iv, QPRES), small_pres);
   qp(iv, QREINT) = rhoe_ref + (apright + amright) * enth * cs + azeright;
+  }
 #ifdef AMREX_USE_EB
-  } else {
+  else {
     for(int n = 0; n < QVAR; n++){
       qp(iv, n) = 0.0;
     }
@@ -367,8 +369,9 @@ CAMR_plm_d (
 
   //  Construct the left state on the i+1/2 interface
 #ifdef AMREX_USE_EB
-  if(area(ivp) > 0.0) {
+  if(area(ivp) > 0.0)
 #endif
+  {
   const amrex::Real rho_ref =
     rho + 0.5 * (1.0 - dtdx * std::max(wv[2], 0.0)) * drho;
   amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> vel_ref{
@@ -409,8 +412,9 @@ CAMR_plm_d (
   qm(ivp, QPRES) = p_ref + (apleft + amleft) * cs;
   qm(ivp, QPRES) = std::max( qm(ivp, QPRES), small_pres);
   qm(ivp, QREINT) = rhoe_ref + (apleft + amleft) * enth * cs + azeleft;
+  }
 #ifdef AMREX_USE_EB
-  } else {
+  else {
     for(int n = 0; n < QVAR; n++){
       qm(ivp, n) = 0.0;
     }
