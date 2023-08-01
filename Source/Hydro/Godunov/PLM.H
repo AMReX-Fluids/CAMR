@@ -393,15 +393,35 @@ CAMR_plm_d (
   // Upwind the passive variables
   for (int ipassive = 0; ipassive < NPASSIVE; ++ipassive) {
     const int n = pmap.qpassMap[ipassive];
-    // Right state
     const amrex::Real vel_ad = q(iv, QU + l_idx[0]);
-    amrex::Real spzero = (vel_ad > 0) ? -1.0 : vel_ad * dtdx;
-    const amrex::Real acmprght = 0.5 * (-1.0 - spzero) * slope[n];
-    qp(iv, n) = q(iv, n) + acmprght;
+    // Right state
+#ifdef AMREX_USE_EB
+    if (area(iv) > 0.0)
+#endif
+    {
+      const amrex::Real spzero = (vel_ad > 0) ? -1.0 : vel_ad * dtdx;
+      const amrex::Real acmprght = 0.5 * (-1.0 - spzero) * slope[n];
+      qp(iv, n) = q(iv, n) + acmprght;
+    }
+#ifdef AMREX_USE_EB
+    else {
+      qp(iv, n) = 0.0;
+    }
+#endif
 
-    spzero = vel_ad >= 0 ? vel_ad * dtdx : 1.0;
-    const amrex::Real acmpleft = 0.5 * (1.0 - spzero) * slope[n];
-    qm(ivp, n) = q(iv, n) + acmpleft;
+#ifdef AMREX_USE_EB
+    if (area(iv) > 0.0)
+#endif
+    {
+      const amrex::Real spzero = vel_ad >= 0 ? vel_ad * dtdx : 1.0;
+      const amrex::Real acmpleft = 0.5 * (1.0 - spzero) * slope[n];
+      qm(ivp, n) = q(iv, n) + acmpleft;
+    }
+#ifdef AMREX_USE_EB
+    else {
+      qm(ivp, n) = 0.0;
+    }
+#endif
   }
 }
 
