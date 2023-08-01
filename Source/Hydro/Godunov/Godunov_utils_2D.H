@@ -37,7 +37,11 @@ CAMR_transd (
   const amrex::Real cdtdx,
   PassMap const& pmap,
   int transverse_reset_density,
-  amrex::Real small_pres)
+  amrex::Real small_pres
+#ifdef AMREX_USE_EB
+  , amrex::Array4<const amrex::Real> const& area = {}
+#endif
+)
 {
   amrex::ignore_unused(k);
   const amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
@@ -47,10 +51,16 @@ CAMR_transd (
     iv + amrex::IntVect::TheDimensionVector(dir == 0 ? 0 : 1));
   const int qvidx = (dir == 0) ? GDV : GDU;
 
-  const amrex::Real flxrho = cdtdx * (flxx(ivp0, URHO) - flxx(iv, URHO));
-  const amrex::Real flxu   = cdtdx * (flxx(ivp0, UMX) - flxx(iv, UMX));
-  const amrex::Real flxv   = cdtdx * (flxx(ivp0, UMY) - flxx(iv, UMY));
-  const amrex::Real flxe   = cdtdx * (flxx(ivp0, UEDEN) - flxx(iv, UEDEN));
+  const bool no_cut_face =
+#ifdef AMREX_USE_EB
+    (area(ivp0) > 0.0) || (area(iv) > 0.0);
+#else
+  true;
+#endif
+  const amrex::Real flxrho = no_cut_face ? cdtdx * (flxx(ivp0, URHO) - flxx(iv, URHO)) : 0.0;
+  const amrex::Real flxu   = no_cut_face ? cdtdx * (flxx(ivp0, UMX) - flxx(iv, UMX)) : 0.0;
+  const amrex::Real flxv   = no_cut_face ? cdtdx * (flxx(ivp0, UMY) - flxx(iv, UMY)) : 0.0;
+  const amrex::Real flxe   = no_cut_face ? cdtdx * (flxx(ivp0, UEDEN) - flxx(iv, UEDEN)) : 0.0;
   const amrex::Real srcr   = srcQ(iv, QRHO);
   const amrex::Real srce   = srcQ(iv, QREINT);
   const amrex::Real srcp   = srcQ(iv, QPRES);
