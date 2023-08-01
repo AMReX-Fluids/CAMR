@@ -19,8 +19,8 @@ Godunov_umeth_eb (
   amrex::Array4<amrex::Real> const& flx2,
   amrex::Array4<amrex::Real> const& q1,
   amrex::Array4<amrex::Real> const& q2,
-  amrex::Array4<const amrex::Real> const& /*a1*/,
-  amrex::Array4<const amrex::Real> const& /*a2*/,
+  amrex::Array4<const amrex::Real> const& a1,
+  amrex::Array4<const amrex::Real> const& a2,
   amrex::Array4<const amrex::Real> const& /*vfrac*/,
   amrex::Array4<amrex::EBCellFlag const> const& flag_arr,
   const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> del,
@@ -99,7 +99,7 @@ Godunov_umeth_eb (
         }
         CAMR_plm_d(
           i, j, k, 0, qxmarr, qxparr, slope, q, qaux(i, j, k, QC), dx, dt,
-          small_dens, small_pres, *lpmap);
+          small_dens, small_pres, *lpmap, a1);
 
         // Y slopes and interp
         for (int n = 0; n < QVAR; n++)
@@ -111,7 +111,7 @@ Godunov_umeth_eb (
         }
         CAMR_plm_d(
           i, j, k, 1, qymarr, qyparr, slope, q, qaux(i, j, k, QC), dy, dt,
-          small_dens, small_pres, *lpmap);
+          small_dens, small_pres, *lpmap, a2);
       });
   } else if (ppm_type == 1) {
     // Compute the normal interface states by reconstructing
