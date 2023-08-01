@@ -2,7 +2,8 @@
 CEXE_sources += Godunov_$(DIM)D.cpp
 CEXE_sources += PPM.cpp
 CEXE_headers += Godunov.H
-CEXE_headers += Godunov_utils.H
+CEXE_headers += Godunov_utils_$(DIM)D.H
+CEXE_headers += flatten.H
 CEXE_headers += PLM.H
 CEXE_headers += PPM.H
 
