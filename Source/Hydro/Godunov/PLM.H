@@ -5,6 +5,7 @@
 
 #include <AMReX_FArrayBox.H>
 #include <AMReX_IArrayBox.H>
+#include <AMReX_Box.H>
 
 #include "CAMR_Constants.H"
 #include "IndexDefines.H"
@@ -273,7 +274,11 @@ CAMR_plm_d (
   amrex::Real const dt,
   amrex::Real const small_dens,
   amrex::Real const small_pres,
-  PassMap const& pmap)
+  PassMap const& pmap
+#ifdef AMREX_USE_EB
+  , amrex::Array4<const amrex::Real> const& area = {}
+#endif
+)
 {
   amrex::ignore_unused(k);
   const amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
@@ -307,7 +312,10 @@ CAMR_plm_d (
     vel[dir] - cc, vel[dir], vel[dir] + cc};
 
   //  Construct the right state on the i-1/2 interface
-  amrex::Real rho_ref =
+#ifdef AMREX_USE_EB
+  if(area(iv) == 1.0) {
+#endif
+  const amrex::Real rho_ref =
     rho - 0.5 * (1.0 + dtdx * std::min(wv[0], 0.0)) * drho;
   amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> vel_ref{
     AMREX_D_DECL(0.0, 0.0, 0.0)};
@@ -316,9 +324,9 @@ CAMR_plm_d (
       vel[dim] -
       0.5 * (1.0 + dtdx * std::min(wv[0], 0.0)) * dvel[dim];
   }
-  amrex::Real p_ref =
+  const amrex::Real p_ref =
     p - 0.5 * (1.0 + dtdx * std::min(wv[0], 0.0)) * dp;
-  amrex::Real rhoe_ref =
+  const amrex::Real rhoe_ref =
     rhoe - 0.5 * (1.0 + dtdx * std::min(wv[0], 0.0)) * drhoe;
 
   const amrex::Real apright = 0.25 * dtdx * (wv[0] - wv[2]) *
@@ -349,18 +357,30 @@ CAMR_plm_d (
   qp(iv, QPRES) = p_ref + (apright + amright) * cs;
   qp(iv, QPRES) = std::max( qp(iv, QPRES), small_pres);
   qp(iv, QREINT) = rhoe_ref + (apright + amright) * enth * cs + azeright;
+#ifdef AMREX_USE_EB
+  } else {
+    for(int n = 0; n < QVAR; n++){
+      qp(iv, n) = 0.0;
+    }
+  }
+#endif
 
   //  Construct the left state on the i+1/2 interface
-  rho_ref =
+#ifdef AMREX_USE_EB
+  if(area(ivp) == 1.0) {
+#endif
+  const amrex::Real rho_ref =
     rho + 0.5 * (1.0 - dtdx * std::max(wv[2], 0.0)) * drho;
+  amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> vel_ref{
+    AMREX_D_DECL(0.0, 0.0, 0.0)};
   for (int dim = 0; dim < AMREX_SPACEDIM; dim++) {
     vel_ref[dim] =
       vel[dim] +
       0.5 * (1.0 - dtdx * std::max(wv[2], 0.0)) * dvel[dim];
   }
-  p_ref = p + 0.5 * (1.0 - dtdx * std::max(wv[2], 0.0)) * dp;
+  const amrex::Real p_ref = p + 0.5 * (1.0 - dtdx * std::max(wv[2], 0.0)) * dp;
 
-  rhoe_ref =
+  const amrex::Real rhoe_ref =
     rhoe + 0.5 * (1.0 - dtdx * std::max(wv[2], 0.0)) * drhoe;
 
   const amrex::Real apleft = 0.0;
@@ -389,6 +409,13 @@ CAMR_plm_d (
   qm(ivp, QPRES) = p_ref + (apleft + amleft) * cs;
   qm(ivp, QPRES) = std::max( qm(ivp, QPRES), small_pres);
   qm(ivp, QREINT) = rhoe_ref + (apleft + amleft) * enth * cs + azeleft;
+#ifdef AMREX_USE_EB
+  } else {
+    for(int n = 0; n < QVAR; n++){
+      qm(ivp, n) = 0.0;
+    }
+  }
+#endif
 
   // Upwind the passive variables
   for (int ipassive = 0; ipassive < NPASSIVE; ++ipassive) {
