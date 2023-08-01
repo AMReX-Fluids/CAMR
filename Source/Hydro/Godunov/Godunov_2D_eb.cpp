@@ -170,7 +170,7 @@ Godunov_umeth_eb (
   amrex::ParallelFor(tybx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
     CAMR_transd(
       i, j, k, cdir, qmarr, qparr, qxmarr, qxparr, fyarr, srcQ, qaux, q2, hdt,
-      hdtdy, *lpmap, l_transverse_reset_density, small_pres);
+      hdtdy, *lpmap, l_transverse_reset_density, small_pres, a2);
   });
 
   const amrex::Box& xfxbx = surroundingNodes(bx, cdir);
@@ -188,7 +188,7 @@ Godunov_umeth_eb (
   amrex::ParallelFor(txbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
     CAMR_transd(
       i, j, k, cdir, qmarr, qparr, qymarr, qyparr, fxarr, srcQ, qaux, gdtemp,
-      hdt, hdtdx, *lpmap, l_transverse_reset_density, small_pres);
+      hdt, hdtdx, *lpmap, l_transverse_reset_density, small_pres, a1);
   });
 
   // Final Riemann problem Y
