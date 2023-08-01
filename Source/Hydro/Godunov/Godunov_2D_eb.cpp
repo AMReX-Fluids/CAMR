@@ -1,6 +1,7 @@
 #include "Godunov.H"
 #include "Godunov_utils_2D.H"
 #include "Hydro_cmpflx.H"
+#include "CAMR_utils_K.H"
 #include "flatten.H"
 #include "PLM.H"
 #include "PPM.H"
@@ -22,6 +23,8 @@ Godunov_umeth_eb (
   amrex::Array4<amrex::Real> const& q2,
   amrex::Array4<const amrex::Real> const& a1,
   amrex::Array4<const amrex::Real> const& a2,
+  amrex::Array4<amrex::Real> const& pdivu,
+  amrex::Array4<const amrex::Real> const& vol,
   amrex::Array4<const amrex::Real> const& /*vfrac*/,
   amrex::Array4<amrex::EBCellFlag const> const& flag_arr,
   const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> del,
@@ -36,7 +39,6 @@ Godunov_umeth_eb (
   const int l_transverse_reset_density)
 {
   BL_PROFILE("CAMR::Godunov_umeth_2D_eb()");
-  amrex::Abort("Not implemented yet");
 
   amrex::Real const dx = del[0];
   amrex::Real const dy = del[1];
@@ -77,7 +79,11 @@ Godunov_umeth_eb (
   const PassMap* lpmap = CAMR::d_pass_map;
   if (ppm_type == 0) {
     amrex::ParallelFor(
-      bxg2, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+      bxg2, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+    {
+        if (flag_arr(i,j,k).isCovered()) {
+            return;
+        }
 
         amrex::Real slope[QVAR];
 
@@ -144,20 +150,25 @@ Godunov_umeth_eb (
   amrex::FArrayBox qgdx(bxg2, NGDNV, amrex::The_Async_Arena());
   auto const& gdtemp = qgdx.array();
   amrex::ParallelFor(
-    xflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-      CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qxmarr, qxparr, fxarr, gdtemp, qaux,
-                cdir, *lpmap, small, small_dens, small_pres);
+    xflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+    {
+        if (!flag_arr(i,j,k).isCovered() && !flag_arr(i-1,j,k).isCovered()) {
+            CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qxmarr, qxparr, fxarr, gdtemp, qaux,
+                        cdir, *lpmap, small, small_dens, small_pres);
+        }
     });
 
   // Y initial fluxes
   cdir = 1;
   amrex::FArrayBox fy(yflxbx, NVAR, amrex::The_Async_Arena());
   auto const& fyarr = fy.array();
-  amrex::ParallelFor(
-    yflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-      CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qymarr, qyparr, fyarr, q2, qaux,
-                cdir, *lpmap, small, small_dens, small_pres);
-    });
+  amrex::ParallelFor( yflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
+      if (!flag_arr(i,j,k).isCovered() && !flag_arr(i,j-1,k).isCovered()) {
+          CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qymarr, qyparr, fyarr, q2, qaux,
+                      cdir, *lpmap, small, small_dens, small_pres);
+      }
+  });
 
   // X interface corrections
   cdir = 0;
@@ -167,35 +178,54 @@ Godunov_umeth_eb (
   auto const& qmarr = qm.array();
   auto const& qparr = qp.array();
 
-  amrex::ParallelFor(tybx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    CAMR_transd(
-      i, j, k, cdir, qmarr, qparr, qxmarr, qxparr, fyarr, srcQ, qaux, q2, hdt,
-      hdtdy, *lpmap, l_transverse_reset_density, small_pres, a2);
+  amrex::ParallelFor(tybx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
+      if (!flag_arr(i,j,k).isCovered() && !flag_arr(i-1,j,k).isCovered()) {
+          CAMR_transd(i, j, k, cdir, qmarr, qparr, qxmarr, qxparr, fyarr, srcQ, qaux, q2, hdt,
+                      hdtdy, *lpmap, l_transverse_reset_density, small_pres, a2);
+      }
   });
 
   const amrex::Box& xfxbx = surroundingNodes(bx, cdir);
 
   // Final Riemann problem X
-  amrex::ParallelFor(xfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qmarr, qparr, flx1, q1, qaux,
-              cdir, *lpmap, small, small_dens, small_pres);
+  amrex::ParallelFor(xfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
+      if (!flag_arr(i,j,k).isCovered() && !flag_arr(i,j-1,k).isCovered()) {
+          CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qmarr, qparr, flx1, q1, qaux,
+                      cdir, *lpmap, small, small_dens, small_pres);
+      }
   });
 
   // Y interface corrections
   cdir = 1;
   const amrex::Box& txbx = grow(bx, cdir, 1);
 
-  amrex::ParallelFor(txbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    CAMR_transd(
-      i, j, k, cdir, qmarr, qparr, qymarr, qyparr, fxarr, srcQ, qaux, gdtemp,
-      hdt, hdtdx, *lpmap, l_transverse_reset_density, small_pres, a1);
+  amrex::ParallelFor(txbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
+      if (!flag_arr(i,j,k).isCovered() && !flag_arr(i,j-1,k).isCovered()) {
+          CAMR_transd(i, j, k, cdir, qmarr, qparr, qymarr, qyparr, fxarr, srcQ, qaux, gdtemp,
+                      hdt, hdtdx, *lpmap, l_transverse_reset_density, small_pres, a1);
+      }
   });
 
   // Final Riemann problem Y
   const amrex::Box& yfxbx = surroundingNodes(bx, cdir);
-  amrex::ParallelFor(yfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qmarr, qparr, flx2, q2, qaux,
-              cdir, *lpmap, small, small_dens, small_pres);
+  amrex::ParallelFor(yfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
+      if (!flag_arr(i,j,k).isCovered() && !flag_arr(i,j-1,k).isCovered()) {
+          CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qmarr, qparr, flx2, q2, qaux,
+                      cdir, *lpmap, small, small_dens, small_pres);
+      }
+  });
+
+  // Construct p div{U}
+  amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+      if (flag_arr(i,j,k).isRegular()) {
+          CAMR_pdivu(i, j, k, pdivu, q1, q2, a1, a2, vol);
+      } else {
+          pdivu(i,j,k) = amrex::Real(0.0);
+      }
   });
 }
 #endif

@@ -2,6 +2,7 @@
 #include "Godunov.H"
 #include "Godunov_utils_3D.H"
 #include "Hydro_cmpflx.H"
+#include "CAMR_utils_K.H"
 #include "flatten.H"
 #include "PLM.H"
 #include "PPM.H"
@@ -26,6 +27,7 @@ Godunov_umeth_eb (
   amrex::Array4<const amrex::Real> const& a1,
   amrex::Array4<const amrex::Real> const& a2,
   amrex::Array4<const amrex::Real> const& a3,
+  amrex::Array4<amrex::Real> const& pdivu,
   amrex::Array4<const amrex::Real> const& /*vfrac*/,
   amrex::Array4<amrex::EBCellFlag const> const& flag_arr,
   const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> del,
@@ -40,7 +42,6 @@ Godunov_umeth_eb (
   const int l_transverse_reset_density)
 {
   BL_PROFILE("CAMR::Godunov_umeth_3D_eb()");
-  amrex::Abort("Not implemented yet");
 
   amrex::Real const dx = del[0];
   amrex::Real const dy = del[1];
@@ -452,6 +453,15 @@ Godunov_umeth_eb (
   });
   qmfab.clear();
   qpfab.clear();
+
+  // Construct p div{U}
+  amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+      if (flag_arr(i,j,k).isRegular()) {
+          CAMR_pdivu(i, j, k, pdivu, q1, q2, a1, a2, vol);
+      } else {
+          pdivu(i,j,k) = Real(0.0);
+      }
+  });
 }
 
 #endif
