@@ -36,7 +36,6 @@ Godunov_umeth_eb (
   const int l_transverse_reset_density)
 {
   BL_PROFILE("CAMR::Godunov_umeth_2D_eb()");
-  amrex::Abort("Not implemented yet");
 
   amrex::Real const dx = del[0];
   amrex::Real const dy = del[1];
@@ -79,6 +78,9 @@ Godunov_umeth_eb (
     amrex::ParallelFor(
       bxg2, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
 
+        if (flag_arr(i,j,k).isCovered()){
+          return;
+        }
         amrex::Real slope[QVAR];
 
         amrex::Real flat = 1.0;

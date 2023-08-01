@@ -184,10 +184,6 @@ CAMR::read_params()
   }
 
 #ifdef AMREX_USE_EB
-  if (do_mol == 0) {
-      amrex::Error("Must set CAMR.do_mol = 1 when running with EB");
-  }
-
   if ( (redistribution_type != "FluxRedist" ) &&
        (redistribution_type != "StateRedist") &&
        (redistribution_type != "NoRedist"   ) ) {
@@ -209,12 +205,6 @@ CAMR::read_params()
   if (max_dt < fixed_dt) {
     amrex::Error("Cannot have max_dt < fixed_dt");
   }
-
-#ifdef AMREX_USE_EB
-  if (do_mol == 0) {
-    amrex::Abort("Must do_mol = 1 when using EB\n");
-  }
-#endif
 
   // Read tagging parameters
   read_tagging_params();
