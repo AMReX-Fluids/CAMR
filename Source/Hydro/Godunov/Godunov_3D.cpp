@@ -1,8 +1,9 @@
 #include <AMReX_GpuAllocators.H>
 #include "Godunov.H"
-#include "Godunov_utils.H"
+#include "Godunov_utils_3D.H"
 #include "CAMR_utils_K.H"
 #include "Hydro_cmpflx.H"
+#include "flatten.H"
 #include "PLM.H"
 #include "PPM.H"
 

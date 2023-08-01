@@ -1,7 +1,8 @@
 #include "Godunov.H"
 #include "CAMR_utils_K.H"
-#include "Godunov_utils.H"
+#include "Godunov_utils_2D.H"
 #include "Hydro_cmpflx.H"
+#include "flatten.H"
 #include "PLM.H"
 #include "PPM.H"
 

@@ -1,6 +1,7 @@
 #include "Godunov.H"
-#include "Godunov_utils.H"
+#include "Godunov_utils_2D.H"
 #include "Hydro_cmpflx.H"
+#include "flatten.H"
 #include "PLM.H"
 #include "PPM.H"
 
@@ -113,7 +114,9 @@ Godunov_umeth_eb (
           i, j, k, 1, qymarr, qyparr, slope, q, qaux(i, j, k, QC), dy, dt,
           small_dens, small_pres, *lpmap, a2);
       });
+
   } else if (ppm_type == 1) {
+
     // Compute the normal interface states by reconstructing
     // the primitive variables using the piecewise parabolic method
     // and doing characteristic tracing.  We do not apply the
@@ -132,6 +135,7 @@ Godunov_umeth_eb (
   } else {
     amrex::Error("CAMR::ppm_type must be 0 (PLM) or 1 (PPM)");
   }
+
   // These are the first flux estimates as per the corner-transport-upwind
   // method X initial fluxes
   cdir = 0;
