@@ -28,6 +28,7 @@ Godunov_umeth_eb (
   amrex::Array4<const amrex::Real> const& a2,
   amrex::Array4<const amrex::Real> const& a3,
   amrex::Array4<amrex::Real> const& pdivu,
+  amrex::Array4<const amrex::Real> const& vol,
   amrex::Array4<const amrex::Real> const& /*vfrac*/,
   amrex::Array4<amrex::EBCellFlag const> const& flag_arr,
   const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> del,
@@ -457,9 +458,9 @@ Godunov_umeth_eb (
   // Construct p div{U}
   amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
       if (flag_arr(i,j,k).isRegular()) {
-          CAMR_pdivu(i, j, k, pdivu, q1, q2, a1, a2, vol);
+          CAMR_pdivu(i, j, k, pdivu, q1, q2, q3, a1, a2, a3, vol);
       } else {
-          pdivu(i,j,k) = Real(0.0);
+          pdivu(i,j,k) = amrex::Real(0.0);
       }
   });
 }
