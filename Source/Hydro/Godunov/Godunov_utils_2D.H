@@ -53,7 +53,7 @@ CAMR_transd (
 
   const bool no_cut_face =
 #ifdef AMREX_USE_EB
-    (area(ivp0) > 0.0) || (area(iv) > 0.0);
+    (area(ivp0) > 0.0) && (area(iv) > 0.0);
 #else
   true;
 #endif
@@ -66,14 +66,17 @@ CAMR_transd (
   const amrex::Real srcp   = srcQ(iv, QPRES);
   const amrex::Real    c   =   qa(iv, QGAMC);
 
-  const amrex::Real pggp = qint(ivp0, GDPRES);
-  const amrex::Real pggm = qint(iv, GDPRES);
-  const amrex::Real ugp  = qint(ivp0, qvidx);
-  const amrex::Real ugm  = qint(iv, qvidx);
+  amrex::Real dAup = 0.0, pav = 0.0, dAu = 0.0;
+  if (no_cut_face) {
+    const amrex::Real pggp = qint(ivp0, GDPRES);
+    const amrex::Real pggm = qint(iv, GDPRES);
+    const amrex::Real ugp = qint(ivp0, qvidx);
+    const amrex::Real ugm = qint(iv, qvidx);
 
-  const amrex::Real dAup = pggp * ugp - pggm * ugm;
-  const amrex::Real pav = 0.5 * (pggp + pggm);
-  const amrex::Real dAu = ugp - ugm;
+    dAup = pggp * ugp - pggm * ugm;
+    pav = 0.5 * (pggp + pggm);
+    dAu = ugp - ugm;
+  }
 
   // ****************************************************************************
   // Update passive variables
@@ -82,7 +85,7 @@ CAMR_transd (
     const int n = pmap.upassMap[ipass];
     const int nqp = pmap.qpassMap[ipass];
     const amrex::Real srcpass = srcQ(iv, nqp);
-    const amrex::Real compn = cdtdx * (flxx(ivp0, n) - flxx(iv, n));
+    const amrex::Real compn = no_cut_face ? cdtdx * (flxx(ivp0, n) - flxx(iv, n)) : 0.0;
     amrex::Real rr = qyp(iv, QRHO);
     amrex::Real rrnew = rr - flxrho;
     amrex::Real compo = rr * qyp(iv, nqp) - compn;
