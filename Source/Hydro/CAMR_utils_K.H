@@ -171,33 +171,32 @@ AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 void
 CAMR_pdivu (
-  const int i,
-  const int j,
-  const int k,
-  amrex::Array4<amrex::Real> const& pdivu,
-  AMREX_D_DECL(
-    amrex::Array4<const amrex::Real> const& q1,
-    amrex::Array4<const amrex::Real> const& q2,
-    amrex::Array4<const amrex::Real> const& q3),
-  AMREX_D_DECL(
-    amrex::Array4<const amrex::Real> const& a1,
-    amrex::Array4<const amrex::Real> const& a2,
-    amrex::Array4<const amrex::Real> const& a3),
-  amrex::Array4<const amrex::Real> const& vol)
+    const int i,
+    const int j,
+    const int k,
+    amrex::Array4<amrex::Real> const& pdivu,
+    AMREX_D_DECL(
+      amrex::Array4<const amrex::Real> const& q1,
+      amrex::Array4<const amrex::Real> const& q2,
+      amrex::Array4<const amrex::Real> const& q3),
+    AMREX_D_DECL(
+      amrex::Array4<const amrex::Real> const& a1,
+      amrex::Array4<const amrex::Real> const& a2,
+      amrex::Array4<const amrex::Real> const& a3),
+    amrex::Array4<const amrex::Real> const& vol)
 {
-  amrex::ignore_unused(k);
-  pdivu(i, j, k) = 0.5 *
+    amrex::ignore_unused(k);
+    pdivu(i, j, k) = 0.5 *
                    (AMREX_D_TERM(
                      (q1(i + 1, j, k, GDPRES) + q1(i, j, k, GDPRES)) *
-                       (q1(i + 1, j, k, GDU) * a1(i + 1, j, k) -
-                        q1(i, j, k, GDU) * a1(i, j, k)),
-                     +(q2(i, j + 1, k, GDPRES) + q2(i, j, k, GDPRES)) *
-                       (q2(i, j + 1, k, GDV) * a2(i, j + 1, k) -
-                        q2(i, j, k, GDV) * a2(i, j, k)),
-                     +(q3(i, j, k + 1, GDPRES) + q3(i, j, k, GDPRES)) *
-                       (q3(i, j, k + 1, GDW) * a3(i, j, k + 1) -
-                        q3(i, j, k, GDW) * a3(i, j, k)))) /
-                   vol(i, j, k);
+                     (q1(i + 1, j, k, GDU)    * a1(i + 1, j, k) -
+                      q1(i    , j, k, GDU)    * a1(i, j, k)),
+                    +(q2(i, j + 1, k, GDPRES) + q2(i, j, k, GDPRES)) *
+                     (q2(i, j + 1, k, GDV)    * a2(i, j + 1, k) -
+                      q2(i, j    , k, GDV)    * a2(i, j, k)),
+                    +(q3(i, j, k + 1, GDPRES) + q3(i, j, k, GDPRES)) *
+                     (q3(i, j, k + 1, GDW) * a3(i, j, k + 1) -
+                      q3(i, j, k    , GDW) * a3(i, j, k)))) / vol(i, j, k);
 }
 
 AMREX_GPU_DEVICE
@@ -236,20 +235,20 @@ AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 void
 CAMR_update (
-  const int i,
-  const int j,
-  const int k,
-  amrex::Array4<amrex::Real> const& update,
-  const amrex::GpuArray<const amrex::Array4<amrex::Real>, AMREX_SPACEDIM> flx,
-  amrex::Array4<const amrex::Real> const& vol,
-  amrex::Array4<const amrex::Real> const& pdivu)
+    const int i,
+    const int j,
+    const int k,
+    amrex::Array4<amrex::Real> const& update,
+    const amrex::GpuArray<const amrex::Array4<amrex::Real>, AMREX_SPACEDIM> flx,
+    amrex::Array4<const amrex::Real> const& vol,
+    amrex::Array4<const amrex::Real> const& pdivu)
 {
     amrex::Real volinv = 1.0/vol(i, j, k);
     for (int n = 0; n < NVAR; ++n) {
       update(i, j, k, n) +=
         (AMREX_D_TERM(flx[0](i, j, k, n) - flx[0](i + 1, j, k, n),
-                      +flx[1](i, j, k, n) - flx[1](i, j + 1, k, n),
-                      +flx[2](i, j, k, n) - flx[2](i, j, k + 1, n))) *
+                     +flx[1](i, j, k, n) - flx[1](i, j + 1, k, n),
+                     +flx[2](i, j, k, n) - flx[2](i, j, k + 1, n))) *
         volinv;
     }
     update(i, j, k, UEINT) -= pdivu(i, j, k);
