@@ -169,7 +169,7 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
     int level_mask_not_covered = CAMRConstants::level_mask_notcovered;
     bool use_wts_in_divnc = false;
 
-    Real fac_for_redist = (do_mol) ? Real(0.5) : Real(1.0);
+    // Real fac_for_redist = (do_mol) ? Real(0.5) : Real(1.0);
     ApplyMLRedistribution(bx, l_ncomp,
                           dsdt_arr, divc_arr, uin_arr, redistwgt_arr,
                           flag_arr,
@@ -181,7 +181,7 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
                           as_crse, drho_as_crse, rrflag_as_crse,
                           as_fine, dm_as_fine, lev_mask,
                           level_mask_not_covered,
-                          fac_for_redist,
+                          /*fac_for_redist,*/
                           use_wts_in_divnc);
 
   BL_PROFILE_VAR_STOP(CAMR_umdrv_eb);
