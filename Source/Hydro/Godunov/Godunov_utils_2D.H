@@ -53,7 +53,7 @@ CAMR_transd (
 
   const bool no_cut_face =
 #ifdef AMREX_USE_EB
-    (area(ivp0) > 0.0) || (area(iv) > 0.0);
+    (area(ivp0) > 0.0) && (area(iv) > 0.0);
 #else
   true;
 #endif
