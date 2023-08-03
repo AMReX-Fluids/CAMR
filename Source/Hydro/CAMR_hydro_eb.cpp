@@ -70,7 +70,7 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
 
     amrex::FArrayBox qec[AMREX_SPACEDIM];
     for (int dir = 0; dir < AMREX_SPACEDIM; dir++) {
-      const Box eboxes = amrex::surroundingNodes(bxg_ii, dir);
+      const Box eboxes = amrex::surroundingNodes(grow(bxg_ii, 1), dir);
       qec[dir].resize(eboxes, NGDNV, amrex::The_Async_Arena());
     }
     amrex::GpuArray<Array4<Real>, AMREX_SPACEDIM> qec_arr{
