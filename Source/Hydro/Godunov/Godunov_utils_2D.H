@@ -108,7 +108,7 @@ CAMR_transd (
         amrex::Real compo = rr * qnormm(ivpn, nqp) - compn;
         qm(ivpn, nqp) = compo / rrnew + hdt * srcpass;
     } else {
-        qm(iv, nqp) = qnormm(iv, nqp);
+        qm(ivpn, nqp) = qnormm(ivpn, nqp);
     }
   }
 
