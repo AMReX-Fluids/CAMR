@@ -26,8 +26,6 @@ Godunov_umeth_eb (
   Array4<amrex::Real> const& q2,
   Array4<const amrex::Real> const& apx,
   Array4<const amrex::Real> const& apy,
-  Array4<const amrex::Real> const& vol,
-  Array4<const amrex::Real> const& vfrac_arr,
   Array4<amrex::EBCellFlag const> const& flag_arr,
   const GpuArray<amrex::Real, AMREX_SPACEDIM> del,
   const Real dt,
