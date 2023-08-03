@@ -93,23 +93,33 @@ CAMR_transd (
     const amrex::Real srcpass = srcQ(iv, nqp);
     const amrex::Real compn = no_cov_face ? cdtdx * (flxx(ivpt, n) - flxx(iv, n)) : 0.0;
 
+    amrex::Real rr, rrnew, compo;
+
+#ifdef AMREX_USE_EB
     if (norm_area(iv) > amrex::Real(0.0)) {
-        amrex::Real rr = qnormp(iv, QRHO);
-        amrex::Real rrnew = rr - flxrho;
-        amrex::Real compo = rr * qnormp(iv, nqp) - compn;
+#endif
+        rr = qnormp(iv, QRHO);
+        rrnew = rr - flxrho;
+        compo = rr * qnormp(iv, nqp) - compn;
         qp(iv, nqp) = compo / rrnew + hdt * srcpass;
+#ifdef AMREX_USE_EB
     } else {
         qp(iv, nqp) = qnormp(iv, nqp);
     }
+#endif
 
+#ifdef AMREX_USE_EB
     if (norm_area(ivpn) > amrex::Real(0.0)) {
-        amrex::Real rr = qnormm(ivpn, QRHO);
-        amrex::Real rrnew = rr - flxrho;
-        amrex::Real compo = rr * qnormm(ivpn, nqp) - compn;
+#endif
+        rr = qnormm(ivpn, QRHO);
+        rrnew = rr - flxrho;
+        compo = rr * qnormm(ivpn, nqp) - compn;
         qm(ivpn, nqp) = compo / rrnew + hdt * srcpass;
+#ifdef AMREX_USE_EB
     } else {
         qm(ivpn, nqp) = qnormm(ivpn, nqp);
     }
+#endif
   }
 
   bool reset_state;
@@ -118,7 +128,9 @@ CAMR_transd (
   // QP
   // ****************************************************************************
 
+#ifdef AMREX_USE_EB
   if (norm_area(iv) > amrex::Real(0.0))
+#endif
   {
       // Convert to conservative
       const amrex::Real rrr = qnormp(iv, QRHO);
@@ -163,6 +175,7 @@ CAMR_transd (
 
       qp(iv,QPRES) = std::max( qp(iv,QPRES), small_pres);
 
+#ifdef AMREX_USE_EB
   } else {
 
       qp(iv,QRHO  ) = qnormp(iv,QRHO  );
@@ -170,13 +183,16 @@ CAMR_transd (
       qp(iv,QV    ) = qnormp(iv,QV    );
       qp(iv,QREINT) = qnormp(iv,QREINT);
       qp(iv,QPRES ) = qnormp(iv,QPRES );
+#endif
   }
 
   // ****************************************************************************
   // QM
   // ****************************************************************************
 
+#ifdef AMREX_USE_EB
   if (norm_area(ivpn) > amrex::Real(0.0))
+#endif
   {
       // Conversion to Conservative
       const amrex::Real rrl = qnormm(ivpn, QRHO);
@@ -218,6 +234,7 @@ CAMR_transd (
 
       qm(ivpn, QPRES) = std::max( qm(ivpn, QPRES), small_pres);
 
+#ifdef AMREX_USE_EB
   } else {
 
       qm(ivpn,QRHO  ) = qnormm(ivpn,QRHO  );
@@ -225,6 +242,7 @@ CAMR_transd (
       qm(ivpn,QV    ) = qnormm(ivpn,QV    );
       qm(ivpn,QREINT) = qnormm(ivpn,QREINT);
       qm(ivpn,QPRES ) = qnormm(ivpn,QPRES );
+#endif
   }
 }
 #endif
