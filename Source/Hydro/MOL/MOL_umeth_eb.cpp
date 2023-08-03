@@ -19,7 +19,7 @@
 using namespace amrex;
 
 void
-MOL_umeth_eb (const Box& bxg_i,
+MOL_umeth_eb (const Box& bx_to_fill,
               const int*  bclo, const int*  bchi,
               const int* domlo, const int* domhi,
               Array4<const Real> const& q_arr,
@@ -56,8 +56,8 @@ MOL_umeth_eb (const Box& bxg_i,
 
     Real l_plm_theta = 2.0; // [1,2] 1: minmod; 2: van Leer's MC
 
-    // bxg_i  = Box(divc_arr);
-    const Box& bxg_ii = grow(bxg_i,1);
+    // bx_to_fill  = Box(divc_arr);
+    const Box& bxg_ii = grow(bx_to_fill,1);
 
     GpuArray<Real,AMREX_SPACEDIM> dxinv;
     AMREX_D_TERM(dxinv[0] = 1./dx[0];,
@@ -78,7 +78,7 @@ MOL_umeth_eb (const Box& bxg_i,
     // ****************************************************************
     // x-direction
     // ****************************************************************
-    amrex::Box xbx = surroundingNodes(bxg_i,0); xbx.grow(IntVect(AMREX_D_DECL(0,1,1)));
+    amrex::Box xbx = surroundingNodes(bx_to_fill,0); xbx.grow(IntVect(AMREX_D_DECL(0,1,1)));
 
     amrex::FArrayBox qxm(xbx, QVAR, amrex::The_Async_Arena());
     amrex::FArrayBox qxp(xbx, QVAR, amrex::The_Async_Arena());
@@ -113,7 +113,7 @@ MOL_umeth_eb (const Box& bxg_i,
     // ****************************************************************
     // y-direction
     // ****************************************************************
-    amrex::Box ybx = surroundingNodes(bxg_i,1); ybx.grow(IntVect(AMREX_D_DECL(1,0,1)));
+    amrex::Box ybx = surroundingNodes(bx_to_fill,1); ybx.grow(IntVect(AMREX_D_DECL(1,0,1)));
 
     amrex::FArrayBox qym(ybx, QVAR, amrex::The_Async_Arena());
     amrex::FArrayBox qyp(ybx, QVAR, amrex::The_Async_Arena());
@@ -149,7 +149,7 @@ MOL_umeth_eb (const Box& bxg_i,
     // ****************************************************************
     // z-direction
     // ****************************************************************
-    amrex::Box zbx = surroundingNodes(bxg_i,2); zbx.grow(IntVect(1,1,0));
+    amrex::Box zbx = surroundingNodes(bx_to_fill,2); zbx.grow(IntVect(1,1,0));
 
     amrex::FArrayBox qzm(zbx, QVAR, amrex::The_Async_Arena());
     amrex::FArrayBox qzp(zbx, QVAR, amrex::The_Async_Arena());
