@@ -60,8 +60,8 @@ eb_divu (int i, int j, int k,
 #elif (AMREX_SPACEDIM == 3)
         amrex::Real ux = 0.25 *
            (q(i, j, k, QU) - q(i - 1, j, k, QU) + q(i, j, k - 1, QU) -
-           q(i - 1, j, k - 1, QU) + q(i, j - 1, k, QU) - q(i - 1, j - 1, k, QU) +
-           q(i, j - 1, k - 1, QU) - q(i - 1, j - 1, k - 1, QU)) * dxInv[0];
+            q(i - 1, j, k - 1, QU) + q(i, j - 1, k, QU) - q(i - 1, j - 1, k, QU) +
+            q(i, j - 1, k - 1, QU) - q(i - 1, j - 1, k - 1, QU)) * dxInv[0];
 
         amrex::Real vy = 0.25 *
           (q(i, j, k, QV) - q(i, j - 1, k, QV) + q(i, j, k - 1, QV) -
@@ -100,47 +100,63 @@ eb_pdivu (int i, int j, int k,
 #if (AMREX_SPACEDIM == 2)
     if (flag(i,j,k).isRegular())
     {
-       pdivu = 0.5 * ((q1(i + 1, j, k, GDPRES) + q1(i, j, k, GDPRES)) *
-                      (q1(i + 1, j, k, GDU)  - q1(i, j, k, GDU) ) *dxinv[0]
-                     +(q2(i, j + 1, k, GDPRES) + q2(i, j, k, GDPRES)) *
-                      (q2(i, j + 1, k, GDV)  - q2(i, j, k, GDV) ) * dxinv[1]);
-
+        pdivu = 0.5 * ((q1(i + 1, j, k, GDPRES) + q1(i, j, k, GDPRES)) *
+                       (q1(i + 1, j, k, GDU   ) - q1(i, j, k, GDU   )) *dxinv[0]
+                      +(q2(i, j + 1, k, GDPRES) + q2(i, j, k, GDPRES)) *
+                       (q2(i, j + 1, k, GDV   ) - q2(i, j, k, GDV   )) * dxinv[1]);
         divu(i,j,k,UEINT) += pdivu;
     }
     else
     {
-        amrex::Real fxm = q1(i,j,k,GDU);
-        if (apx(i,j,k) != 0.0 && apx(i,j,k) != 1.0) {
-            int jj = j + static_cast<int>(amrex::Math::copysign(1.0, fcx(i,j,k,0)));
-            amrex::Real fracy = flag(i,j,k).isConnected(0,jj-j,0) ? amrex::Math::abs(fcx(i,j,k,0)) : 0.0;
-            fxm = (1.0-fracy)*fxm + fracy *q1(i,jj,k ,GDU);
+        amrex::Real fxm, fxp, fym, fyp;
+        if (apx(i,j,k) > 0.0) {
+            fxm = q1(i,j,k,GDU);
+            if (apx(i,j,k) != 0.0 && apx(i,j,k) != 1.0) {
+                int jj = j + static_cast<int>(amrex::Math::copysign(1.0, fcx(i,j,k,0)));
+                amrex::Real fracy = flag(i,j,k).isConnected(0,jj-j,0) ? amrex::Math::abs(fcx(i,j,k,0)) : 0.0;
+                fxm = (1.0-fracy)*fxm + fracy *q1(i,jj,k ,GDU);
+            }
+        } else {
+            fxm = amrex::Real(0.0);
         }
 
-        amrex::Real fxp = q1(i+1,j,k,GDU);
-        if (apx(i+1,j,k) != 0.0 && apx(i+1,j,k) != 1.0) {
-            int jj = j + static_cast<int>(amrex::Math::copysign(1.0,fcx(i+1,j,k,0)));
-            amrex::Real fracy = flag(i+1,j,k).isConnected(0,jj-j,0) ? amrex::Math::abs(fcx(i+1,j,k,0)) : 0.0;
-            fxp = (1.0-fracy)*fxp + fracy *q1(i+1,jj,k,GDU);
-
+        if (apx(i+1,j,k) > 0.0) {
+            fxp = q1(i+1,j,k,GDU);
+            if (apx(i+1,j,k) != 0.0 && apx(i+1,j,k) != 1.0) {
+                int jj = j + static_cast<int>(amrex::Math::copysign(1.0,fcx(i+1,j,k,0)));
+                amrex::Real fracy = flag(i+1,j,k).isConnected(0,jj-j,0) ? amrex::Math::abs(fcx(i+1,j,k,0)) : 0.0;
+                fxp = (1.0-fracy)*fxp + fracy *q1(i+1,jj,k,GDU);
+            }
+        } else {
+            fxp = amrex::Real(0.0);
         }
 
-        amrex::Real fym = q2(i,j,k,GDV);
-        if (apy(i,j,k) != 0.0 && apy(i,j,k) != 1.0) {
-            int ii = i + static_cast<int>(amrex::Math::copysign(1.0,fcy(i,j,k,0)));
-            amrex::Real fracx = flag(i,j,k).isConnected(ii-i,0,0) ? amrex::Math::abs(fcy(i,j,k,0)) : 0.0;
-            fym = (1.0-fracx)*fym +  fracx *q2(ii,j,k,GDV);
+        if (apy(i,j,k) > 0.0) {
+            fym = q2(i,j,k,GDV);
+            if (apy(i,j,k) != 0.0 && apy(i,j,k) != 1.0) {
+                int ii = i + static_cast<int>(amrex::Math::copysign(1.0,fcy(i,j,k,0)));
+                amrex::Real fracx = flag(i,j,k).isConnected(ii-i,0,0) ? amrex::Math::abs(fcy(i,j,k,0)) : 0.0;
+                fym = (1.0-fracx)*fym +  fracx *q2(ii,j,k,GDV);
+            }
+        } else {
+            fym = amrex::Real(0.0);
         }
 
-        amrex::Real fyp = q2(i,j+1,k,GDV);
-        if (apy(i,j+1,k) != 0.0 && apy(i,j+1,k) != 1.0) {
-            int ii = i + static_cast<int>(amrex::Math::copysign(1.0,fcy(i,j+1,k,0)));
-            amrex::Real fracx = flag(i,j+1,k).isConnected(ii-i,0,0) ? amrex::Math::abs(fcy(i,j+1,k,0)) : 0.0;
-            fyp = (1.0-fracx)*fyp + fracx *q2(ii,j+1,k,GDV);
+        if (apy(i,j+1,k) > 0.0) {
+            fyp = q2(i,j+1,k,GDV);
+            if (apy(i,j+1,k) != 0.0 && apy(i,j+1,k) != 1.0) {
+                int ii = i + static_cast<int>(amrex::Math::copysign(1.0,fcy(i,j+1,k,0)));
+                amrex::Real fracx = flag(i,j+1,k).isConnected(ii-i,0,0) ? amrex::Math::abs(fcy(i,j+1,k,0)) : 0.0;
+                fyp = (1.0-fracx)*fyp + fracx *q2(ii,j+1,k,GDV);
+            }
+        } else {
+            fyp = amrex::Real(0.0);
         }
 
         divu(i,j,k,UEINT) += (1.0/vfrc(i,j,k)) * q(i,j,k,QPRES)*
             ( dxinv[0] * (apx(i+1,j,k)*fxp-apx(i,j,k)*fxm)
             + dxinv[1] * (apy(i,j+1,k)*fyp-apy(i,j,k)*fym) );
+        amrex::Print() << "DONE  " << amrex::IntVect(i,j) << std::endl;
 
     }
 
@@ -159,78 +175,102 @@ eb_pdivu (int i, int j, int k,
     }
     else
     {
-        amrex::Real fxm = q1(i,j,k,GDU);
-        if (apx(i,j,k) != 0.0 && apx(i,j,k) != 1.0) {
-            int jj = j + static_cast<int>(amrex::Math::copysign(1.0, fcx(i,j,k,0)));
-            int kk = k + static_cast<int>(amrex::Math::copysign(1.0, fcx(i,j,k,1)));
-            amrex::Real fracy = flag(i,j,k).isConnected(0,jj-j,0) ? amrex::Math::abs(fcx(i,j,k,0)) : 0.0;
-            amrex::Real fracz = flag(i,j,k).isConnected(0,0,kk-k) ? amrex::Math::abs(fcx(i,j,k,1)) : 0.0;
-            fxm = (1.0-fracy)*(1.0-fracz)*fxm
-                +      fracy *(1.0-fracz)*q1(i,jj,k ,GDU)
-                +      fracz *(1.0-fracy)*q1(i,j ,kk,GDU)
-                +      fracy *     fracz *q1(i,jj,kk,GDU);
+        amrex::Real fxm, fxp, fym, fyp, fzm, fzp;
+        if (apx(i,j,k) > 0.0) {
+            fxm = q1(i,j,k,GDU);
+            if (apx(i,j,k) != 0.0 && apx(i,j,k) != 1.0) {
+                int jj = j + static_cast<int>(amrex::Math::copysign(1.0, fcx(i,j,k,0)));
+                int kk = k + static_cast<int>(amrex::Math::copysign(1.0, fcx(i,j,k,1)));
+                amrex::Real fracy = flag(i,j,k).isConnected(0,jj-j,0) ? amrex::Math::abs(fcx(i,j,k,0)) : 0.0;
+                amrex::Real fracz = flag(i,j,k).isConnected(0,0,kk-k) ? amrex::Math::abs(fcx(i,j,k,1)) : 0.0;
+                fxm = (1.0-fracy)*(1.0-fracz)*fxm
+                    +      fracy *(1.0-fracz)*q1(i,jj,k ,GDU)
+                    +      fracz *(1.0-fracy)*q1(i,j ,kk,GDU)
+                    +      fracy *     fracz *q1(i,jj,kk,GDU);
+            }
+        } else {
+                fxm = amrex::Real(0.0);
         }
 
-        amrex::Real fxp = q1(i+1,j,k,GDU);
-        if (apx(i+1,j,k) != 0.0 && apx(i+1,j,k) != 1.0) {
-            int jj = j + static_cast<int>(amrex::Math::copysign(1.0,fcx(i+1,j,k,0)));
-            int kk = k + static_cast<int>(amrex::Math::copysign(1.0,fcx(i+1,j,k,1)));
-            amrex::Real fracy = flag(i+1,j,k).isConnected(0,jj-j,0) ? amrex::Math::abs(fcx(i+1,j,k,0)) : 0.0;
-            amrex::Real fracz = flag(i+1,j,k).isConnected(0,0,kk-k) ? amrex::Math::abs(fcx(i+1,j,k,1)) : 0.0;
-            fxp = (1.0-fracy)*(1.0-fracz)*fxp
-                +      fracy *(1.0-fracz)*q1(i+1,jj,k ,GDU)
-                +      fracz *(1.0-fracy)*q1(i+1,j ,kk,GDU)
-                +      fracy *     fracz *q1(i+1,jj,kk,GDU);
-
+        if (apx(i+1,j,k) > 0.0) {
+            fxp = q1(i+1,j,k,GDU);
+            if (apx(i+1,j,k) != 0.0 && apx(i+1,j,k) != 1.0) {
+                int jj = j + static_cast<int>(amrex::Math::copysign(1.0,fcx(i+1,j,k,0)));
+                int kk = k + static_cast<int>(amrex::Math::copysign(1.0,fcx(i+1,j,k,1)));
+                amrex::Real fracy = flag(i+1,j,k).isConnected(0,jj-j,0) ? amrex::Math::abs(fcx(i+1,j,k,0)) : 0.0;
+                amrex::Real fracz = flag(i+1,j,k).isConnected(0,0,kk-k) ? amrex::Math::abs(fcx(i+1,j,k,1)) : 0.0;
+                fxp = (1.0-fracy)*(1.0-fracz)*fxp
+                    +      fracy *(1.0-fracz)*q1(i+1,jj,k ,GDU)
+                    +      fracz *(1.0-fracy)*q1(i+1,j ,kk,GDU)
+                    +      fracy *     fracz *q1(i+1,jj,kk,GDU);
+            }
+        } else {
+                fxp = amrex::Real(0.0);
         }
 
-        amrex::Real fym = q2(i,j,k,GDV);
-        if (apy(i,j,k) != 0.0 && apy(i,j,k) != 1.0) {
-            int ii = i + static_cast<int>(amrex::Math::copysign(1.0,fcy(i,j,k,0)));
-            int kk = k + static_cast<int>(amrex::Math::copysign(1.0,fcy(i,j,k,1)));
-            amrex::Real fracx = flag(i,j,k).isConnected(ii-i,0,0) ? amrex::Math::abs(fcy(i,j,k,0)) : 0.0;
-            amrex::Real fracz = flag(i,j,k).isConnected(0,0,kk-k) ? amrex::Math::abs(fcy(i,j,k,1)) : 0.0;
-            fym = (1.0-fracx)*(1.0-fracz)*fym
-                +      fracx *(1.0-fracz)*q2(ii,j,k ,GDV)
-                +      fracz *(1.0-fracx)*q2(i ,j,kk,GDV)
-                +      fracx *     fracz *q2(ii,j,kk,GDV);
+        if (apy(i,j,k) > 0.0) {
+            fym = q2(i,j,k,GDV);
+            if (apy(i,j,k) != 0.0 && apy(i,j,k) != 1.0) {
+                int ii = i + static_cast<int>(amrex::Math::copysign(1.0,fcy(i,j,k,0)));
+                int kk = k + static_cast<int>(amrex::Math::copysign(1.0,fcy(i,j,k,1)));
+                amrex::Real fracx = flag(i,j,k).isConnected(ii-i,0,0) ? amrex::Math::abs(fcy(i,j,k,0)) : 0.0;
+                amrex::Real fracz = flag(i,j,k).isConnected(0,0,kk-k) ? amrex::Math::abs(fcy(i,j,k,1)) : 0.0;
+                fym = (1.0-fracx)*(1.0-fracz)*fym
+                    +      fracx *(1.0-fracz)*q2(ii,j,k ,GDV)
+                    +      fracz *(1.0-fracx)*q2(i ,j,kk,GDV)
+                    +      fracx *     fracz *q2(ii,j,kk,GDV);
+            }
+        } else {
+                fym = amrex::Real(0.0);
         }
 
-        amrex::Real fyp = q2(i,j+1,k,GDV);
-        if (apy(i,j+1,k) != 0.0 && apy(i,j+1,k) != 1.0) {
-            int ii = i + static_cast<int>(amrex::Math::copysign(1.0,fcy(i,j+1,k,0)));
-            int kk = k + static_cast<int>(amrex::Math::copysign(1.0,fcy(i,j+1,k,1)));
-            amrex::Real fracx = flag(i,j+1,k).isConnected(ii-i,0,0) ? amrex::Math::abs(fcy(i,j+1,k,0)) : 0.0;
-            amrex::Real fracz = flag(i,j+1,k).isConnected(0,0,kk-k) ? amrex::Math::abs(fcy(i,j+1,k,1)) : 0.0;
-            fyp = (1.0-fracx)*(1.0-fracz)*fyp
-                +      fracx *(1.0-fracz)*q2(ii,j+1,k ,GDV)
-                +      fracz *(1.0-fracx)*q2(i ,j+1,kk,GDV)
-                +      fracx *     fracz *q2(ii,j+1,kk,GDV);
+        if (apy(i,j,k) > 0.0) {
+            fyp = q2(i,j+1,k,GDV);
+            if (apy(i,j+1,k) != 0.0 && apy(i,j+1,k) != 1.0) {
+                int ii = i + static_cast<int>(amrex::Math::copysign(1.0,fcy(i,j+1,k,0)));
+                int kk = k + static_cast<int>(amrex::Math::copysign(1.0,fcy(i,j+1,k,1)));
+                amrex::Real fracx = flag(i,j+1,k).isConnected(ii-i,0,0) ? amrex::Math::abs(fcy(i,j+1,k,0)) : 0.0;
+                amrex::Real fracz = flag(i,j+1,k).isConnected(0,0,kk-k) ? amrex::Math::abs(fcy(i,j+1,k,1)) : 0.0;
+                fyp = (1.0-fracx)*(1.0-fracz)*fyp
+                    +      fracx *(1.0-fracz)*q2(ii,j+1,k ,GDV)
+                    +      fracz *(1.0-fracx)*q2(i ,j+1,kk,GDV)
+                    +      fracx *     fracz *q2(ii,j+1,kk,GDV);
+            }
+        } else {
+                fyp = amrex::Real(0.0);
         }
 
-        amrex::Real fzm = q3(i,j,k,GDW);
-        if (apz(i,j,k) != 0.0 && apz(i,j,k) != 1.0) {
-            int ii = i + static_cast<int>(amrex::Math::copysign(1.0,fcz(i,j,k,0)));
-            int jj = j + static_cast<int>(amrex::Math::copysign(1.0,fcz(i,j,k,1)));
-            amrex::Real fracx = flag(i,j,k).isConnected(ii-i,0,0) ? amrex::Math::abs(fcz(i,j,k,0)) : 0.0;
-            amrex::Real fracy = flag(i,j,k).isConnected(0,jj-j,0) ? amrex::Math::abs(fcz(i,j,k,1)) : 0.0;
+        if (apz(i,j,k) > 0.0) {
+            fzm = q3(i,j,k,GDW);
+            if (apz(i,j,k) != 0.0 && apz(i,j,k) != 1.0) {
+                int ii = i + static_cast<int>(amrex::Math::copysign(1.0,fcz(i,j,k,0)));
+                int jj = j + static_cast<int>(amrex::Math::copysign(1.0,fcz(i,j,k,1)));
+                amrex::Real fracx = flag(i,j,k).isConnected(ii-i,0,0) ? amrex::Math::abs(fcz(i,j,k,0)) : 0.0;
+                amrex::Real fracy = flag(i,j,k).isConnected(0,jj-j,0) ? amrex::Math::abs(fcz(i,j,k,1)) : 0.0;
 
-            fzm = (1.0-fracx)*(1.0-fracy)*fzm
-                +      fracx *(1.0-fracy)*q3(ii,j ,k,GDW)
-                +      fracy *(1.0-fracx)*q3(i ,jj,k,GDW)
-                +      fracx *     fracy *q3(ii,jj,k,GDW);
+                fzm = (1.0-fracx)*(1.0-fracy)*fzm
+                    +      fracx *(1.0-fracy)*q3(ii,j ,k,GDW)
+                    +      fracy *(1.0-fracx)*q3(i ,jj,k,GDW)
+                    +      fracx *     fracy *q3(ii,jj,k,GDW);
+            }
+        } else {
+                fzm = amrex::Real(0.0);
         }
 
-        amrex::Real fzp = q3(i,j,k+1,GDW);
-        if (apz(i,j,k+1) != 0.0 && apz(i,j,k+1) != 1.0) {
-            int ii = i + static_cast<int>(amrex::Math::copysign(1.0,fcz(i,j,k+1,0)));
-            int jj = j + static_cast<int>(amrex::Math::copysign(1.0,fcz(i,j,k+1,1)));
-            amrex::Real fracx = flag(i,j,k+1).isConnected(ii-i,0,0) ? amrex::Math::abs(fcz(i,j,k+1,0)) : 0.0;
-            amrex::Real fracy = flag(i,j,k+1).isConnected(0,jj-j,0) ? amrex::Math::abs(fcz(i,j,k+1,1)) : 0.0;
-            fzp = (1.0-fracx)*(1.0-fracy)*fzp
-                +      fracx *(1.0-fracy)*q3(ii,j ,k+1,GDW)
-                +      fracy *(1.0-fracx)*q3(i ,jj,k+1,GDW)
-                +      fracx *     fracy *q3(ii,jj,k+1,GDW);
+        if (apz(i,j,k+1) > 0.0) {
+            fzp = q3(i,j,k+1,GDW);
+            if (apz(i,j,k+1) != 0.0 && apz(i,j,k+1) != 1.0) {
+                int ii = i + static_cast<int>(amrex::Math::copysign(1.0,fcz(i,j,k+1,0)));
+                int jj = j + static_cast<int>(amrex::Math::copysign(1.0,fcz(i,j,k+1,1)));
+                amrex::Real fracx = flag(i,j,k+1).isConnected(ii-i,0,0) ? amrex::Math::abs(fcz(i,j,k+1,0)) : 0.0;
+                amrex::Real fracy = flag(i,j,k+1).isConnected(0,jj-j,0) ? amrex::Math::abs(fcz(i,j,k+1,1)) : 0.0;
+                fzp = (1.0-fracx)*(1.0-fracy)*fzp
+                    +      fracx *(1.0-fracy)*q3(ii,j ,k+1,GDW)
+                    +      fracy *(1.0-fracx)*q3(i ,jj,k+1,GDW)
+                    +      fracx *     fracy *q3(ii,jj,k+1,GDW);
+            }
+        } else {
+                fzp = amrex::Real(0.0);
         }
 
         divu(i,j,k,UEINT) += (1.0/vfrc(i,j,k)) * q(i,j,k,QPRES)*
