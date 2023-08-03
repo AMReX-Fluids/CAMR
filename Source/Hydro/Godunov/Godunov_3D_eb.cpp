@@ -13,7 +13,7 @@ using namespace amrex;
 
 void
 Godunov_umeth_eb (
-  Box const& bx,
+  Box const& bx_to_fill,
   const int* bclo,
   const int* bchi,
   const int* domlo,
@@ -27,15 +27,15 @@ Godunov_umeth_eb (
   Array4<Real> const& q1,
   Array4<Real> const& q2,
   Array4<Real> const& q3,
-  Array4<const Real> const& a1,
-  Array4<const Real> const& a2,
-  Array4<const Real> const& a3,
+  Array4<const Real> const& apx,
+  Array4<const Real> const& apy,
+  Array4<const Real> const& apz,
   Array4<EBCellFlag const> const& flag_arr,
   const GpuArray<Real, AMREX_SPACEDIM> del,
   const Real dt,
   const Real small,
-  const Real l_small_dens,
-  const Real l_small_pres,
+  const Real small_dens,
+  const Real small_pres,
   const int ppm_type,
   const int use_pslope,
   const int use_flattening,
@@ -69,8 +69,8 @@ Godunov_umeth_eb (
   const int dhz = domhi[2];
 
   // auto const& bcMaskarr = bcMask.array();
-  const Box& bxg1 = grow(bx, 1);
-  const Box& bxg2 = grow(bx, 2);
+  const Box& bxg1 = grow(bx_to_fill, 1);
+  const Box& bxg2 = grow(bx_to_fill, 2);
 
   // X data
   int cdir = 0;
@@ -124,9 +124,8 @@ Godunov_umeth_eb (
           else
               slope[n] = plm_slope_eb(i, j, k, n, 0, flag_arr, q, flat, iorder);
         }
-        CAMR_plm_d(
-          i, j, k, idir, qxmarr, qxparr, slope, q, qaux(i, j, k, QC), dx, dt,
-          l_small_dens, l_small_pres, *lpmap, a1);
+        CAMR_plm_d(i, j, k, idir, qxmarr, qxparr, slope, q, qaux(i, j, k, QC), dx, dt,
+                   small_dens, small_pres, *lpmap, apx);
 
         // Y slopes and interp
         idir = 1;
@@ -136,9 +135,8 @@ Godunov_umeth_eb (
           else
               slope[n] = plm_slope_eb(i, j, k, n, 1, flag_arr, q, flat, iorder);
         }
-        CAMR_plm_d(
-          i, j, k, idir, qymarr, qyparr, slope, q, qaux(i, j, k, QC), dy, dt,
-          l_small_dens, l_small_pres, *lpmap, a2);
+        CAMR_plm_d(i, j, k, idir, qymarr, qyparr, slope, q, qaux(i, j, k, QC), dy, dt,
+                   small_dens, small_pres, *lpmap, apy);
 
         // Z slopes and interp
         idir = 2;
@@ -148,33 +146,27 @@ Godunov_umeth_eb (
           else
               slope[n] = plm_slope_eb(i, j, k, n, 2, flag_arr, q, flat, iorder);
         }
-        CAMR_plm_d(
-          i, j, k, idir, qzmarr, qzparr, slope, q, qaux(i, j, k, QC), dz, dt,
-          l_small_dens, l_small_pres, *lpmap, a3);
+        CAMR_plm_d(i, j, k, idir, qzmarr, qzparr, slope, q, qaux(i, j, k, QC), dz, dt,
+                   small_dens, small_pres, *lpmap, apz);
       });
   } else if (ppm_type == 1) {
-    // Compute the normal interface states by reconstructing
-    // the primitive variables using the piecewise parabolic method
-    // and doing characteristic tracing.  We do not apply the
-    // transverse terms here.
 
-    int idir = 0;
-    trace_ppm(
-      bxg2, idir, q, qaux, srcQ, qxmarr, qxparr, bxg2, dt, del, use_flattening,
-      l_small_dens, l_small_pres, lpmap);
+      // Compute the normal interface states by reconstructing
+      // the primitive variables using the piecewise parabolic method
+      // and doing characteristic tracing.  We do not apply the
+      // transverse terms here.
 
-    idir = 1;
-    trace_ppm(
-      bxg2, idir, q, qaux, srcQ, qymarr, qyparr, bxg2, dt, del, use_flattening,
-      l_small_dens, l_small_pres, lpmap);
+      trace_ppm(bxg2, 0, q, qaux, srcQ, qxmarr, qxparr, bxg2, dt, del, use_flattening,
+                small_dens, small_pres, lpmap);
 
-    idir = 2;
-    trace_ppm(
-      bxg2, idir, q, qaux, srcQ, qzmarr, qzparr, bxg2, dt, del, use_flattening,
-      l_small_dens, l_small_pres, lpmap);
+      trace_ppm(bxg2, 1, q, qaux, srcQ, qymarr, qyparr, bxg2, dt, del, use_flattening,
+                small_dens, small_pres, lpmap);
+
+      trace_ppm(bxg2, 2, q, qaux, srcQ, qzmarr, qzparr, bxg2, dt, del, use_flattening,
+                small_dens, small_pres, lpmap);
 
   } else {
-    amrex::Error("CAMR::ppm_type must be 0 (PLM) or 1 (PPM)");
+      amrex::Error("CAMR::ppm_type must be 0 (PLM) or 1 (PPM)");
   }
 
   // These are the first flux estimates as per the corner-transport-upwind
@@ -184,12 +176,11 @@ Godunov_umeth_eb (
   auto const& fxarr = fx.array();
   FArrayBox qgdx(xflxbx, NGDNV, amrex::The_Async_Arena());
   auto const& gdtempx = qgdx.array();
-  ParallelFor(
-    xflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-      CAMR_cmpflx(
-        i, j, k, bclx, bchx, dlx, dhx, qxmarr, qxparr, fxarr, gdtempx, qaux,
-        cdir, *lpmap, small, l_small_dens, l_small_pres);
-    });
+  ParallelFor(xflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
+      CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qxmarr, qxparr, fxarr, gdtempx, qaux,
+                  cdir, *lpmap, small, small_dens, small_pres);
+  });
 
   // Y initial fluxes
   cdir = 1;
@@ -197,12 +188,11 @@ Godunov_umeth_eb (
   auto const& fyarr = fy.array();
   FArrayBox qgdy(yflxbx, NGDNV, amrex::The_Async_Arena());
   auto const& gdtempy = qgdy.array();
-  ParallelFor(
-    yflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-      CAMR_cmpflx(
-        i, j, k, bcly, bchy, dly, dhy, qymarr, qyparr, fyarr, gdtempy, qaux,
-        cdir, *lpmap, small, l_small_dens, l_small_pres);
-    });
+  ParallelFor(yflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
+      CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qymarr, qyparr, fyarr, gdtempy, qaux,
+                  cdir, *lpmap, small, small_dens, small_pres);
+  });
 
   // Z initial fluxes
   cdir = 2;
@@ -210,12 +200,11 @@ Godunov_umeth_eb (
   auto const& fzarr = fz.array();
   FArrayBox qgdz(zflxbx, NGDNV, amrex::The_Async_Arena());
   auto const& gdtempz = qgdz.array();
-  ParallelFor(
-    zflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-      CAMR_cmpflx(
-        i, j, k, bclz, bchz, dlz, dhz, qzmarr, qzparr, fzarr, gdtempz, qaux,
-        cdir, *lpmap, small, l_small_dens, l_small_pres);
-    });
+  ParallelFor(zflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
+      CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qzmarr, qzparr, fzarr, gdtempz, qaux,
+                  cdir, *lpmap, small, small_dens, small_pres);
+  });
 
   // X interface corrections
   cdir = 0;
@@ -231,15 +220,14 @@ Godunov_umeth_eb (
   auto const& qmxz = qxzm.array();
   auto const& qpxz = qxzp.array();
 
-  ParallelFor(txbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    // X|Y
-    CAMR_transdo(
-      i, j, k, cdir, 1, qmxy, qpxy, qxmarr, qxparr, fyarr, qaux, gdtempy, cdtdy,
-      *lpmap, l_transverse_reset_density, l_small_pres);
-    // X|Z
-    CAMR_transdo(
-      i, j, k, cdir, 2, qmxz, qpxz, qxmarr, qxparr, fzarr, qaux, gdtempz, cdtdz,
-      *lpmap, l_transverse_reset_density, l_small_pres);
+  ParallelFor(txbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
+      // X|Y
+      CAMR_transdo(i, j, k, cdir, 1, qmxy, qpxy, qxmarr, qxparr, fyarr, qaux, gdtempy, cdtdy,
+                   *lpmap, l_transverse_reset_density, small_pres);
+      // X|Z
+      CAMR_transdo(i, j, k, cdir, 2, qmxz, qpxz, qxmarr, qxparr, fzarr, qaux, gdtempz, cdtdz,
+                   *lpmap, l_transverse_reset_density, small_pres);
   });
 
   const Box& txfxbx = surroundingNodes(bxg1, cdir);
@@ -254,16 +242,14 @@ Godunov_umeth_eb (
   auto const& qxz = gdvxzfab.array();
 
   // Riemann problem X|Y X|Z
-  ParallelFor(
-    txfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+  ParallelFor(txfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
       // X|Y
-      CAMR_cmpflx(
-        i, j, k, bclx, bchx, dlx, dhx, qmxy, qpxy, flxy, qxy, qaux,
-        cdir, *lpmap, small, l_small_dens, l_small_pres);
+      CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qmxy, qpxy, flxy, qxy, qaux,
+                  cdir, *lpmap, small, small_dens, small_pres);
       // X|Z
-      CAMR_cmpflx(
-        i, j, k, bclx, bchx, dlx, dhx, qmxz, qpxz, flxz, qxz, qaux,
-        cdir, *lpmap, small, l_small_dens, l_small_pres);
+      CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qmxz, qpxz, flxz, qxz, qaux,
+                  cdir, *lpmap, small, small_dens, small_pres);
     });
   qxym.clear();
   qxyp.clear();
@@ -283,15 +269,14 @@ Godunov_umeth_eb (
   auto const& qmyz = qyzm.array();
   auto const& qpyz = qyzp.array();
 
-  ParallelFor(tybx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    // Y|X
-    CAMR_transdo(
-      i, j, k, cdir, 0, qmyx, qpyx, qymarr, qyparr, fxarr, qaux, gdtempx, cdtdx,
-      *lpmap, l_transverse_reset_density, l_small_pres);
-    // Y|Z
-    CAMR_transdo(
-      i, j, k, cdir, 2, qmyz, qpyz, qymarr, qyparr, fzarr, qaux, gdtempz, cdtdz,
-      *lpmap, l_transverse_reset_density, l_small_pres);
+  ParallelFor(tybx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
+      // Y|X
+      CAMR_transdo(i, j, k, cdir, 0, qmyx, qpyx, qymarr, qyparr, fxarr, qaux, gdtempx, cdtdx,
+                   *lpmap, l_transverse_reset_density, small_pres);
+      // Y|Z
+      CAMR_transdo(i, j, k, cdir, 2, qmyz, qpyz, qymarr, qyparr, fzarr, qaux, gdtempz, cdtdz,
+                   *lpmap, l_transverse_reset_density, small_pres);
   });
   fz.clear();
   qgdz.clear();
@@ -308,17 +293,15 @@ Godunov_umeth_eb (
   auto const& qyx = gdvyxfab.array();
   auto const& qyz = gdvyzfab.array();
 
-  ParallelFor(
-    tyfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+  ParallelFor(tyfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
       // Y|X
-      CAMR_cmpflx(
-        i, j, k, bcly, bchy, dly, dhy, qmyx, qpyx, flyx, qyx, qaux,
-        cdir, *lpmap, small, l_small_dens, l_small_pres);
+      CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qmyx, qpyx, flyx, qyx, qaux,
+                  cdir, *lpmap, small, small_dens, small_pres);
       // Y|Z
-      CAMR_cmpflx(
-        i, j, k, bcly, bchy, dly, dhy, qmyz, qpyz, flyz, qyz, qaux,
-        cdir, *lpmap, small, l_small_dens, l_small_pres);
-    });
+      CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qmyz, qpyz, flyz, qyz, qaux,
+                  cdir, *lpmap, small, small_dens, small_pres);
+  });
   qyxm.clear();
   qyxp.clear();
   qyzm.clear();
@@ -338,16 +321,16 @@ Godunov_umeth_eb (
   auto const& qmzy = qzym.array();
   auto const& qpzy = qzyp.array();
 
-  ParallelFor(tzbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    // Z|X
-    CAMR_transdo(
-      i, j, k, cdir, 0, qmzx, qpzx, qzmarr, qzparr, fxarr, qaux, gdtempx, cdtdx,
-      *lpmap, l_transverse_reset_density, l_small_pres);
-    // Z|Y
-    CAMR_transdo(
-      i, j, k, cdir, 1, qmzy, qpzy, qzmarr, qzparr, fyarr, qaux, gdtempy, cdtdy,
-      *lpmap, l_transverse_reset_density, l_small_pres);
+  ParallelFor(tzbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
+      // Z|X
+      CAMR_transdo(i, j, k, cdir, 0, qmzx, qpzx, qzmarr, qzparr, fxarr, qaux, gdtempx, cdtdx,
+                   *lpmap, l_transverse_reset_density, small_pres);
+      // Z|Y
+      CAMR_transdo(i, j, k, cdir, 1, qmzy, qpzy, qzmarr, qzparr, fyarr, qaux, gdtempy, cdtdy,
+                   *lpmap, l_transverse_reset_density, small_pres);
   });
+
   fx.clear();
   fy.clear();
   qgdx.clear();
@@ -365,17 +348,16 @@ Godunov_umeth_eb (
   auto const& qzx = gdvzxfab.array();
   auto const& qzy = gdvzyfab.array();
 
-  ParallelFor(
-    tzfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+  ParallelFor(tzfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
       // Z|X
-      CAMR_cmpflx(
-        i, j, k, bclz, bchz, dlz, dhz, qmzx, qpzx, flzx, qzx, qaux,
-        cdir, *lpmap, small, l_small_dens, l_small_pres);
+      CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qmzx, qpzx, flzx, qzx, qaux,
+                  cdir, *lpmap, small, small_dens, small_pres);
       // Z|Y
-      CAMR_cmpflx(
-        i, j, k, bclz, bchz, dlz, dhz, qmzy, qpzy, flzy, qzy, qaux,
-        cdir, *lpmap, small, l_small_dens, l_small_pres);
-    });
+      CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qmzy, qpzy, flzy, qzy, qaux,
+                  cdir, *lpmap, small, small_dens, small_pres);
+  });
+
   qzxm.clear();
   qzxp.clear();
   qzym.clear();
@@ -389,12 +371,12 @@ Godunov_umeth_eb (
 
   // X | Y&Z
   cdir = 0;
-  const Box& xfxbx = surroundingNodes(bx, cdir);
-  const Box& tyzbx = grow(bx, cdir, 1);
-  ParallelFor(tyzbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    CAMR_transdd(
-      i, j, k, cdir, qm, qp, qxmarr, qxparr, flyz, flzy, qyz, qzy, qaux, srcQ,
-      hdt, hdtdy, hdtdz, *lpmap, l_transverse_reset_density, l_small_pres);
+  const Box& xfxbx = surroundingNodes(bx_to_fill, cdir);
+  const Box& tyzbx = grow(bx_to_fill, cdir, 1);
+  ParallelFor(tyzbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
+      CAMR_transdd(i, j, k, cdir, qm, qp, qxmarr, qxparr, flyz, flzy, qyz, qzy, qaux, srcQ,
+                   hdt, hdtdy, hdtdz, *lpmap, l_transverse_reset_density, small_pres);
   });
   qxm.clear();
   qxp.clear();
@@ -405,18 +387,17 @@ Godunov_umeth_eb (
 
   // Final X flux
   ParallelFor(xfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qm, qp, flx1, q1, qaux,
-              cdir, *lpmap, small, l_small_dens, l_small_pres);
+      CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qm, qp, flx1, q1, qaux,
+                  cdir, *lpmap, small, small_dens, small_pres);
   });
 
   // Y | X&Z
   cdir = 1;
-  const Box& yfxbx = surroundingNodes(bx, cdir);
-  const Box& txzbx = grow(bx, cdir, 1);
+  const Box& yfxbx = surroundingNodes(bx_to_fill, cdir);
+  const Box& txzbx = grow(bx_to_fill, cdir, 1);
   ParallelFor(txzbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    CAMR_transdd(
-      i, j, k, cdir, qm, qp, qymarr, qyparr, flxz, flzx, qxz, qzx, qaux, srcQ,
-      hdt, hdtdx, hdtdz, *lpmap, l_transverse_reset_density, l_small_pres);
+      CAMR_transdd(i, j, k, cdir, qm, qp, qymarr, qyparr, flxz, flzx, qxz, qzx, qaux, srcQ,
+                   hdt, hdtdx, hdtdz, *lpmap, l_transverse_reset_density, small_pres);
   });
   qym.clear();
   qyp.clear();
@@ -427,18 +408,17 @@ Godunov_umeth_eb (
 
   // Final Y flux
   ParallelFor(yfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qm, qp, flx2, q2, qaux,
-              cdir, *lpmap, small, l_small_dens, l_small_pres);
+      CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qm, qp, flx2, q2, qaux,
+                  cdir, *lpmap, small, small_dens, small_pres);
   });
 
   // Z | X&Y
   cdir = 2;
-  const Box& zfxbx = surroundingNodes(bx, cdir);
-  const Box& txybx = grow(bx, cdir, 1);
+  const Box& zfxbx = surroundingNodes(bx_to_fill, cdir);
+  const Box& txybx = grow(bx_to_fill, cdir, 1);
   ParallelFor(txybx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    CAMR_transdd(
-      i, j, k, cdir, qm, qp, qzmarr, qzparr, flxy, flyx, qxy, qyx, qaux, srcQ,
-      hdt, hdtdx, hdtdy, *lpmap, l_transverse_reset_density, l_small_pres);
+      CAMR_transdd(i, j, k, cdir, qm, qp, qzmarr, qzparr, flxy, flyx, qxy, qyx, qaux, srcQ,
+                   hdt, hdtdx, hdtdy, *lpmap, l_transverse_reset_density, small_pres);
   });
   qzm.clear();
   qzp.clear();
@@ -449,8 +429,8 @@ Godunov_umeth_eb (
 
   // Final Z flux
   ParallelFor(zfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qm, qp, flx3, q3, qaux,
-              cdir, *lpmap, small, l_small_dens, l_small_pres);
+      CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qm, qp, flx3, q3, qaux,
+                  cdir, *lpmap, small, small_dens, small_pres);
   });
   qmfab.clear();
   qpfab.clear();
