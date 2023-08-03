@@ -454,15 +454,6 @@ Godunov_umeth_eb (
   });
   qmfab.clear();
   qpfab.clear();
-
-  // Construct p div{U}
-  amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-      if (flag_arr(i,j,k).isRegular()) {
-          CAMR_pdivu(i, j, k, pdivu, q1, q2, q3, a1, a2, a3, vol);
-      } else {
-          pdivu(i,j,k) = amrex::Real(0.0);
-      }
-  });
 }
 
 #endif

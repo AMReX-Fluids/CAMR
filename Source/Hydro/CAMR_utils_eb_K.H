@@ -30,9 +30,9 @@ AMREX_GPU_DEVICE AMREX_FORCE_INLINE
 void
 eb_divu (int i, int j, int k,
          amrex::Array4<amrex::Real const> const& q,
-          amrex::Array4<amrex::Real> const& divu,
-          amrex::Array4<amrex::Real const> const& vfrac,
-          amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxInv)
+         amrex::Array4<amrex::Real> const& divu,
+         amrex::Array4<amrex::Real const> const& vfrac,
+         amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxInv)
 {
 #if (AMREX_SPACEDIM == 2)
     amrex::Real surrounding_vol = vfrac(i,j  ,k  ) + vfrac(i-1,j  ,k  ) +

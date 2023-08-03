@@ -19,12 +19,11 @@
 using namespace amrex;
 
 void
-MOL_umeth_eb (const Box& /*bx*/,
+MOL_umeth_eb (const Box& bxg_i,
               const int*  bclo, const int*  bchi,
               const int* domlo, const int* domhi,
               Array4<const Real> const& q_arr,
               Array4<const Real> const& qaux_arr,
-              Array4<      Real> const& divc_arr,
               AMREX_D_DECL(Array4<Real> const& q1,
                            Array4<Real> const& q2,
                            Array4<Real> const& q3),
@@ -57,7 +56,7 @@ MOL_umeth_eb (const Box& /*bx*/,
 
     Real l_plm_theta = 2.0; // [1,2] 1: minmod; 2: van Leer's MC
 
-    const Box& bxg_i  = Box(divc_arr);
+    // bxg_i  = Box(divc_arr);
     const Box& bxg_ii = grow(bxg_i,1);
 
     GpuArray<Real,AMREX_SPACEDIM> dxinv;
