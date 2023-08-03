@@ -60,8 +60,6 @@ void Godunov_umeth_eb (
   amrex::Array4<const amrex::Real> const& a1,
   amrex::Array4<const amrex::Real> const& a2,
   amrex::Array4<const amrex::Real> const& a3,
-  amrex::Array4<const amrex::Real> const& vol,
-  amrex::Array4<const amrex::Real> const& vfrac,
   amrex::Array4<amrex::EBCellFlag const> const& flag_arr,
   const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> del,
   const amrex::Real dt,
