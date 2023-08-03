@@ -227,17 +227,14 @@ Godunov_umeth_eb (
   auto const& qmxz = qxzm.array();
   auto const& qpxz = qxzp.array();
 
-  ParallelFor(txbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    if (!flag_arr(i, j, k).isCovered()) {
+  ParallelFor(txbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
       // X|Y
-      CAMR_transdo(i, j, k, cdir, 1, qmxy, qpxy, qxmarr, qxparr, fyarr, qaux,
-                   gdtempy, cdtdy, *lpmap, l_transverse_reset_density,
-                   small_pres);
+      CAMR_transdo(i, j, k, cdir, 1, qmxy, qpxy, qxmarr, qxparr, fyarr, qaux, gdtempy, cdtdy,
+                   *lpmap, l_transverse_reset_density, small_pres);
       // X|Z
-      CAMR_transdo(i, j, k, cdir, 2, qmxz, qpxz, qxmarr, qxparr, fzarr, qaux,
-                   gdtempz, cdtdz, *lpmap, l_transverse_reset_density,
-                   small_pres);
-    }
+      CAMR_transdo(i, j, k, cdir, 2, qmxz, qpxz, qxmarr, qxparr, fzarr, qaux, gdtempz, cdtdz,
+                   *lpmap, l_transverse_reset_density, small_pres);
   });
 
   const Box& txfxbx = surroundingNodes(bxg1, cdir);
