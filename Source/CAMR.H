@@ -453,7 +453,12 @@ int
 CAMR::numGrow()
 {
 #ifdef AMREX_USE_EB
-  int ng = 5;
+  // IF MOL     + FRD then 5
+  // IF Godunov + FRD then 6
+  // IF MOL     + SRD then 6
+  // IF Godunov + SRD then 7
+  // So for now we just put 7
+  int ng = 7;
 #else
   int ng = 4;
 #endif

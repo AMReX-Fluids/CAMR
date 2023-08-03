@@ -144,8 +144,8 @@ Godunov_umeth (
   auto const& gdtemp = qgdx.array();
   amrex::ParallelFor(xflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
-        CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qxmarr, qxparr, fxarr, gdtemp, qaux,
-                    cdir, *lpmap, small, small_dens, small_pres);
+      CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qxmarr, qxparr, fxarr, gdtemp, qaux,
+                  cdir, *lpmap, small, small_dens, small_pres);
   });
 
   // Y initial fluxes

@@ -28,7 +28,6 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
                const GpuArray<Real, AMREX_SPACEDIM> dxinv,
                const GpuArray<const Array4<Real>, AMREX_SPACEDIM>& flux_arr,
                const amrex::GpuArray<const Array4<const Real>, AMREX_SPACEDIM> /*a*/,
-               Array4<Real> const& vol,
                int as_crse,
                Array4<Real> const& drho_as_crse,
                Array4<int const> const& rrflag_as_crse,
@@ -67,9 +66,7 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
 
     // Temporary FArrayBoxes
     FArrayBox  divu(bxg_ii, 1, amrex::The_Async_Arena());
-    FArrayBox pdivu(bx    , 1, amrex::The_Async_Arena());
     auto const& divuarr = divu.array();
-    auto const& pdivuarr = pdivu.array();
 
     amrex::FArrayBox qec[AMREX_SPACEDIM];
     for (int dir = 0; dir < AMREX_SPACEDIM; dir++) {
@@ -118,16 +115,17 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
     // Also construct the redistribution weights for flux redistribution if necessary
     // ****************************************************************
     if (do_mol) {
-        MOL_umeth_eb(bx, bclo, bchi, domlo, domhi, q_arr, qaux_arr, divc_arr,
+        MOL_umeth_eb(Box(divc_arr), bclo, bchi, domlo, domhi, q_arr, qaux_arr,
                      AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]), vf_arr,
                      flag_arr, dx, flux_tmp_arr, small, small_dens, small_pres,
                      plm_iorder, l_eb_weights_type);
     } else {
-        Godunov_umeth_eb(bx, bclo, bchi, domlo, domhi, q_arr, qaux_arr, src_q,
+        Godunov_umeth_eb(Box(divc_arr), bclo, bchi, domlo, domhi, q_arr, qaux_arr,
+                         src_q,
                          AMREX_D_DECL(flux_tmp_arr[0], flux_tmp_arr[1], flux_tmp_arr[2]),
                          AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
                          AMREX_D_DECL(apx, apy, apz),
-                         pdivuarr, vol, vf_arr, flag_arr, dx, dt,
+                         flag_arr, dx, dt,
                          small, small_dens, small_pres, ppm_type, use_pslope, use_flattening,
                          plm_iorder, transverse_reset_density);
     }

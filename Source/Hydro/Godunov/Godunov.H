@@ -16,10 +16,8 @@
 #if AMREX_SPACEDIM == 3
 void Godunov_umeth (
   amrex::Box const& bx,
-  const int* bclo,
-  const int* bchi,
-  const int* domlo,
-  const int* domhi,
+  const int* bclo,  const int* bchi,
+  const int* domlo, const int* domhi,
   amrex::Array4<const amrex::Real> const& q,
   amrex::Array4<const amrex::Real> const& qaux,
   amrex::Array4<const amrex::Real> const& srcQ,
@@ -47,11 +45,9 @@ void Godunov_umeth (
 
 #ifdef AMREX_USE_EB
 void Godunov_umeth_eb (
-  amrex::Box const& bx,
-  const int* bclo,
-  const int* bchi,
-  const int* domlo,
-  const int* domhi,
+  amrex::Box const& bx_to_fill,
+  const int* bclo,  const int* bchi,
+  const int* domlo, const int* domhi,
   amrex::Array4<const amrex::Real> const& q,
   amrex::Array4<const amrex::Real> const& qaux,
   amrex::Array4<const amrex::Real> const& srcQ,
@@ -64,7 +60,6 @@ void Godunov_umeth_eb (
   amrex::Array4<const amrex::Real> const& a1,
   amrex::Array4<const amrex::Real> const& a2,
   amrex::Array4<const amrex::Real> const& a3,
-  amrex::Array4<amrex::Real> const& pdivu,
   amrex::Array4<const amrex::Real> const& vol,
   amrex::Array4<const amrex::Real> const& vfrac,
   amrex::Array4<amrex::EBCellFlag const> const& flag_arr,
@@ -126,9 +121,6 @@ void Godunov_umeth_eb (
   amrex::Array4<amrex::Real> const& q2,
   amrex::Array4<const amrex::Real> const& a1,
   amrex::Array4<const amrex::Real> const& a2,
-  amrex::Array4<amrex::Real> const& pdivu,
-  amrex::Array4<const amrex::Real> const& vol,
-  amrex::Array4<const amrex::Real> const& vfrac,
   amrex::Array4<amrex::EBCellFlag const> const& flag_arr,
   const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> del,
   const amrex::Real dt,
