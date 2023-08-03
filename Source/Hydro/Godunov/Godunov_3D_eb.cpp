@@ -207,7 +207,7 @@ Godunov_umeth_eb (
   FArrayBox qgdz(zflxbx, NGDNV, amrex::The_Async_Arena());
   auto const& gdtempz = qgdz.array();
   ParallelFor(zflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    if (!flag_arr(i, j, k).isCovered() && !flag_arr(i, j, k-1).isCovered()) {
+    if (!flag_arr(i, j, k).isCovered() && !flag_arr(i, j, k - 1).isCovered()) {
       CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qzmarr, qzparr, fzarr, gdtempz,
                   qaux, cdir, *lpmap, small, small_dens, small_pres);
     }
