@@ -156,8 +156,6 @@ eb_pdivu (int i, int j, int k,
         divu(i,j,k,UEINT) += (1.0/vfrc(i,j,k)) * q(i,j,k,QPRES)*
             ( dxinv[0] * (apx(i+1,j,k)*fxp-apx(i,j,k)*fxm)
             + dxinv[1] * (apy(i,j+1,k)*fyp-apy(i,j,k)*fym) );
-        amrex::Print() << "DONE  " << amrex::IntVect(i,j) << std::endl;
-
     }
 
 #else // 3-d starts here
