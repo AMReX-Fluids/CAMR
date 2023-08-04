@@ -284,7 +284,7 @@ CAMR_transdd (
   const amrex::IntVect ivpt1(iv + amrex::IntVect::TheDimensionVector(l_idx[2]));
   const amrex::IntVect ivpn(iv + amrex::IntVect::TheDimensionVector(dir));
 
-  // ivpn is an offset by 1 in the     normal direction
+  // ivpn is an offset by 1 in the normal direction
   // ivpt0 is an offset by 1 in the first transverse direction
   // ivpt1 is an offset by 1 in the second transverse direction
   // If (dir == 0),  ivpt0 = (i,j+1,k) and ivpt1 = (i,j,k+1) and ivpn = (i+1,j,k) and qvidx0 = GDV and qvidx1 = GVW
