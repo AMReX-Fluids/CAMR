@@ -455,7 +455,7 @@ CAMR_transdd (
     amrex::Real rvnewl = rvl - flxv;
     amrex::Real rwnewl = rwl - flxw;
     amrex::Real renewl = rel - flxe;
-    
+
     bool reset_state = false;
     if (transverse_reset_density == 1 && rrnewl < 0.) {
       rrnewl = rrl;
@@ -470,11 +470,11 @@ CAMR_transdd (
     qm(ivpn, QU) = runewl / rrnewl + hdt * srcu;
     qm(ivpn, QV) = rvnewl / rrnewl + hdt * srcv;
     qm(ivpn, QW) = rwnewl / rrnewl + hdt * srcw;
-    
+
     const amrex::Real rhoekinl =
       0.5 * (runewl * runewl + rvnewl * rvnewl + rwnewl * rwnewl) / rrnewl;
     qm(ivpn, QREINT) = renewl - rhoekinl + hdt * srce;
-    
+
     if(!reset_state){
       qm(ivpn, QPRES) = qnormm(ivpn, QPRES) - pxnew - pynew + hdt * srcp;
     } else {
