@@ -383,7 +383,7 @@ Godunov_umeth_eb (
   ParallelFor(tyzbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
       CAMR_transdd(i, j, k, cdir, qm, qp, qxmarr, qxparr, flyz, flzy, qyz, qzy, qaux, srcQ,
-                   hdt, hdtdy, hdtdz, *lpmap, l_transverse_reset_density, small_pres);
+                   hdt, hdtdy, hdtdz, *lpmap, l_transverse_reset_density, small_pres, apx, apy, apz);
   });
   qxm.clear();
   qxp.clear();
@@ -404,7 +404,7 @@ Godunov_umeth_eb (
   const Box& txzbx = grow(bx_to_fill, cdir, 1);
   ParallelFor(txzbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
       CAMR_transdd(i, j, k, cdir, qm, qp, qymarr, qyparr, flxz, flzx, qxz, qzx, qaux, srcQ,
-                   hdt, hdtdx, hdtdz, *lpmap, l_transverse_reset_density, small_pres);
+                   hdt, hdtdx, hdtdz, *lpmap, l_transverse_reset_density, small_pres, apy, apx, apz);
   });
   qym.clear();
   qyp.clear();
@@ -425,7 +425,7 @@ Godunov_umeth_eb (
   const Box& txybx = grow(bx_to_fill, cdir, 1);
   ParallelFor(txybx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
       CAMR_transdd(i, j, k, cdir, qm, qp, qzmarr, qzparr, flxy, flyx, qxy, qyx, qaux, srcQ,
-                   hdt, hdtdx, hdtdy, *lpmap, l_transverse_reset_density, small_pres);
+                   hdt, hdtdx, hdtdy, *lpmap, l_transverse_reset_density, small_pres, apz, apx, apy);
   });
   qzm.clear();
   qzp.clear();
