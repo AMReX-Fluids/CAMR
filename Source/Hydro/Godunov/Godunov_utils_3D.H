@@ -269,7 +269,13 @@ CAMR_transdd (
   const amrex::Real cdtdx1,
   PassMap const& pmap,
   int transverse_reset_density,
-  amrex::Real small_pres)
+  amrex::Real small_pres
+#ifdef AMREX_USE_EB
+  , amrex::Array4<const amrex::Real> const&  norm_area = {}
+  , amrex::Array4<const amrex::Real> const& trans0_area = {}
+  , amrex::Array4<const amrex::Real> const& trans1_area = {}
+#endif
+)
 {
   amrex::ignore_unused(k);
   const amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
@@ -291,16 +297,23 @@ CAMR_transdd (
   // If (dir == 1),  ivpt0 = (i+1,j,k) and ivpt1 = (i,j,k+1) and ivpn = (i,j+1,k) and qvidx0 = GDU and qvidx1 = GVW
   // If (dir == 2),  ivpt0 = (i+1,j,k) and ivpt1 = (i,j+1,k) and ivpn = (i,j,k+1) and qvidx0 = GDU and qvidx1 = GVV
 
-  const amrex::Real flxrho = cdtdx0 * (flxx(ivpt0, URHO) - flxx(iv, URHO)) +
-                             cdtdx1 * (flxy(ivpt1, URHO) - flxy(iv, URHO));
-  const amrex::Real flxu = cdtdx0 * (flxx(ivpt0, UMX) - flxx(iv, UMX)) +
-                           cdtdx1 * (flxy(ivpt1, UMX) - flxy(iv, UMX));
-  const amrex::Real flxv = cdtdx0 * (flxx(ivpt0, UMY) - flxx(iv, UMY)) +
-                           cdtdx1 * (flxy(ivpt1, UMY) - flxy(iv, UMY));
-  const amrex::Real flxw = cdtdx0 * (flxx(ivpt0, UMZ) - flxx(iv, UMZ)) +
-                           cdtdx1 * (flxy(ivpt1, UMZ) - flxy(iv, UMZ));
-  const amrex::Real flxe = cdtdx0 * (flxx(ivpt0, UEDEN) - flxx(iv, UEDEN)) +
-                           cdtdx1 * (flxy(ivpt1, UEDEN) - flxy(iv, UEDEN));
+  const bool no_cov_face =
+#ifdef AMREX_USE_EB
+    (trans0_area(ivpt0) > 0.0) && (trans1_area(ivpt1) > 0.0) && (trans0_area(iv) > 0.0) && (trans1_area(iv) > 0.0);
+#else
+  true;
+#endif
+
+  const amrex::Real flxrho = no_cov_face ? cdtdx0 * (flxx(ivpt0, URHO) - flxx(iv, URHO)) +
+                             cdtdx1 * (flxy(ivpt1, URHO) - flxy(iv, URHO)) : amrex::Real(0.0);
+  const amrex::Real flxu = no_cov_face ? cdtdx0 * (flxx(ivpt0, UMX) - flxx(iv, UMX)) +
+                           cdtdx1 * (flxy(ivpt1, UMX) - flxy(iv, UMX)) : amrex::Real(0.0);
+  const amrex::Real flxv = no_cov_face ? cdtdx0 * (flxx(ivpt0, UMY) - flxx(iv, UMY)) +
+                           cdtdx1 * (flxy(ivpt1, UMY) - flxy(iv, UMY)) : amrex::Real(0.0);
+  const amrex::Real flxw = no_cov_face ? cdtdx0 * (flxx(ivpt0, UMZ) - flxx(iv, UMZ)) +
+                           cdtdx1 * (flxy(ivpt1, UMZ) - flxy(iv, UMZ)) : amrex::Real(0.0);
+  const amrex::Real flxe = no_cov_face ? cdtdx0 * (flxx(ivpt0, UEDEN) - flxx(iv, UEDEN)) +
+                           cdtdx1 * (flxy(ivpt1, UEDEN) - flxy(iv, UEDEN)) : amrex::Real(0.0);
   const amrex::Real c = qa(iv, QGAMC);
   const amrex::Real srcrho = srcq(iv, QRHO);
   const amrex::Real srcu = srcq(iv, QU);
@@ -319,15 +332,35 @@ CAMR_transdd (
     const int n = pmap.upassMap[ipass];
     const int nqp = pmap.qpassMap[ipass];
     const amrex::Real srcpass = srcq(iv, nqp);
-    const amrex::Real compn = cdtdx0 * (flxx(ivpt0, n) - flxx(iv, n)) +
-                              cdtdx1 * (flxy(ivpt1, n) - flxy(iv, n));
+    const amrex::Real compn = no_cov_face ?
+      cdtdx0 * (flxx(ivpt0, n) - flxx(iv, n)) +
+      cdtdx1 * (flxy(ivpt1, n) - flxy(iv, n)) : amrex::Real(0.0);
+
+    amrex::Real compo;
+
     // qp
-    amrex::Real compo = rrr * qzp(iv, nqp) - compn;
-    qp(iv, nqp) = compo / rrnewr + hdt * srcpass;
+#ifdef AMREX_USE_EB
+    if (norm_area(iv) > amrex::Real(0.0)) {
+#endif
+      compo = rrr * qzp(iv, nqp) - compn;
+      qp(iv, nqp) = compo / rrnewr + hdt * srcpass;
+#ifdef AMREX_USE_EB
+    } else {
+      qp(iv, nqp) = qzp(iv, nqp);
+    }
+#endif
 
     // qm
-    compo = rrl * qzm(ivpn, nqp) - compn;
-    qm(ivpn, nqp) = compo / rrnewl + hdt * srcpass;
+#ifdef AMREX_USE_EB
+    if (norm_area(ivpn) > amrex::Real(0.0)) {
+#endif
+      compo = rrl * qzm(ivpn, nqp) - compn;
+      qm(ivpn, nqp) = compo / rrnewl + hdt * srcpass;
+#ifdef AMREX_USE_EB
+    } else {
+      qm(ivpn, nqp) = qzm(ivpn, nqp);
+    }
+#endif
   }
 
   // Update hydro vars
