@@ -47,8 +47,8 @@ CAMR_transd (
   amrex::ignore_unused(k);
 
   const amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
-  const amrex::IntVect ivpt(iv + amrex::IntVect::TheDimensionVector(dir == 0 ? 1 : 0));
   const amrex::IntVect ivpn(iv + amrex::IntVect::TheDimensionVector(dir == 0 ? 0 : 1));
+  const amrex::IntVect ivpt(iv + amrex::IntVect::TheDimensionVector(dir == 0 ? 1 : 0));
   const int qvidx = (dir == 0) ? GDV : GDU;
 
   // ivpt is an offset by 1 in the transverse direction
@@ -63,10 +63,10 @@ CAMR_transd (
   true;
 #endif
 
-  const amrex::Real flxrho = no_cov_face ? cdtdx * (flxx(ivpt, URHO ) - flxx(iv, URHO )) : 0.0;
-  const amrex::Real flxu   = no_cov_face ? cdtdx * (flxx(ivpt, UMX  ) - flxx(iv, UMX  )) : 0.0;
-  const amrex::Real flxv   = no_cov_face ? cdtdx * (flxx(ivpt, UMY  ) - flxx(iv, UMY  )) : 0.0;
-  const amrex::Real flxe   = no_cov_face ? cdtdx * (flxx(ivpt, UEDEN) - flxx(iv, UEDEN)) : 0.0;
+  const amrex::Real flxrho = no_cov_face ? cdtdx * (flxx(ivpt, URHO ) - flxx(iv, URHO )) : amrex::Real(0.0);
+  const amrex::Real flxu   = no_cov_face ? cdtdx * (flxx(ivpt, UMX  ) - flxx(iv, UMX  )) : amrex::Real(0.0);
+  const amrex::Real flxv   = no_cov_face ? cdtdx * (flxx(ivpt, UMY  ) - flxx(iv, UMY  )) : amrex::Real(0.0);
+  const amrex::Real flxe   = no_cov_face ? cdtdx * (flxx(ivpt, UEDEN) - flxx(iv, UEDEN)) : amrex::Real(0.0);
   const amrex::Real srcr   = srcQ(iv, QRHO);
   const amrex::Real srce   = srcQ(iv, QREINT);
   const amrex::Real srcp   = srcQ(iv, QPRES);
