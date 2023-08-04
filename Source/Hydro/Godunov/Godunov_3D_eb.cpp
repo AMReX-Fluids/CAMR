@@ -229,12 +229,14 @@ Godunov_umeth_eb (
 
   ParallelFor(txbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
-      // X|Y
-      CAMR_transdo(i, j, k, cdir, 1, qmxy, qpxy, qxmarr, qxparr, fyarr, qaux, gdtempy, cdtdy,
-                   *lpmap, l_transverse_reset_density, small_pres, apx, apy);
-      // X|Z
-      CAMR_transdo(i, j, k, cdir, 2, qmxz, qpxz, qxmarr, qxparr, fzarr, qaux, gdtempz, cdtdz,
-                   *lpmap, l_transverse_reset_density, small_pres, apx, apz);
+      if (!flag_arr(i,j,k).isCovered()) {
+        // X|Y
+        CAMR_transdo(i, j, k, cdir, 1, qmxy, qpxy, qxmarr, qxparr, fyarr, qaux, gdtempy, cdtdy,
+                     *lpmap, l_transverse_reset_density, small_pres, apx, apy);
+        // X|Z
+        CAMR_transdo(i, j, k, cdir, 2, qmxz, qpxz, qxmarr, qxparr, fzarr, qaux, gdtempz, cdtdz,
+                     *lpmap, l_transverse_reset_density, small_pres, apx, apz);
+      }
   });
 
   const Box& txfxbx = surroundingNodes(bxg1, cdir);
@@ -251,13 +253,15 @@ Godunov_umeth_eb (
   // Riemann problem X|Y X|Z
   ParallelFor(txfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
+    if (!flag_arr(i, j, k).isCovered() && !flag_arr(i - 1, j, k).isCovered()) {
       // X|Y
       CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qmxy, qpxy, flxy, qxy, qaux,
                   cdir, *lpmap, small, small_dens, small_pres);
       // X|Z
       CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qmxz, qpxz, flxz, qxz, qaux,
                   cdir, *lpmap, small, small_dens, small_pres);
-    });
+    }
+  });
   qxym.clear();
   qxyp.clear();
   qxzm.clear();
@@ -278,12 +282,16 @@ Godunov_umeth_eb (
 
   ParallelFor(tybx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
+    if (!flag_arr(i, j, k).isCovered()) {
       // Y|X
-      CAMR_transdo(i, j, k, cdir, 0, qmyx, qpyx, qymarr, qyparr, fxarr, qaux, gdtempx, cdtdx,
-                   *lpmap, l_transverse_reset_density, small_pres, apy, apx);
+      CAMR_transdo(i, j, k, cdir, 0, qmyx, qpyx, qymarr, qyparr, fxarr, qaux,
+                   gdtempx, cdtdx, *lpmap, l_transverse_reset_density,
+                   small_pres, apy, apx);
       // Y|Z
-      CAMR_transdo(i, j, k, cdir, 2, qmyz, qpyz, qymarr, qyparr, fzarr, qaux, gdtempz, cdtdz,
-                   *lpmap, l_transverse_reset_density, small_pres, apy, apz);
+      CAMR_transdo(i, j, k, cdir, 2, qmyz, qpyz, qymarr, qyparr, fzarr, qaux,
+                   gdtempz, cdtdz, *lpmap, l_transverse_reset_density,
+                   small_pres, apy, apz);
+    }
   });
   fz.clear();
   qgdz.clear();
@@ -302,12 +310,14 @@ Godunov_umeth_eb (
 
   ParallelFor(tyfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
+    if (!flag_arr(i, j, k).isCovered() && !flag_arr(i, j - 1, k).isCovered()) {
       // Y|X
       CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qmyx, qpyx, flyx, qyx, qaux,
                   cdir, *lpmap, small, small_dens, small_pres);
       // Y|Z
       CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qmyz, qpyz, flyz, qyz, qaux,
                   cdir, *lpmap, small, small_dens, small_pres);
+    }
   });
   qyxm.clear();
   qyxp.clear();
@@ -330,12 +340,16 @@ Godunov_umeth_eb (
 
   ParallelFor(tzbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
+    if (!flag_arr(i, j, k).isCovered()) {
       // Z|X
-      CAMR_transdo(i, j, k, cdir, 0, qmzx, qpzx, qzmarr, qzparr, fxarr, qaux, gdtempx, cdtdx,
-                   *lpmap, l_transverse_reset_density, small_pres, apz, apx);
+      CAMR_transdo(i, j, k, cdir, 0, qmzx, qpzx, qzmarr, qzparr, fxarr, qaux,
+                   gdtempx, cdtdx, *lpmap, l_transverse_reset_density,
+                   small_pres, apz, apx);
       // Z|Y
-      CAMR_transdo(i, j, k, cdir, 1, qmzy, qpzy, qzmarr, qzparr, fyarr, qaux, gdtempy, cdtdy,
-                   *lpmap, l_transverse_reset_density, small_pres, apz, apy);
+      CAMR_transdo(i, j, k, cdir, 1, qmzy, qpzy, qzmarr, qzparr, fyarr, qaux,
+                   gdtempy, cdtdy, *lpmap, l_transverse_reset_density,
+                   small_pres, apz, apy);
+    }
   });
 
   fx.clear();
@@ -355,14 +369,15 @@ Godunov_umeth_eb (
   auto const& qzx = gdvzxfab.array();
   auto const& qzy = gdvzyfab.array();
 
-  ParallelFor(tzfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
-  {
+  ParallelFor(tzfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+    if (!flag_arr(i, j, k).isCovered() && !flag_arr(i, j, k - 1).isCovered()) {
       // Z|X
       CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qmzx, qpzx, flzx, qzx, qaux,
                   cdir, *lpmap, small, small_dens, small_pres);
       // Z|Y
       CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qmzy, qpzy, flzy, qzy, qaux,
                   cdir, *lpmap, small, small_dens, small_pres);
+    }
   });
 
   qzxm.clear();
@@ -382,8 +397,11 @@ Godunov_umeth_eb (
   const Box& tyzbx = grow(bx_to_fill, cdir, 1);
   ParallelFor(tyzbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
-      CAMR_transdd(i, j, k, cdir, qm, qp, qxmarr, qxparr, flyz, flzy, qyz, qzy, qaux, srcQ,
-                   hdt, hdtdy, hdtdz, *lpmap, l_transverse_reset_density, small_pres, apx, apy, apz);
+    if (!flag_arr(i, j, k).isCovered()) {
+      CAMR_transdd(i, j, k, cdir, qm, qp, qxmarr, qxparr, flyz, flzy, qyz, qzy,
+                   qaux, srcQ, hdt, hdtdy, hdtdz, *lpmap,
+                   l_transverse_reset_density, small_pres, apx, apy, apz);
+    }
   });
   qxm.clear();
   qxp.clear();
@@ -393,18 +411,25 @@ Godunov_umeth_eb (
   gdvzyfab.clear();
 
   // Final X flux
-  ParallelFor(xfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-      CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qm, qp, flx1, q1, qaux,
-                  cdir, *lpmap, small, small_dens, small_pres);
+  ParallelFor(xfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
+    if (!flag_arr(i, j, k).isCovered() && !flag_arr(i - 1, j, k).isCovered()) {
+      CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qm, qp, flx1, q1, qaux, cdir,
+                  *lpmap, small, small_dens, small_pres);
+    }
   });
 
   // Y | X&Z
   cdir = 1;
   const Box& yfxbx = surroundingNodes(bx_to_fill, cdir);
   const Box& txzbx = grow(bx_to_fill, cdir, 1);
-  ParallelFor(txzbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-      CAMR_transdd(i, j, k, cdir, qm, qp, qymarr, qyparr, flxz, flzx, qxz, qzx, qaux, srcQ,
-                   hdt, hdtdx, hdtdz, *lpmap, l_transverse_reset_density, small_pres, apy, apx, apz);
+  ParallelFor(txzbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
+    if (!flag_arr(i, j, k).isCovered()) {
+      CAMR_transdd(i, j, k, cdir, qm, qp, qymarr, qyparr, flxz, flzx, qxz, qzx,
+                   qaux, srcQ, hdt, hdtdx, hdtdz, *lpmap,
+                   l_transverse_reset_density, small_pres, apy, apx, apz);
+    }
   });
   qym.clear();
   qyp.clear();
@@ -414,9 +439,12 @@ Godunov_umeth_eb (
   gdvzxfab.clear();
 
   // Final Y flux
-  ParallelFor(yfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-      CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qm, qp, flx2, q2, qaux,
-                  cdir, *lpmap, small, small_dens, small_pres);
+  ParallelFor(yfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
+    if (!flag_arr(i, j, k).isCovered() && !flag_arr(i, j - 1, k).isCovered()) {
+      CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qm, qp, flx2, q2, qaux, cdir,
+                  *lpmap, small, small_dens, small_pres);
+    }
   });
 
   // Z | X&Y
@@ -424,8 +452,11 @@ Godunov_umeth_eb (
   const Box& zfxbx = surroundingNodes(bx_to_fill, cdir);
   const Box& txybx = grow(bx_to_fill, cdir, 1);
   ParallelFor(txybx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-      CAMR_transdd(i, j, k, cdir, qm, qp, qzmarr, qzparr, flxy, flyx, qxy, qyx, qaux, srcQ,
-                   hdt, hdtdx, hdtdy, *lpmap, l_transverse_reset_density, small_pres, apz, apx, apy);
+    if (!flag_arr(i, j, k).isCovered()) {
+      CAMR_transdd(i, j, k, cdir, qm, qp, qzmarr, qzparr, flxy, flyx, qxy, qyx,
+                   qaux, srcQ, hdt, hdtdx, hdtdy, *lpmap,
+                   l_transverse_reset_density, small_pres, apz, apx, apy);
+    }
   });
   qzm.clear();
   qzp.clear();
@@ -435,9 +466,12 @@ Godunov_umeth_eb (
   gdvyxfab.clear();
 
   // Final Z flux
-  ParallelFor(zfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-      CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qm, qp, flx3, q3, qaux,
-                  cdir, *lpmap, small, small_dens, small_pres);
+  ParallelFor(zfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
+    if (!flag_arr(i, j, k).isCovered() && !flag_arr(i, j, k - 1).isCovered()) {
+      CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qm, qp, flx3, q3, qaux, cdir,
+                  *lpmap, small, small_dens, small_pres);
+    }
   });
   qmfab.clear();
   qpfab.clear();
