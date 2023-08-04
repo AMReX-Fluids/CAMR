@@ -697,6 +697,20 @@ CAMR::post_timestep(int /*iteration*/)
     amrex::MultiFab& S_new_crse = get_new_data(State_Type);
     clean_state(S_new_crse);
 
+#ifdef AMREX_USE_EB
+    // If we redistribute then the ML redistribution algorithm may change
+    // values on the fine grid due to the interpolation that happens during
+    // re-redistribution.  Therefore we need to call clean_state
+    // on the fine data as well as the coarse data since both
+    // may have been changed by the reflux call.
+    if ( level < finest_level && (redistribution_type != "NoRedist") ) {
+        CAMR& fine_level = getLevel(level + 1);
+        amrex::MultiFab& S_new_fine = fine_level.get_new_data(State_Type);
+        clean_state(S_new_fine);
+    }
+#endif
+
+
   if (level == 0) {
     int nstep = parent->levelSteps(0);
     amrex::Real dtlev = parent->dtLevel(0);
