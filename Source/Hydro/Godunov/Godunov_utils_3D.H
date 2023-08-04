@@ -122,11 +122,11 @@ CAMR_transdo (
 
   // QP
 
-  // Convert to conservative
 #ifdef AMREX_USE_EB
   if (norm_area(iv) > 0.)
 #endif
   {
+      // Convert to conservative
       const amrex::Real rrr = qnormp(iv, QRHO);
       amrex::Real rur = qnormp(iv, QU);
       amrex::Real rvr = qnormp(iv, QV);
@@ -256,8 +256,8 @@ CAMR_transdd (
   const int dir,
   amrex::Array4<amrex::Real> const& qm,
   amrex::Array4<amrex::Real> const& qp,
-  amrex::Array4<const amrex::Real> const& qzm,
-  amrex::Array4<const amrex::Real> const& qzp,
+  amrex::Array4<const amrex::Real> const& qnormm,
+  amrex::Array4<const amrex::Real> const& qnormp,
   amrex::Array4<const amrex::Real> const& flxx,
   amrex::Array4<const amrex::Real> const& flxy,
   amrex::Array4<const amrex::Real> const& qx,
@@ -323,8 +323,8 @@ CAMR_transdd (
   const amrex::Real srcp = srcq(iv, QPRES);
 
   // Update passive variables
-  const amrex::Real rrr = qzp(iv, QRHO);
-  const amrex::Real rrl = qzm(ivpn, QRHO);
+  const amrex::Real rrr = qnormp(iv, QRHO);
+  const amrex::Real rrl = qnormm(ivpn, QRHO);
   amrex::Real rrnewl = rrl - flxrho;
   amrex::Real rrnewr = rrr - flxrho;
 
@@ -342,11 +342,11 @@ CAMR_transdd (
 #ifdef AMREX_USE_EB
     if (norm_area(iv) > amrex::Real(0.0)) {
 #endif
-      compo = rrr * qzp(iv, nqp) - compn;
+      compo = rrr * qnormp(iv, nqp) - compn;
       qp(iv, nqp) = compo / rrnewr + hdt * srcpass;
 #ifdef AMREX_USE_EB
     } else {
-      qp(iv, nqp) = qzp(iv, nqp);
+      qp(iv, nqp) = qnormp(iv, nqp);
     }
 #endif
 
@@ -354,112 +354,143 @@ CAMR_transdd (
 #ifdef AMREX_USE_EB
     if (norm_area(ivpn) > amrex::Real(0.0)) {
 #endif
-      compo = rrl * qzm(ivpn, nqp) - compn;
+      compo = rrl * qnormm(ivpn, nqp) - compn;
       qm(ivpn, nqp) = compo / rrnewl + hdt * srcpass;
 #ifdef AMREX_USE_EB
     } else {
-      qm(ivpn, nqp) = qzm(ivpn, nqp);
+      qm(ivpn, nqp) = qnormm(ivpn, nqp);
     }
 #endif
   }
 
   // Update hydro vars
-  const amrex::Real pggpx = qx(ivpt0, GDPRES);
-  const amrex::Real pggmx = qx(iv, GDPRES);
-  const amrex::Real ugpx = qx(ivpt0, qvidx0);
-  const amrex::Real ugmx = qx(iv, qvidx0);
+  amrex::Real dAupx = 0.0, pavx = 0.0, dAux = 0.0;
+  amrex::Real dAupy = 0.0, pavy = 0.0, dAuy = 0.0;
+  if (no_cov_face) {
+    const amrex::Real pggpx = qx(ivpt0, GDPRES);
+    const amrex::Real pggmx = qx(iv, GDPRES);
+    const amrex::Real ugpx = qx(ivpt0, qvidx0);
+    const amrex::Real ugmx = qx(iv, qvidx0);
 
-  const amrex::Real dAupx = pggpx * ugpx - pggmx * ugmx;
-  const amrex::Real pavx = 0.5 * (pggpx + pggmx);
-  const amrex::Real dAux = ugpx - ugmx;
+    dAupx = pggpx * ugpx - pggmx * ugmx;
+    pavx = 0.5 * (pggpx + pggmx);
+    dAux = ugpx - ugmx;
 
-  const amrex::Real pggpy = qy(ivpt1, GDPRES);
-  const amrex::Real pggmy = qy(iv, GDPRES);
-  const amrex::Real ugpy = qy(ivpt1, qvidx1);
-  const amrex::Real ugmy = qy(iv, qvidx1);
+    const amrex::Real pggpy = qy(ivpt1, GDPRES);
+    const amrex::Real pggmy = qy(iv, GDPRES);
+    const amrex::Real ugpy = qy(ivpt1, qvidx1);
+    const amrex::Real ugmy = qy(iv, qvidx1);
 
-  const amrex::Real dAupy = pggpy * ugpy - pggmy * ugmy;
-  const amrex::Real pavy = 0.5 * (pggpy + pggmy);
-  const amrex::Real dAuy = ugpy - ugmy;
+    dAupy = pggpy * ugpy - pggmy * ugmy;
+    pavy = 0.5 * (pggpy + pggmy);
+    dAuy = ugpy - ugmy;
+  }
   const amrex::Real pxnew = cdtdx0 * (dAupx + pavx * dAux * (c - 1.0));
   const amrex::Real pynew = cdtdx1 * (dAupy + pavy * dAuy * (c - 1.0));
 
   // qp state
-  const amrex::Real rur = rrr * qzp(iv, QU);
-  const amrex::Real rvr = rrr * qzp(iv, QV);
-  const amrex::Real rwr = rrr * qzp(iv, QW);
-  const amrex::Real ekinr = 0.5 * (rur * rur + rvr * rvr + rwr * rwr) / rrr;
-  const amrex::Real rer = qzp(iv, QREINT) + ekinr;
+#ifdef AMREX_USE_EB
+  if (norm_area(iv) > 0.)
+#endif
+  {
+    const amrex::Real rur = rrr * qnormp(iv, QU);
+    const amrex::Real rvr = rrr * qnormp(iv, QV);
+    const amrex::Real rwr = rrr * qnormp(iv, QW);
+    const amrex::Real ekinr = 0.5 * (rur * rur + rvr * rvr + rwr * rwr) / rrr;
+    const amrex::Real rer = qnormp(iv, QREINT) + ekinr;
 
-  amrex::Real runewr = rur - flxu;
-  amrex::Real rvnewr = rvr - flxv;
-  amrex::Real rwnewr = rwr - flxw;
-  amrex::Real renewr = rer - flxe;
+    amrex::Real runewr = rur - flxu;
+    amrex::Real rvnewr = rvr - flxv;
+    amrex::Real rwnewr = rwr - flxw;
+    amrex::Real renewr = rer - flxe;
 
-  bool reset_state = false;
+    bool reset_state = false;
 
-  if (transverse_reset_density == 1 && rrnewr < 0.) {
-     rrnewr = rrr;
-     runewr = rur;
-     rvnewr = rvr;
-     rwnewr = rwr;
-     renewr = rer;
-     reset_state = true;
-  }
+    if (transverse_reset_density == 1 && rrnewr < 0.) {
+      rrnewr = rrr;
+      runewr = rur;
+      rvnewr = rvr;
+      rwnewr = rwr;
+      renewr = rer;
+      reset_state = true;
+    }
 
-  qp(iv, QRHO) = rrnewr + hdt * srcrho;
-  qp(iv, QU) = runewr / rrnewr + hdt * srcu;
-  qp(iv, QV) = rvnewr / rrnewr + hdt * srcv;
-  qp(iv, QW) = rwnewr / rrnewr + hdt * srcw;
+    qp(iv, QRHO) = rrnewr + hdt * srcrho;
+    qp(iv, QU) = runewr / rrnewr + hdt * srcu;
+    qp(iv, QV) = rvnewr / rrnewr + hdt * srcv;
+    qp(iv, QW) = rwnewr / rrnewr + hdt * srcw;
 
-  const amrex::Real rhoekinr =
-    0.5 * (runewr * runewr + rvnewr * rvnewr + rwnewr * rwnewr) / rrnewr;
-  qp(iv, QREINT) = renewr - rhoekinr + hdt * srce;
+    const amrex::Real rhoekinr =
+      0.5 * (runewr * runewr + rvnewr * rvnewr + rwnewr * rwnewr) / rrnewr;
+    qp(iv, QREINT) = renewr - rhoekinr + hdt * srce;
 
-  if (!reset_state){
-   qp(iv, QPRES) =  qzp(iv, QPRES) - pxnew - pynew + hdt * srcp;
+    if (!reset_state){
+      qp(iv, QPRES) =  qnormp(iv, QPRES) - pxnew - pynew + hdt * srcp;
+    } else {
+      qp(iv, QPRES) = qnormp(iv, QPRES) + hdt * srcp;
+    }
+    qp(iv, QPRES) = std::max( qp(iv,QPRES), small_pres);
+#ifdef AMREX_USE_EB
   } else {
-    qp(iv, QPRES) = qzp(iv, QPRES) + hdt * srcp;
+      qp(iv,QRHO  ) = qnormp(iv,QRHO  );
+      qp(iv,QU    ) = qnormp(iv,QU    );
+      qp(iv,QV    ) = qnormp(iv,QV    );
+      qp(iv,QREINT) = qnormp(iv,QREINT);
+      qp(iv,QPRES ) = qnormp(iv,QPRES );
+#endif
   }
-   qp(iv, QPRES) = std::max( qp(iv,QPRES), small_pres);
 
   // qm state
-  const amrex::Real rul = rrl * qzm(ivpn, QU);
-  const amrex::Real rvl = rrl * qzm(ivpn, QV);
-  const amrex::Real rwl = rrl * qzm(ivpn, QW);
-  const amrex::Real ekinl = 0.5 * (rul * rul + rvl * rvl + rwl * rwl) / rrl;
-  const amrex::Real rel = qzm(ivpn, QREINT) + ekinl;
+#ifdef AMREX_USE_EB
+  if (norm_area(ivpn) > 0.)
+#endif
+  {
+    const amrex::Real rul = rrl * qnormm(ivpn, QU);
+    const amrex::Real rvl = rrl * qnormm(ivpn, QV);
+    const amrex::Real rwl = rrl * qnormm(ivpn, QW);
+    const amrex::Real ekinl = 0.5 * (rul * rul + rvl * rvl + rwl * rwl) / rrl;
+    const amrex::Real rel = qnormm(ivpn, QREINT) + ekinl;
 
-  amrex::Real runewl = rul - flxu;
-  amrex::Real rvnewl = rvl - flxv;
-  amrex::Real rwnewl = rwl - flxw;
-  amrex::Real renewl = rel - flxe;
+    amrex::Real runewl = rul - flxu;
+    amrex::Real rvnewl = rvl - flxv;
+    amrex::Real rwnewl = rwl - flxw;
+    amrex::Real renewl = rel - flxe;
+    
+    bool reset_state = false;
+    if (transverse_reset_density == 1 && rrnewl < 0.) {
+      rrnewl = rrl;
+      runewl = rul;
+      rvnewl = rvl;
+      rwnewl = rwl;
+      renewl = rel;
+      reset_state = true;
+    }
 
-  reset_state = false;
-  if (transverse_reset_density == 1 && rrnewl < 0.) {
-     rrnewl = rrl;
-     runewl = rul;
-     rvnewl = rvl;
-     rwnewl = rwl;
-     renewl = rel;
-     reset_state = true;
-  }
-
-  qm(ivpn, QRHO) = rrnewl + hdt * srcrho;
-  qm(ivpn, QU) = runewl / rrnewl + hdt * srcu;
-  qm(ivpn, QV) = rvnewl / rrnewl + hdt * srcv;
-  qm(ivpn, QW) = rwnewl / rrnewl + hdt * srcw;
-
-  const amrex::Real rhoekinl =
-    0.5 * (runewl * runewl + rvnewl * rvnewl + rwnewl * rwnewl) / rrnewl;
-  qm(ivpn, QREINT) = renewl - rhoekinl + hdt * srce;
-
-  if(!reset_state){
-    qm(ivpn, QPRES) = qzm(ivpn, QPRES) - pxnew - pynew + hdt * srcp;
+    qm(ivpn, QRHO) = rrnewl + hdt * srcrho;
+    qm(ivpn, QU) = runewl / rrnewl + hdt * srcu;
+    qm(ivpn, QV) = rvnewl / rrnewl + hdt * srcv;
+    qm(ivpn, QW) = rwnewl / rrnewl + hdt * srcw;
+    
+    const amrex::Real rhoekinl =
+      0.5 * (runewl * runewl + rvnewl * rvnewl + rwnewl * rwnewl) / rrnewl;
+    qm(ivpn, QREINT) = renewl - rhoekinl + hdt * srce;
+    
+    if(!reset_state){
+      qm(ivpn, QPRES) = qnormm(ivpn, QPRES) - pxnew - pynew + hdt * srcp;
+    } else {
+      qm(ivpn, QPRES) = qnormm(ivpn, QPRES) + hdt * srcp;
+    }
+    qm(ivpn, QPRES) = std::max(qm(ivpn,QPRES), small_pres);
+#ifdef AMREX_USE_EB
   } else {
-    qm(ivpn, QPRES) = qzm(ivpn, QPRES) + hdt * srcp;
+      qm(ivpn,QRHO  ) = qnormm(ivpn,QRHO  );
+      qm(ivpn,QU    ) = qnormm(ivpn,QU    );
+      qm(ivpn,QV    ) = qnormm(ivpn,QV    );
+      qm(ivpn,QW    ) = qnormm(ivpn,QW    );
+      qm(ivpn,QREINT) = qnormm(ivpn,QREINT);
+      qm(ivpn,QPRES ) = qnormm(ivpn,QPRES );
+#endif
   }
-  qm(ivpn, QPRES) = std::max(qm(ivpn,QPRES), small_pres);
 }
 #endif
 #endif
