@@ -370,7 +370,7 @@ Godunov_umeth_eb (
   auto const& qzy = gdvzyfab.array();
 
   ParallelFor(tzfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    if (!flag_arr(i, j, k).isCovered() && !flag_arr(i, j, k + 1).isCovered()) {
+    if (!flag_arr(i, j, k).isCovered() && !flag_arr(i, j, k - 1).isCovered()) {
       // Z|X
       CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qmzx, qpzx, flzx, qzx, qaux,
                   cdir, *lpmap, small, small_dens, small_pres);
