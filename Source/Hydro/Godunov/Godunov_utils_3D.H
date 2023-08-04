@@ -280,20 +280,27 @@ CAMR_transdd (
     {bdim[0] * 0 + bdim[1] * 1 + bdim[2] * 2,
      bdim[0] * 1 + bdim[1] * 0 + bdim[2] * 0,
      bdim[0] * 2 + bdim[1] * 2 + bdim[2] * 1}};
-  const amrex::IntVect ivp0(iv + amrex::IntVect::TheDimensionVector(l_idx[1]));
-  const amrex::IntVect ivp1(iv + amrex::IntVect::TheDimensionVector(l_idx[2]));
-  const amrex::IntVect ivp2(iv + amrex::IntVect::TheDimensionVector(dir));
+  const amrex::IntVect ivpt0(iv + amrex::IntVect::TheDimensionVector(l_idx[1]));
+  const amrex::IntVect ivpt1(iv + amrex::IntVect::TheDimensionVector(l_idx[2]));
+  const amrex::IntVect ivpn(iv + amrex::IntVect::TheDimensionVector(dir));
 
-  const amrex::Real flxrho = cdtdx0 * (flxx(ivp0, URHO) - flxx(iv, URHO)) +
-                             cdtdx1 * (flxy(ivp1, URHO) - flxy(iv, URHO));
-  const amrex::Real flxu = cdtdx0 * (flxx(ivp0, UMX) - flxx(iv, UMX)) +
-                           cdtdx1 * (flxy(ivp1, UMX) - flxy(iv, UMX));
-  const amrex::Real flxv = cdtdx0 * (flxx(ivp0, UMY) - flxx(iv, UMY)) +
-                           cdtdx1 * (flxy(ivp1, UMY) - flxy(iv, UMY));
-  const amrex::Real flxw = cdtdx0 * (flxx(ivp0, UMZ) - flxx(iv, UMZ)) +
-                           cdtdx1 * (flxy(ivp1, UMZ) - flxy(iv, UMZ));
-  const amrex::Real flxe = cdtdx0 * (flxx(ivp0, UEDEN) - flxx(iv, UEDEN)) +
-                           cdtdx1 * (flxy(ivp1, UEDEN) - flxy(iv, UEDEN));
+  // ivpn is an offset by 1 in the     normal direction
+  // ivpt0 is an offset by 1 in the first transverse direction
+  // ivpt1 is an offset by 1 in the second transverse direction
+  // If (dir == 0),  ivpt0 = (i,j+1,k) and ivpt1 = (i,j,k+1) and ivpn = (i+1,j,k) and qvidx0 = GDV and qvidx1 = GVW
+  // If (dir == 1),  ivpt0 = (i+1,j,k) and ivpt1 = (i,j,k+1) and ivpn = (i,j+1,k) and qvidx0 = GDU and qvidx1 = GVW
+  // If (dir == 2),  ivpt0 = (i+1,j,k) and ivpt1 = (i,j+1,k) and ivpn = (i,j,k+1) and qvidx0 = GDU and qvidx1 = GVV
+
+  const amrex::Real flxrho = cdtdx0 * (flxx(ivpt0, URHO) - flxx(iv, URHO)) +
+                             cdtdx1 * (flxy(ivpt1, URHO) - flxy(iv, URHO));
+  const amrex::Real flxu = cdtdx0 * (flxx(ivpt0, UMX) - flxx(iv, UMX)) +
+                           cdtdx1 * (flxy(ivpt1, UMX) - flxy(iv, UMX));
+  const amrex::Real flxv = cdtdx0 * (flxx(ivpt0, UMY) - flxx(iv, UMY)) +
+                           cdtdx1 * (flxy(ivpt1, UMY) - flxy(iv, UMY));
+  const amrex::Real flxw = cdtdx0 * (flxx(ivpt0, UMZ) - flxx(iv, UMZ)) +
+                           cdtdx1 * (flxy(ivpt1, UMZ) - flxy(iv, UMZ));
+  const amrex::Real flxe = cdtdx0 * (flxx(ivpt0, UEDEN) - flxx(iv, UEDEN)) +
+                           cdtdx1 * (flxy(ivpt1, UEDEN) - flxy(iv, UEDEN));
   const amrex::Real c = qa(iv, QGAMC);
   const amrex::Real srcrho = srcq(iv, QRHO);
   const amrex::Real srcu = srcq(iv, QU);
@@ -304,7 +311,7 @@ CAMR_transdd (
 
   // Update passive variables
   const amrex::Real rrr = qzp(iv, QRHO);
-  const amrex::Real rrl = qzm(ivp2, QRHO);
+  const amrex::Real rrl = qzm(ivpn, QRHO);
   amrex::Real rrnewl = rrl - flxrho;
   amrex::Real rrnewr = rrr - flxrho;
 
@@ -312,30 +319,30 @@ CAMR_transdd (
     const int n = pmap.upassMap[ipass];
     const int nqp = pmap.qpassMap[ipass];
     const amrex::Real srcpass = srcq(iv, nqp);
-    const amrex::Real compn = cdtdx0 * (flxx(ivp0, n) - flxx(iv, n)) +
-                              cdtdx1 * (flxy(ivp1, n) - flxy(iv, n));
+    const amrex::Real compn = cdtdx0 * (flxx(ivpt0, n) - flxx(iv, n)) +
+                              cdtdx1 * (flxy(ivpt1, n) - flxy(iv, n));
     // qp
     amrex::Real compo = rrr * qzp(iv, nqp) - compn;
     qp(iv, nqp) = compo / rrnewr + hdt * srcpass;
 
     // qm
-    compo = rrl * qzm(ivp2, nqp) - compn;
-    qm(ivp2, nqp) = compo / rrnewl + hdt * srcpass;
+    compo = rrl * qzm(ivpn, nqp) - compn;
+    qm(ivpn, nqp) = compo / rrnewl + hdt * srcpass;
   }
 
   // Update hydro vars
-  const amrex::Real pggpx = qx(ivp0, GDPRES);
+  const amrex::Real pggpx = qx(ivpt0, GDPRES);
   const amrex::Real pggmx = qx(iv, GDPRES);
-  const amrex::Real ugpx = qx(ivp0, qvidx0);
+  const amrex::Real ugpx = qx(ivpt0, qvidx0);
   const amrex::Real ugmx = qx(iv, qvidx0);
 
   const amrex::Real dAupx = pggpx * ugpx - pggmx * ugmx;
   const amrex::Real pavx = 0.5 * (pggpx + pggmx);
   const amrex::Real dAux = ugpx - ugmx;
 
-  const amrex::Real pggpy = qy(ivp1, GDPRES);
+  const amrex::Real pggpy = qy(ivpt1, GDPRES);
   const amrex::Real pggmy = qy(iv, GDPRES);
-  const amrex::Real ugpy = qy(ivp1, qvidx1);
+  const amrex::Real ugpy = qy(ivpt1, qvidx1);
   const amrex::Real ugmy = qy(iv, qvidx1);
 
   const amrex::Real dAupy = pggpy * ugpy - pggmy * ugmy;
@@ -384,11 +391,11 @@ CAMR_transdd (
    qp(iv, QPRES) = std::max( qp(iv,QPRES), small_pres);
 
   // qm state
-  const amrex::Real rul = rrl * qzm(ivp2, QU);
-  const amrex::Real rvl = rrl * qzm(ivp2, QV);
-  const amrex::Real rwl = rrl * qzm(ivp2, QW);
+  const amrex::Real rul = rrl * qzm(ivpn, QU);
+  const amrex::Real rvl = rrl * qzm(ivpn, QV);
+  const amrex::Real rwl = rrl * qzm(ivpn, QW);
   const amrex::Real ekinl = 0.5 * (rul * rul + rvl * rvl + rwl * rwl) / rrl;
-  const amrex::Real rel = qzm(ivp2, QREINT) + ekinl;
+  const amrex::Real rel = qzm(ivpn, QREINT) + ekinl;
 
   amrex::Real runewl = rul - flxu;
   amrex::Real rvnewl = rvl - flxv;
@@ -405,21 +412,21 @@ CAMR_transdd (
      reset_state = true;
   }
 
-  qm(ivp2, QRHO) = rrnewl + hdt * srcrho;
-  qm(ivp2, QU) = runewl / rrnewl + hdt * srcu;
-  qm(ivp2, QV) = rvnewl / rrnewl + hdt * srcv;
-  qm(ivp2, QW) = rwnewl / rrnewl + hdt * srcw;
+  qm(ivpn, QRHO) = rrnewl + hdt * srcrho;
+  qm(ivpn, QU) = runewl / rrnewl + hdt * srcu;
+  qm(ivpn, QV) = rvnewl / rrnewl + hdt * srcv;
+  qm(ivpn, QW) = rwnewl / rrnewl + hdt * srcw;
 
   const amrex::Real rhoekinl =
     0.5 * (runewl * runewl + rvnewl * rvnewl + rwnewl * rwnewl) / rrnewl;
-  qm(ivp2, QREINT) = renewl - rhoekinl + hdt * srce;
+  qm(ivpn, QREINT) = renewl - rhoekinl + hdt * srce;
 
   if(!reset_state){
-    qm(ivp2, QPRES) = qzm(ivp2, QPRES) - pxnew - pynew + hdt * srcp;
+    qm(ivpn, QPRES) = qzm(ivpn, QPRES) - pxnew - pynew + hdt * srcp;
   } else {
-    qm(ivp2, QPRES) = qzm(ivp2, QPRES) + hdt * srcp;
+    qm(ivpn, QPRES) = qzm(ivpn, QPRES) + hdt * srcp;
   }
-  qm(ivp2, QPRES) = std::max(qm(ivp2,QPRES), small_pres);
+  qm(ivpn, QPRES) = std::max(qm(ivpn,QPRES), small_pres);
 }
 #endif
 #endif
