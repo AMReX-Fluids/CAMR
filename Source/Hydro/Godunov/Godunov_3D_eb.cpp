@@ -231,10 +231,10 @@ Godunov_umeth_eb (
   {
       // X|Y
       CAMR_transdo(i, j, k, cdir, 1, qmxy, qpxy, qxmarr, qxparr, fyarr, qaux, gdtempy, cdtdy,
-                   *lpmap, l_transverse_reset_density, small_pres);
+                   *lpmap, l_transverse_reset_density, small_pres, apx, apy);
       // X|Z
       CAMR_transdo(i, j, k, cdir, 2, qmxz, qpxz, qxmarr, qxparr, fzarr, qaux, gdtempz, cdtdz,
-                   *lpmap, l_transverse_reset_density, small_pres);
+                   *lpmap, l_transverse_reset_density, small_pres, apx, apz);
   });
 
   const Box& txfxbx = surroundingNodes(bxg1, cdir);
@@ -280,10 +280,10 @@ Godunov_umeth_eb (
   {
       // Y|X
       CAMR_transdo(i, j, k, cdir, 0, qmyx, qpyx, qymarr, qyparr, fxarr, qaux, gdtempx, cdtdx,
-                   *lpmap, l_transverse_reset_density, small_pres);
+                   *lpmap, l_transverse_reset_density, small_pres, apy, apx);
       // Y|Z
       CAMR_transdo(i, j, k, cdir, 2, qmyz, qpyz, qymarr, qyparr, fzarr, qaux, gdtempz, cdtdz,
-                   *lpmap, l_transverse_reset_density, small_pres);
+                   *lpmap, l_transverse_reset_density, small_pres, apy, apz);
   });
   fz.clear();
   qgdz.clear();
@@ -332,10 +332,10 @@ Godunov_umeth_eb (
   {
       // Z|X
       CAMR_transdo(i, j, k, cdir, 0, qmzx, qpzx, qzmarr, qzparr, fxarr, qaux, gdtempx, cdtdx,
-                   *lpmap, l_transverse_reset_density, small_pres);
+                   *lpmap, l_transverse_reset_density, small_pres, apz, apx);
       // Z|Y
       CAMR_transdo(i, j, k, cdir, 1, qmzy, qpzy, qzmarr, qzparr, fyarr, qaux, gdtempy, cdtdy,
-                   *lpmap, l_transverse_reset_density, small_pres);
+                   *lpmap, l_transverse_reset_density, small_pres, apz, apy);
   });
 
   fx.clear();
