@@ -61,7 +61,7 @@ Godunov_umeth_eb (
   // X data
   int cdir = 0;
   const Box& xmbx = growHi(bxg2, cdir, 1);
-  const Box& xflxbx = surroundingNodes(grow(bxg2, cdir, -1), cdir);
+  const Box& xflxbx = surroundingNodes( bxg1, cdir);
   FArrayBox qxm(xmbx, QVAR, amrex::The_Async_Arena());
   FArrayBox qxp(bxg2, QVAR, amrex::The_Async_Arena());
   auto const& qxmarr = qxm.array();
@@ -70,7 +70,7 @@ Godunov_umeth_eb (
   // Y data
   cdir = 1;
   const Box& ymbx = growHi(bxg2, cdir, 1);
-  const Box& yflxbx = surroundingNodes(grow(bxg2, cdir, -1), cdir);
+  const Box& yflxbx = surroundingNodes( bxg1, cdir);
   FArrayBox qym(ymbx, QVAR, amrex::The_Async_Arena());
   FArrayBox qyp(bxg2, QVAR, amrex::The_Async_Arena());
   auto const& qymarr = qym.array();
@@ -183,7 +183,7 @@ Godunov_umeth_eb (
   // X interface corrections
   // *******************************************************************************
   cdir = 0;
-  const Box& tybx = grow(bx_to_fill, 1);
+  const Box& tybx = bxg1;
   FArrayBox qm(bxg2, QVAR, amrex::The_Async_Arena());
   FArrayBox qp(bxg1, QVAR, amrex::The_Async_Arena());
   auto const& qmarr = qm.array();
@@ -214,7 +214,7 @@ Godunov_umeth_eb (
   // Y interface corrections
   // *******************************************************************************
   cdir = 1;
-  const Box& txbx = grow(bx_to_fill, 1);
+  const Box& txbx = bxg1;
 
   ParallelFor(txbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
