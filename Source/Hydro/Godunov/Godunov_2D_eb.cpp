@@ -183,7 +183,7 @@ Godunov_umeth_eb (
   // X interface corrections
   // *******************************************************************************
   cdir = 0;
-  const Box& tybx = grow(bx_to_fill, cdir, 1);
+  const Box& tybx = grow(bx_to_fill, 1);
   FArrayBox qm(bxg2, QVAR, amrex::The_Async_Arena());
   FArrayBox qp(bxg1, QVAR, amrex::The_Async_Arena());
   auto const& qmarr = qm.array();
@@ -197,7 +197,9 @@ Godunov_umeth_eb (
       }
   });
 
-  const Box& xfxbx = surroundingNodes(bx_to_fill, cdir);
+  // This box must be grown by one in transverse direction so we can
+  // do tangential interpolation when taking divergence later
+  const Box& xfxbx = surroundingNodes( grow(bx_to_fill, 1, 1-cdir), cdir);
 
   // Final Riemann problem X
   ParallelFor(xfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
@@ -212,7 +214,7 @@ Godunov_umeth_eb (
   // Y interface corrections
   // *******************************************************************************
   cdir = 1;
-  const Box& txbx = grow(bx_to_fill, cdir, 1);
+  const Box& txbx = grow(bx_to_fill, 1);
 
   ParallelFor(txbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
@@ -222,8 +224,11 @@ Godunov_umeth_eb (
       }
   });
 
+  // This box must be grown by one in transverse direction so we can
+  // do tangential interpolation when taking divergence later
+  const Box& yfxbx = surroundingNodes( grow(bx_to_fill, 1, 1-cdir), cdir);
+
   // Final Riemann problem Y
-  const Box& yfxbx = surroundingNodes(bx_to_fill, cdir);
   ParallelFor(yfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
       if (!flag_arr(i,j,k).isCovered() && !flag_arr(i,j-1,k).isCovered()) {
