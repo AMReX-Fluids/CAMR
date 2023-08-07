@@ -8,5 +8,6 @@ target_sources(CAMR
    eb_regular.cpp
    eb_sphere.cpp
    writeEBsurface.cpp
+   eb_plane.cpp
    eb_if.H
    )
