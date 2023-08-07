@@ -1,8 +1,8 @@
-CAMR_HOME      ?= ../..
-AMREX_HOME     ?= ../../../amrex
+CAMR_HOME      ?= ../../../
+AMREX_HOME     ?= ../../../../amrex
 
 # AMReX
-DIM = 2
+DIM = 3
 COMP = gnu
 PRECISION = DOUBLE
 
@@ -23,13 +23,14 @@ USE_SYCL = FALSE
 
 # Debugging
 DEBUG = FALSE
-DEBUG = TRUE
+DEBUG = FALSE
 
 TEST = TRUE
 USE_ASSERTION = TRUE
 
 # CAMR
 USE_EB = TRUE
+USE_MOVING_EB = TRUE
 Eos_Model := GammaLaw
 
 # GNU Make

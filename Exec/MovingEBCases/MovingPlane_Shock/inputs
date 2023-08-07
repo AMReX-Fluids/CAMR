@@ -5,10 +5,8 @@ stop_time = 0.2
 
 geometry.is_periodic = 0 0 0
 geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
-
 geometry.prob_lo     =   -0.1 -0.0625 -0.0625
 geometry.prob_hi     =    0.9  0.0625  0.0625
-
 amr.n_cell           =   64   8  8
 
 # >>>>>>>>>>>>>  BC FLAGS <<<<<<<<<<<<<<<<
@@ -34,13 +32,14 @@ CAMR.redistribution_type = StateRedist
 # REFINEMENT / REGRIDDING
 CAMR.refine_cut_cells = 1
 amr.max_level       = 1       # maximum level number allowed
+amr.force_regrid_level_zero = 1
 #amr.loadbalance_with_workestimates = 1
-#amr.loadbalance_level0_int = 1000
+amr.loadbalance_level0_int = 1000
 
 amr.ref_ratio       = 2 2 2 2 # refinement ratio
 amr.regrid_int      = 1 1 1 1 # how often to regrid
 amr.blocking_factor = 8
-amr.max_grid_size   = 16
+amr.max_grid_size   = 8
 amr.n_error_buf     = 3 3 3 3 # number of buffer cells in error est
 amr.grid_eff        = 0.99     # what constitutes an efficient grid
 
