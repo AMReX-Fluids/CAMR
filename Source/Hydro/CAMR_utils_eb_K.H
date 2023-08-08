@@ -106,7 +106,7 @@ eb_pdivu (int i, int j, int k,
                        (q2(i, j + 1, k, GDV   ) - q2(i, j, k, GDV   )) * dxinv[1]);
         divu(i,j,k,UEINT) += pdivu;
     }
-    else
+    else if (!flag(i,j,k).isCovered())
     {
         amrex::Real fxm, fxp, fym, fyp;
         if (apx(i,j,k) > 0.0) {
@@ -171,7 +171,7 @@ eb_pdivu (int i, int j, int k,
 
         divu(i,j,k,UEINT) += pdivu;
     }
-    else
+    else if (!flag(i,j,k).isCovered())
     {
         amrex::Real fxm, fxp, fym, fyp, fzm, fzp;
         if (apx(i,j,k) > 0.0) {
@@ -222,7 +222,7 @@ eb_pdivu (int i, int j, int k,
                 fym = amrex::Real(0.0);
         }
 
-        if (apy(i,j,k) > 0.0) {
+        if (apy(i,j+1,k) > 0.0) {
             fyp = q2(i,j+1,k,GDV);
             if (apy(i,j+1,k) != 0.0 && apy(i,j+1,k) != 1.0) {
                 int ii = i + static_cast<int>(amrex::Math::copysign(1.0,fcy(i,j+1,k,0)));
@@ -556,20 +556,21 @@ void eb_compute_div (int i, int j, int k, int n,
     divu(i,j,k,n) *= -1.0;
 
     // Go ahead and make the redistwgt array here since we'll need it in flux_redistribute
-    if (eb_weights_type == 0)
-        { redistwgt(i,j,k) = 1.0; }
-    else if (eb_weights_type == 1)
-        { redistwgt(i,j,k) = q(i,j,k,QRHO)*( q(i,j,k,QREINT) +
+    if (eb_weights_type == 0) {
+        redistwgt(i,j,k) = 1.0;
+    } else if (eb_weights_type == 1) {
+        redistwgt(i,j,k) = q(i,j,k,QRHO)*( q(i,j,k,QREINT) +
 #if (AMREX_SPACEDIM == 2)
-                        0.5*(q(i,j,k,QU)*q(i,j,k,QU) + q(i,j,k,QV)*q(i,j,k,QV)) ); }
+                        0.5*(q(i,j,k,QU)*q(i,j,k,QU) + q(i,j,k,QV)*q(i,j,k,QV)) );
 #else
                     0.5*(q(i,j,k,QU)*q(i,j,k,QU) + q(i,j,k,QV)*q(i,j,k,QV) + q(i,j,k,QW)*q(i,j,k,QW)) );
-      }
 #endif
-    else if (eb_weights_type == 2)
-        { redistwgt(i,j,k) = q(i,j,k,QRHO); }
-    else if (eb_weights_type == 3)
-        { redistwgt(i,j,k) = vfrc(i,j,k); }
+    }
+    else if (eb_weights_type == 2) {
+        redistwgt(i,j,k) = q(i,j,k,QRHO);
+    } else if (eb_weights_type == 3) {
+        redistwgt(i,j,k) = vfrc(i,j,k);
+    }
 }
 #endif
 #endif

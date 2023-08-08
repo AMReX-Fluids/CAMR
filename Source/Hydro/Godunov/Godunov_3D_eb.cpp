@@ -44,65 +44,53 @@ Godunov_umeth_eb (
 {
   BL_PROFILE("CAMR::Godunov_umeth_3D_eb()");
 
+ int cdir;
+
   Real const dx = del[0];
   Real const dy = del[1];
   Real const dz = del[2];
-  Real const hdtdx = 0.5 * dt / dx;
-  Real const hdtdy = 0.5 * dt / dy;
-  Real const hdtdz = 0.5 * dt / dz;
-  Real const cdtdx = 1.0 / 3.0 * dt / dx;
-  Real const cdtdy = 1.0 / 3.0 * dt / dy;
-  Real const cdtdz = 1.0 / 3.0 * dt / dz;
-  Real const hdt = 0.5 * dt;
 
-  const int bclx = bclo[0];
-  const int bcly = bclo[1];
-  const int bclz = bclo[2];
-  const int bchx = bchi[0];
-  const int bchy = bchi[1];
-  const int bchz = bchi[2];
-  const int dlx = domlo[0];
-  const int dly = domlo[1];
-  const int dlz = domlo[2];
-  const int dhx = domhi[0];
-  const int dhy = domhi[1];
-  const int dhz = domhi[2];
+  Real const hdt = Real(0.5) * dt;
+  Real const hdtdx = hdt / dx;
+  Real const hdtdy = hdt / dy;
+  Real const hdtdz = hdt / dz;
+  Real const cdtdx = Real(1.0 / 3.0) * dt / dx;
+  Real const cdtdy = Real(1.0 / 3.0) * dt / dy;
+  Real const cdtdz = Real(1.0 / 3.0) * dt / dz;
 
-  // auto const& bcMaskarr = bcMask.array();
+  const int bclx =  bclo[0]; const int bcly =  bclo[1]; const int bclz =  bclo[2];
+  const int bchx =  bchi[0]; const int bchy =  bchi[1]; const int bchz =  bchi[2];
+  const int  dlx = domlo[0]; const int  dly = domlo[1]; const int  dlz = domlo[2];
+  const int  dhx = domhi[0]; const int  dhy = domhi[1]; const int  dhz = domhi[2];
+
   const Box& bxg1 = grow(bx_to_fill, 1);
   const Box& bxg2 = grow(bx_to_fill, 2);
 
   // X data
-  int cdir = 0;
+  cdir = 0;
   const Box& xmbx = growHi(bxg2, cdir, 1);
-  const Box& xflxbx = surroundingNodes(grow(bxg2, cdir, -1), cdir);
-  FArrayBox qxm(xmbx, QVAR, amrex::The_Async_Arena());
-  FArrayBox qxp(bxg2, QVAR, amrex::The_Async_Arena());
-  auto const& qxmarr = qxm.array();
-  auto const& qxparr = qxp.array();
+  FArrayBox qxm(xmbx, QVAR, amrex::The_Async_Arena()); auto const& qxmarr = qxm.array();
+  FArrayBox qxp(bxg2, QVAR, amrex::The_Async_Arena()); auto const& qxparr = qxp.array();
 
   // Y data
   cdir = 1;
   const Box& ymbx = growHi(bxg2, cdir, 1);
-  const Box& yflxbx = surroundingNodes(grow(bxg2, cdir, -1), cdir);
-  FArrayBox qym(ymbx, QVAR, amrex::The_Async_Arena());
-  FArrayBox qyp(bxg2, QVAR, amrex::The_Async_Arena());
-  auto const& qymarr = qym.array();
-  auto const& qyparr = qyp.array();
+  FArrayBox qym(ymbx, QVAR, amrex::The_Async_Arena()); auto const& qymarr = qym.array();
+  FArrayBox qyp(bxg2, QVAR, amrex::The_Async_Arena()); auto const& qyparr = qyp.array();
 
   // Z data
   cdir = 2;
   const Box& zmbx = growHi(bxg2, cdir, 1);
-  const Box& zflxbx = surroundingNodes(grow(bxg2, cdir, -1), cdir);
-  FArrayBox qzm(zmbx, QVAR, amrex::The_Async_Arena());
-  FArrayBox qzp(bxg2, QVAR, amrex::The_Async_Arena());
-  auto const& qzmarr = qzm.array();
-  auto const& qzparr = qzp.array();
+  FArrayBox qzm(zmbx, QVAR, amrex::The_Async_Arena()); auto const& qzmarr = qzm.array();
+  FArrayBox qzp(bxg2, QVAR, amrex::The_Async_Arena()); auto const& qzparr = qzp.array();
+
 
   const PassMap* lpmap = CAMR::d_pass_map;
-
-  // Put the PLM and slopes in the same kernel launch to avoid unnecessary
-  // launch overhead
+  //
+  // Put the PLM and slopes in the same kernel launch to avoid unnecessary launch overhead
+  // Note that we compute the qm and qp values on bxg2
+  // -5,-5,-5
+  //
   if (ppm_type == 0) {
     ParallelFor(
       bxg2, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
@@ -128,6 +116,7 @@ Godunov_umeth_eb (
           else
               slope[n] = plm_slope_eb(i, j, k, n, 0, flag_arr, q, flat, iorder);
         }
+        // cells -5,-5,-5
         CAMR_plm_d(i, j, k, idir, qxmarr, qxparr, slope, q, qaux(i, j, k, QC), dx, dt,
                    small_dens, small_pres, *lpmap, apx);
 
@@ -139,6 +128,7 @@ Godunov_umeth_eb (
           else
               slope[n] = plm_slope_eb(i, j, k, n, 1, flag_arr, q, flat, iorder);
         }
+        // cells -5,-5,-5
         CAMR_plm_d(i, j, k, idir, qymarr, qyparr, slope, q, qaux(i, j, k, QC), dy, dt,
                    small_dens, small_pres, *lpmap, apy);
 
@@ -150,6 +140,7 @@ Godunov_umeth_eb (
           else
               slope[n] = plm_slope_eb(i, j, k, n, 2, flag_arr, q, flat, iorder);
         }
+        // cells -5,-5,-5
         CAMR_plm_d(i, j, k, idir, qzmarr, qzparr, slope, q, qaux(i, j, k, QC), dz, dt,
                    small_dens, small_pres, *lpmap, apz);
       });
@@ -173,73 +164,111 @@ Godunov_umeth_eb (
       amrex::Error("CAMR::ppm_type must be 0 (PLM) or 1 (PPM)");
   }
 
-  // These are the first flux estimates as per the corner-transport-upwind
-  // method X initial fluxes
+
+  // These are the first flux estimates as per the corner-transport-upwind method
+
+  // *************************************************************************************
+  // X initial fluxes
+  // *************************************************************************************
   cdir = 0;
+  const Box& xflxbx = surroundingNodes(grow(bxg2, cdir, -1), cdir);
+
   FArrayBox fx(xflxbx, NVAR, amrex::The_Async_Arena());
   auto const& fxarr = fx.array();
+
   FArrayBox qgdx(xflxbx, NGDNV, amrex::The_Async_Arena());
   auto const& gdtempx = qgdx.array();
+
+  // -4,-5,-5
   ParallelFor(xflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    if (!flag_arr(i, j, k).isCovered() && !flag_arr(i - 1, j, k).isCovered()) {
+    if (apx(i,j,k) > 0.) {
       CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qxmarr, qxparr, fxarr, gdtempx,
                   qaux, cdir, *lpmap, small, small_dens, small_pres);
     }
   });
 
+  // *************************************************************************************
   // Y initial fluxes
+  // *************************************************************************************
   cdir = 1;
+  const Box& yflxbx = surroundingNodes(grow(bxg2, cdir, -1), cdir);
+
   FArrayBox fy(yflxbx, NVAR, amrex::The_Async_Arena());
   auto const& fyarr = fy.array();
+
   FArrayBox qgdy(yflxbx, NGDNV, amrex::The_Async_Arena());
   auto const& gdtempy = qgdy.array();
+
+  // -5,-4,-5
   ParallelFor(yflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    if (!flag_arr(i, j, k).isCovered() && !flag_arr(i, j - 1, k).isCovered()) {
+    if (apy(i,j,k) > 0.) {
       CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qymarr, qyparr, fyarr, gdtempy,
                   qaux, cdir, *lpmap, small, small_dens, small_pres);
     }
   });
 
+  // *************************************************************************************
   // Z initial fluxes
+  // *************************************************************************************
   cdir = 2;
+  const Box& zflxbx = surroundingNodes(grow(bxg2, cdir, -1), cdir);
+
   FArrayBox fz(zflxbx, NVAR, amrex::The_Async_Arena());
   auto const& fzarr = fz.array();
+
   FArrayBox qgdz(zflxbx, NGDNV, amrex::The_Async_Arena());
   auto const& gdtempz = qgdz.array();
+
+  // -5,-5,-4
   ParallelFor(zflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    if (!flag_arr(i, j, k).isCovered() && !flag_arr(i, j, k - 1).isCovered()) {
+    if (apz(i,j,k) > 0.) {
       CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qzmarr, qzparr, fzarr, gdtempz,
                   qaux, cdir, *lpmap, small, small_dens, small_pres);
     }
   });
 
+  // *************************************************************************************
   // X interface corrections
+  // *************************************************************************************
   cdir = 0;
-  const Box& txbx = grow(bxg1, cdir, 1);
-  const Box& txbxm = growHi(txbx, cdir, 1);
-  FArrayBox qxym(txbxm, QVAR, amrex::The_Async_Arena());
-  FArrayBox qxyp(txbx, QVAR, amrex::The_Async_Arena());
+  FArrayBox qxym(xmbx, QVAR, amrex::The_Async_Arena());
+  FArrayBox qxyp(xmbx, QVAR, amrex::The_Async_Arena());
   auto const& qmxy = qxym.array();
   auto const& qpxy = qxyp.array();
 
-  FArrayBox qxzm(txbxm, QVAR, amrex::The_Async_Arena());
-  FArrayBox qxzp(txbx, QVAR, amrex::The_Async_Arena());
+  FArrayBox qxzm(xmbx, QVAR, amrex::The_Async_Arena());
+  FArrayBox qxzp(xmbx, QVAR, amrex::The_Async_Arena());
   auto const& qmxz = qxzm.array();
   auto const& qpxz = qxzp.array();
 
-  ParallelFor(txbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  //
+  Box xybx(bxg2); xybx.grow(1,-1);
+  // amrex::Print() << "TRANSDO: Y FLUXES CHANGING X " << xybx << std::endl;
+  ParallelFor(xybx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
+      // fyarr was made on y-faces to -5,-4,-5
+      // this loop is over cells to   -5,-4,-5
       if (!flag_arr(i,j,k).isCovered()) {
         // X|Y
         CAMR_transdo(i, j, k, cdir, 1, qmxy, qpxy, qxmarr, qxparr, fyarr, qaux, gdtempy, cdtdy,
                      *lpmap, l_transverse_reset_density, small_pres, apx, apy);
+      }
+  });
+
+  Box xzbx(bxg2); xzbx.grow(2,-1);
+  // amrex::Print() << "TRANSDO: Z FLUXES CHANGING X " << xzbx << std::endl;
+  ParallelFor(xzbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
+      // fzarr was made on z-faces to -5,-5,-4
+      // this loop is over cells to   -5,-5,-4
+      if (!flag_arr(i,j,k).isCovered()) {
         // X|Z
         CAMR_transdo(i, j, k, cdir, 2, qmxz, qpxz, qxmarr, qxparr, fzarr, qaux, gdtempz, cdtdz,
                      *lpmap, l_transverse_reset_density, small_pres, apx, apz);
       }
   });
 
-  const Box& txfxbx = surroundingNodes(bxg1, cdir);
+  const Box& txfxbx = surroundingNodes(bxg2, cdir);
   FArrayBox fluxxy(txfxbx, NVAR, amrex::The_Async_Arena());
   FArrayBox fluxxz(txfxbx, NVAR, amrex::The_Async_Arena());
   FArrayBox gdvxyfab(txfxbx, NGDNV, amrex::The_Async_Arena());
@@ -250,16 +279,30 @@ Godunov_umeth_eb (
   auto const& qxy = gdvxyfab.array();
   auto const& qxz = gdvxzfab.array();
 
-  // Riemann problem X|Y X|Z
-  ParallelFor(txfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+
+  // Riemann problem X|Y
+  Box xycmpbx(surroundingNodes(bxg1,0).grow(2,1));
+  // this loop is over x-faces to   -4,-4,-5
+  // amrex::Print() << "DOING CMPFLX XY " << xycmpbx << std::endl;
+  ParallelFor(xycmpbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
-    if (!flag_arr(i, j, k).isCovered() && !flag_arr(i - 1, j, k).isCovered()) {
       // X|Y
-      CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qmxy, qpxy, flxy, qxy, qaux,
-                  cdir, *lpmap, small, small_dens, small_pres);
+      if (apx(i,j,k) > 0.) {
+          CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qmxy, qpxy, flxy, qxy, qaux,
+                      cdir, *lpmap, small, small_dens, small_pres);
+    }
+  });
+
+  // Riemann problem X|Z
+  Box xzcmpbx(surroundingNodes(bxg1,0).grow(1,1));
+  // this loop is over x-faces to   -4,-5,-4
+  // amrex::Print() << "DOING CMPFLX XZ " << xzcmpbx << std::endl;
+  ParallelFor(xzcmpbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
       // X|Z
-      CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qmxz, qpxz, flxz, qxz, qaux,
-                  cdir, *lpmap, small, small_dens, small_pres);
+      if (apx(i,j,k) > 0.) {
+          CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qmxz, qpxz, flxz, qxz, qaux,
+                      cdir, *lpmap, small, small_dens, small_pres);
     }
   });
   qxym.clear();
@@ -267,37 +310,49 @@ Godunov_umeth_eb (
   qxzm.clear();
   qxzp.clear();
 
+  // *************************************************************************************
   // Y interface corrections
+  // *************************************************************************************
+
   cdir = 1;
-  const Box& tybx = grow(bxg1, cdir, 1);
-  const Box& tybxm = growHi(tybx, cdir, 1);
-  FArrayBox qyxm(tybxm, QVAR, amrex::The_Async_Arena());
-  FArrayBox qyxp(tybx, QVAR, amrex::The_Async_Arena());
-  FArrayBox qyzm(tybxm, QVAR, amrex::The_Async_Arena());
-  FArrayBox qyzp(tybx, QVAR, amrex::The_Async_Arena());
+  FArrayBox qyxm(ymbx, QVAR, amrex::The_Async_Arena());
+  FArrayBox qyxp(ymbx, QVAR, amrex::The_Async_Arena());
   auto const& qmyx = qyxm.array();
   auto const& qpyx = qyxp.array();
+
+  FArrayBox qyzm(ymbx, QVAR, amrex::The_Async_Arena());
+  FArrayBox qyzp(ymbx, QVAR, amrex::The_Async_Arena());
   auto const& qmyz = qyzm.array();
   auto const& qpyz = qyzp.array();
 
-  ParallelFor(tybx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  Box yxbx(bxg2); yxbx.grow(0,-1);
+  // amrex::Print() << "TRANSDO: X FLUXES CHANGING Y " << yxbx << std::endl;
+  ParallelFor(yxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
-    if (!flag_arr(i, j, k).isCovered()) {
       // Y|X
-      CAMR_transdo(i, j, k, cdir, 0, qmyx, qpyx, qymarr, qyparr, fxarr, qaux,
-                   gdtempx, cdtdx, *lpmap, l_transverse_reset_density,
-                   small_pres, apy, apx);
+      if (!flag_arr(i, j, k).isCovered()) {
+          CAMR_transdo(i, j, k, cdir, 0, qmyx, qpyx, qymarr, qyparr, fxarr, qaux,
+                       gdtempx, cdtdx, *lpmap, l_transverse_reset_density,
+                       small_pres, apy, apx);
+      }
+  });
+
+  Box yzbx(bxg2); yzbx.grow(2,-1);
+  // amrex::Print() << "TRANSDO: Z FLUXES CHANGING Y " << yzbx << std::endl;
+  ParallelFor(yzbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
       // Y|Z
-      CAMR_transdo(i, j, k, cdir, 2, qmyz, qpyz, qymarr, qyparr, fzarr, qaux,
-                   gdtempz, cdtdz, *lpmap, l_transverse_reset_density,
-                   small_pres, apy, apz);
+      if (!flag_arr(i, j, k).isCovered()) {
+          CAMR_transdo(i, j, k, cdir, 2, qmyz, qpyz, qymarr, qyparr, fzarr, qaux,
+                       gdtempz, cdtdz, *lpmap, l_transverse_reset_density,
+                       small_pres, apy, apz);
     }
   });
   fz.clear();
   qgdz.clear();
 
   // Riemann problem Y|X Y|Z
-  const Box& tyfxbx = surroundingNodes(bxg1, cdir);
+  const Box& tyfxbx = surroundingNodes(bxg2, cdir);
   FArrayBox fluxyx(tyfxbx, NVAR, amrex::The_Async_Arena());
   FArrayBox fluxyz(tyfxbx, NVAR, amrex::The_Async_Arena());
   FArrayBox gdvyxfab(tyfxbx, NGDNV, amrex::The_Async_Arena());
@@ -308,48 +363,73 @@ Godunov_umeth_eb (
   auto const& qyx = gdvyxfab.array();
   auto const& qyz = gdvyzfab.array();
 
-  ParallelFor(tyfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  // Riemann problem Y|X
+  Box yxcmpbx(surroundingNodes(bxg1,1).grow(2,1));
+  // amrex::Print() << "DOING CMPFLX YX " << yxcmpbx << std::endl;
+  ParallelFor(yxcmpbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
-    if (!flag_arr(i, j, k).isCovered() && !flag_arr(i, j - 1, k).isCovered()) {
       // Y|X
-      CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qmyx, qpyx, flyx, qyx, qaux,
-                  cdir, *lpmap, small, small_dens, small_pres);
-      // Y|Z
-      CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qmyz, qpyz, flyz, qyz, qaux,
-                  cdir, *lpmap, small, small_dens, small_pres);
-    }
+      if (apy(i,j,k) > 0.) {
+           CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qmyx, qpyx, flyx, qyx, qaux,
+                       cdir, *lpmap, small, small_dens, small_pres);
+      }
   });
+
+  // Riemann problem Y|Z
+  Box yzcmpbx(surroundingNodes(bxg1,1).grow(0,1));
+  // amrex::Print() << "DOING CMPFLX YZ " << yzcmpbx << std::endl;
+  ParallelFor(yzcmpbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
+      // Y|Z
+      if (apy(i,j,k) > 0.) {
+          CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qmyz, qpyz, flyz, qyz, qaux,
+                      cdir, *lpmap, small, small_dens, small_pres);
+      }
+  });
+
   qyxm.clear();
   qyxp.clear();
   qyzm.clear();
   qyzp.clear();
 
-  // Z interface corrections
-  cdir = 2;
-  const Box& tzbx = grow(bxg1, cdir, 1);
-  const Box& tzbxm = growHi(tzbx, cdir, 1);
-  FArrayBox qzxm(tzbxm, QVAR, amrex::The_Async_Arena());
-  FArrayBox qzxp(tzbx, QVAR, amrex::The_Async_Arena());
-  FArrayBox qzym(tzbxm, QVAR, amrex::The_Async_Arena());
-  FArrayBox qzyp(tzbx, QVAR, amrex::The_Async_Arena());
 
+  // *************************************************************************************
+  // Z interface corrections
+  // *************************************************************************************
+  cdir = 2;
+
+  FArrayBox qzxm(zmbx, QVAR, amrex::The_Async_Arena());
+  FArrayBox qzxp(zmbx, QVAR, amrex::The_Async_Arena());
   auto const& qmzx = qzxm.array();
   auto const& qpzx = qzxp.array();
+
+  FArrayBox qzym(zmbx, QVAR, amrex::The_Async_Arena());
+  FArrayBox qzyp(zmbx, QVAR, amrex::The_Async_Arena());
   auto const& qmzy = qzym.array();
   auto const& qpzy = qzyp.array();
 
-  ParallelFor(tzbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  Box zxbx(bxg2); zxbx.grow(0,-1);
+  // amrex::Print() << "TRANSDO: X FLUXES CHANGING Z " << zxbx << std::endl;
+  ParallelFor(zxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
-    if (!flag_arr(i, j, k).isCovered()) {
       // Z|X
-      CAMR_transdo(i, j, k, cdir, 0, qmzx, qpzx, qzmarr, qzparr, fxarr, qaux,
-                   gdtempx, cdtdx, *lpmap, l_transverse_reset_density,
-                   small_pres, apz, apx);
+      if (!flag_arr(i, j, k).isCovered()) {
+          CAMR_transdo(i, j, k, cdir, 0, qmzx, qpzx, qzmarr, qzparr, fxarr, qaux,
+                       gdtempx, cdtdx, *lpmap, l_transverse_reset_density,
+                       small_pres, apz, apx);
+      }
+  });
+
+  Box zybx(bxg2); zybx.grow(1,-1);
+  // amrex::Print() << "TRANSDO: Y FLUXES CHANGING Z " << zybx << std::endl;
+  ParallelFor(zybx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
       // Z|Y
-      CAMR_transdo(i, j, k, cdir, 1, qmzy, qpzy, qzmarr, qzparr, fyarr, qaux,
-                   gdtempy, cdtdy, *lpmap, l_transverse_reset_density,
-                   small_pres, apz, apy);
-    }
+      if (!flag_arr(i, j, k).isCovered()) {
+          CAMR_transdo(i, j, k, cdir, 1, qmzy, qpzy, qzmarr, qzparr, fyarr, qaux,
+                       gdtempy, cdtdy, *lpmap, l_transverse_reset_density,
+                       small_pres, apz, apy);
+      }
   });
 
   fx.clear();
@@ -357,8 +437,9 @@ Godunov_umeth_eb (
   qgdx.clear();
   qgdy.clear();
 
+
   // Riemann problem Z|X Z|Y
-  const Box& tzfxbx = surroundingNodes(bxg1, cdir);
+  const Box& tzfxbx = surroundingNodes(bxg2, cdir);
   FArrayBox fluxzx(tzfxbx, NVAR, amrex::The_Async_Arena());
   FArrayBox fluxzy(tzfxbx, NVAR, amrex::The_Async_Arena());
   FArrayBox gdvzxfab(tzfxbx, NGDNV, amrex::The_Async_Arena());
@@ -369,15 +450,28 @@ Godunov_umeth_eb (
   auto const& qzx = gdvzxfab.array();
   auto const& qzy = gdvzyfab.array();
 
-  ParallelFor(tzfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    if (!flag_arr(i, j, k).isCovered() && !flag_arr(i, j, k - 1).isCovered()) {
+  // Riemann problem Z|X
+  Box zxcmpbx(surroundingNodes(bxg1,2).grow(1,1));
+  // amrex::Print() << "DOING CMPFLX ZX " << zxcmpbx << std::endl;
+  ParallelFor(zxcmpbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
       // Z|X
-      CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qmzx, qpzx, flzx, qzx, qaux,
-                  cdir, *lpmap, small, small_dens, small_pres);
+      if (apz(i,j,k) > 0.) {
+          CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qmzx, qpzx, flzx, qzx, qaux,
+                      cdir, *lpmap, small, small_dens, small_pres);
+      }
+  });
+
+  // Riemann problem Z|Y
+  Box zycmpbx(surroundingNodes(bxg1,2).grow(0,1));
+  // amrex::Print() << "DOING CMPFLX ZY " << zycmpbx << std::endl;
+  ParallelFor(zycmpbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  {
       // Z|Y
-      CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qmzy, qpzy, flzy, qzy, qaux,
-                  cdir, *lpmap, small, small_dens, small_pres);
-    }
+      if (apz(i,j,k) > 0.) {
+          CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qmzy, qpzy, flzy, qzy, qaux,
+                      cdir, *lpmap, small, small_dens, small_pres);
+      }
   });
 
   qzxm.clear();
@@ -385,23 +479,25 @@ Godunov_umeth_eb (
   qzym.clear();
   qzyp.clear();
 
-  // Temp Fabs for Final Fluxes
   FArrayBox qmfab(bxg2, QVAR, amrex::The_Async_Arena());
   FArrayBox qpfab(bxg1, QVAR, amrex::The_Async_Arena());
   auto const& qm = qmfab.array();
   auto const& qp = qpfab.array();
 
-  // X | Y&Z
+  // *************************************************************************************
+  // Final X steps
+  // *************************************************************************************
   cdir = 0;
-  const Box& xfxbx = surroundingNodes(bx_to_fill, cdir);
-  const Box& tyzbx = grow(bx_to_fill, cdir, 1);
-  ParallelFor(tyzbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+
+  // this loop is over cells to   -4,-4,-4
+  // amrex::Print() << "DOING TRANSDD FOR X " << bxg1 << std::endl;
+  ParallelFor(bxg1, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
-    if (!flag_arr(i, j, k).isCovered()) {
-      CAMR_transdd(i, j, k, cdir, qm, qp, qxmarr, qxparr, flyz, flzy, qyz, qzy,
-                   qaux, srcQ, hdt, hdtdy, hdtdz, *lpmap,
-                   l_transverse_reset_density, small_pres, apx, apy, apz);
-    }
+      if (!flag_arr(i, j, k).isCovered()) {
+          CAMR_transdd(i, j, k, cdir, qm, qp, qxmarr, qxparr, flyz, flzy, qyz, qzy,
+                       qaux, srcQ, hdt, hdtdy, hdtdz, *lpmap,
+                       l_transverse_reset_density, small_pres, apx, apy, apz);
+      }
   });
   qxm.clear();
   qxp.clear();
@@ -410,26 +506,30 @@ Godunov_umeth_eb (
   fluxzy.clear();
   gdvzyfab.clear();
 
-  // Final X flux
-  ParallelFor(xfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  // This box must be grown by one in transverse direction so we can
+  // do tangential interpolation when taking divergence later
+  Box xfbx(surroundingNodes(bx_to_fill,0)); xfbx.grow(1,1); xfbx.grow(2,1);
+  ParallelFor(xfbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
-    if (!flag_arr(i, j, k).isCovered() && !flag_arr(i - 1, j, k).isCovered()) {
-      CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qm, qp, flx1, q1, qaux, cdir,
-                  *lpmap, small, small_dens, small_pres);
-    }
+      if (apx(i,j,k) > 0.) {
+          CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qm, qp, flx1, q1, qaux, cdir,
+                      *lpmap, small, small_dens, small_pres);
+      }
   });
 
-  // Y | X&Z
+  // *************************************************************************************
+  // Final Y steps
+  // *************************************************************************************
   cdir = 1;
-  const Box& yfxbx = surroundingNodes(bx_to_fill, cdir);
-  const Box& txzbx = grow(bx_to_fill, cdir, 1);
-  ParallelFor(txzbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  // this loop is over cells to   -4,-4,-4
+  // amrex::Print() << "DOING TRANSDD FOR Y " << bxg1 << std::endl;
+  ParallelFor(bxg1, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
-    if (!flag_arr(i, j, k).isCovered()) {
-      CAMR_transdd(i, j, k, cdir, qm, qp, qymarr, qyparr, flxz, flzx, qxz, qzx,
-                   qaux, srcQ, hdt, hdtdx, hdtdz, *lpmap,
-                   l_transverse_reset_density, small_pres, apy, apx, apz);
-    }
+      if (!flag_arr(i, j, k).isCovered()) {
+          CAMR_transdd(i, j, k, cdir, qm, qp, qymarr, qyparr, flxz, flzx, qxz, qzx,
+                       qaux, srcQ, hdt, hdtdx, hdtdz, *lpmap,
+                       l_transverse_reset_density, small_pres, apy, apx, apz);
+      }
   });
   qym.clear();
   qyp.clear();
@@ -438,25 +538,28 @@ Godunov_umeth_eb (
   fluxzx.clear();
   gdvzxfab.clear();
 
-  // Final Y flux
-  ParallelFor(yfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  // This box must be grown by one in transverse direction so we can
+  // do tangential interpolation when taking divergence later
+  Box yfbx(surroundingNodes(bx_to_fill,1)); yfbx.grow(0,1); yfbx.grow(2,1);
+  ParallelFor(yfbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
-    if (!flag_arr(i, j, k).isCovered() && !flag_arr(i, j - 1, k).isCovered()) {
-      CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qm, qp, flx2, q2, qaux, cdir,
-                  *lpmap, small, small_dens, small_pres);
-    }
+      if (apy(i,j,k) > 0.) {
+          CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qm, qp, flx2, q2, qaux, cdir,
+                      *lpmap, small, small_dens, small_pres);
+      }
   });
 
-  // Z | X&Y
+  // *************************************************************************************
+  // Final Z steps
+  // *************************************************************************************
   cdir = 2;
-  const Box& zfxbx = surroundingNodes(bx_to_fill, cdir);
-  const Box& txybx = grow(bx_to_fill, cdir, 1);
-  ParallelFor(txybx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    if (!flag_arr(i, j, k).isCovered()) {
-      CAMR_transdd(i, j, k, cdir, qm, qp, qzmarr, qzparr, flxy, flyx, qxy, qyx,
-                   qaux, srcQ, hdt, hdtdx, hdtdy, *lpmap,
-                   l_transverse_reset_density, small_pres, apz, apx, apy);
-    }
+  // amrex::Print() << "DOING TRANSDD FOR Y " << bxg1 << std::endl;
+  ParallelFor(bxg1, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+      if (!flag_arr(i, j, k).isCovered()) {
+          CAMR_transdd(i, j, k, cdir, qm, qp, qzmarr, qzparr, flxy, flyx, qxy, qyx,
+                       qaux, srcQ, hdt, hdtdx, hdtdy, *lpmap,
+                       l_transverse_reset_density, small_pres, apz, apx, apy);
+      }
   });
   qzm.clear();
   qzp.clear();
@@ -465,13 +568,15 @@ Godunov_umeth_eb (
   fluxyx.clear();
   gdvyxfab.clear();
 
-  // Final Z flux
-  ParallelFor(zfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+  // This box must be grown by one in transverse direction so we can
+  // do tangential interpolation when taking divergence later
+  Box zfbx(surroundingNodes(bx_to_fill,2)); zfbx.grow(0,1); zfbx.grow(1,1);
+  ParallelFor(zfbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
-    if (!flag_arr(i, j, k).isCovered() && !flag_arr(i, j, k - 1).isCovered()) {
-      CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qm, qp, flx3, q3, qaux, cdir,
-                  *lpmap, small, small_dens, small_pres);
-    }
+      if (apz(i,j,k) > 0.) {
+          CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qm, qp, flx3, q3, qaux, cdir,
+                      *lpmap, small, small_dens, small_pres);
+      }
   });
   qmfab.clear();
   qpfab.clear();

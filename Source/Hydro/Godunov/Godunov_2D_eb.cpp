@@ -158,7 +158,7 @@ Godunov_umeth_eb (
   ParallelFor(
     xflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
     {
-        if (!flag_arr(i,j,k).isCovered() && !flag_arr(i-1,j,k).isCovered()) {
+        if (apx(i,j,k) > 0.) {
             CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qxmarr, qxparr, fxarr, gdtemp, qaux,
                         cdir, *lpmap, small, small_dens, small_pres);
         }
@@ -173,7 +173,7 @@ Godunov_umeth_eb (
   auto const& fyarr = fy.array();
   ParallelFor( yflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
-      if (!flag_arr(i,j,k).isCovered() && !flag_arr(i,j-1,k).isCovered()) {
+      if (apy(i,j,k) > 0.) {
           CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qymarr, qyparr, fyarr, q2, qaux,
                       cdir, *lpmap, small, small_dens, small_pres);
       }
@@ -204,7 +204,7 @@ Godunov_umeth_eb (
   // Final Riemann problem X
   ParallelFor(xfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
-      if (!flag_arr(i,j,k).isCovered() && !flag_arr(i-1,j,k).isCovered()) {
+      if (apx(i,j,k) > 0.) {
           CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qmarr, qparr, flx1, q1, qaux,
                       cdir, *lpmap, small, small_dens, small_pres);
       }
@@ -231,7 +231,7 @@ Godunov_umeth_eb (
   // Final Riemann problem Y
   ParallelFor(yfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
-      if (!flag_arr(i,j,k).isCovered() && !flag_arr(i,j-1,k).isCovered()) {
+      if (apy(i,j,k) > 0.) {
           CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qmarr, qparr, flx2, q2, qaux,
                       cdir, *lpmap, small, small_dens, small_pres);
       }
