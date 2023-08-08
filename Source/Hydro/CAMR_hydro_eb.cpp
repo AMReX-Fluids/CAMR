@@ -116,7 +116,7 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
     // ****************************************************************
     if (do_mol) {
         MOL_umeth_eb(Box(divc_arr), bclo, bchi, domlo, domhi, q_arr, qaux_arr,
-                     AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]), vf_arr,
+                     AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
                      flag_arr, dx, flux_tmp_arr, small, small_dens, small_pres,
                      plm_iorder, l_eb_weights_type);
     } else {

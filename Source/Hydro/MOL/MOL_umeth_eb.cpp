@@ -27,7 +27,6 @@ MOL_umeth_eb (const Box& bx_to_fill,
               AMREX_D_DECL(Array4<Real> const& q1,
                            Array4<Real> const& q2,
                            Array4<Real> const& q3),
-              Array4<const Real      > const& vfrac,
               Array4<amrex::EBCellFlag const> const& flag,
               const GpuArray<amrex::Real, AMREX_SPACEDIM> dx,
               const GpuArray<const amrex::Array4<amrex::Real>, AMREX_SPACEDIM> flux_tmp,
@@ -89,7 +88,7 @@ MOL_umeth_eb (const Box& bx_to_fill,
     amrex::ParallelFor(bxg_ii,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-        if (vfrac(i,j,k) > 0.) {
+        if (!flag(i,j,k).isCovered()) {
             mol_slope_eb_x(i, j, k, slope, q_arr, qaux_arr, flag, small_dens, l_plm_iorder, l_plm_theta);
         }
     });
@@ -124,7 +123,7 @@ MOL_umeth_eb (const Box& bx_to_fill,
     amrex::ParallelFor(bxg_ii,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-        if (vfrac(i,j,k) > 0.) {
+        if (!flag(i,j,k).isCovered()) {
             mol_slope_eb_y(i, j, k, slope, q_arr, qaux_arr, flag, small_dens, l_plm_iorder, l_plm_theta);
         }
     });
@@ -159,7 +158,7 @@ MOL_umeth_eb (const Box& bx_to_fill,
     amrex::ParallelFor(bxg_ii,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-        if (vfrac(i,j,k) > 0.) {
+        if (!flag(i,j,k).isCovered()) {
             mol_slope_eb_z(i, j, k, slope, q_arr, qaux_arr, flag, small_dens, l_plm_iorder, l_plm_theta);
         }
     });

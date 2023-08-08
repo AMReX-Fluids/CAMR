@@ -72,7 +72,7 @@ CAMR_consup_eb( const Box& bx,
     {
         // This does the divergence but not the redistribution -- we will do that later
         // We do compute the weights here though
-        if (vfrac(i,j,k) > 0.) {
+        if (!flag(i,j,k).isCovered()) {
             eb_compute_div(i,j,k,n,blo,bhi,q_arr,qaux_arr,divc_arr,
                            AMREX_D_DECL(fx_in_arr ,fy_in_arr ,fz_in_arr),
                            AMREX_D_DECL(fx_out_arr,fy_out_arr,fz_out_arr),
@@ -87,7 +87,7 @@ CAMR_consup_eb( const Box& bx,
     amrex::ParallelFor(bxg_i,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-        if (vfrac(i,j,k) > 0.) {
+        if (!flag(i,j,k).isCovered()) {
             eb_pdivu(i,j,k,q_arr,
                      AMREX_D_DECL(q1, q2, q3),
                      divc_arr, flag, vfrac,

@@ -39,7 +39,6 @@ void MOL_umeth_eb (
                AMREX_D_DECL(amrex::Array4<amrex::Real> const& q1,
                             amrex::Array4<amrex::Real> const& q2,
                             amrex::Array4<amrex::Real> const& q3),
-               amrex::Array4<const amrex::Real> const& vfrac,
                amrex::Array4<amrex::EBCellFlag const> const& flag_arr,
                const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx,
                const amrex::GpuArray<const amrex::Array4<amrex::Real>, AMREX_SPACEDIM> flux_tmp_arr,
