@@ -384,6 +384,7 @@ protected:
 
   int find_datalog_index(const std::string& logname);
 
+  bool time_to_sum_integrated();
   void sum_integrated_quantities();
 
   void write_info();

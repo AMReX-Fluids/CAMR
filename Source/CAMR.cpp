@@ -513,13 +513,13 @@ amrex::Real CAMR::estTimeStep(amrex::Real /*dt_old*/)
 #ifdef AMREX_USE_EB
     auto const& fact =
       dynamic_cast<amrex::EBFArrayBoxFactory const&>(stateMF.Factory());
-    auto const& flags = fact.getMultiEBCellFlagFab();
+    auto const& flag = fact.getMultiEBCellFlagFab();
 #endif
 
     amrex::Real AMREX_D_DECL(dx1 = dx[0], dx2 = dx[1], dx3 = dx[2]);
 
 #ifdef AMREX_USE_EB
-    amrex::Real dt = amrex::ReduceMin( stateMF, flags, 0,
+    amrex::Real dt = amrex::ReduceMin( stateMF, flag, 0,
         [=] AMREX_GPU_HOST_DEVICE(
           amrex::Box const& bx, const amrex::Array4<const amrex::Real>& fab_arr,
           const amrex::Array4<const amrex::EBCellFlag>& flag_arr
@@ -710,30 +710,8 @@ CAMR::post_timestep(int /*iteration*/)
     }
 #endif
 
-
-  if (level == 0) {
-    int nstep = parent->levelSteps(0);
-    amrex::Real dtlev = parent->dtLevel(0);
-    amrex::Real cumtime = parent->cumTime() + dtlev;
-
-    bool sum_int_test = (sum_interval > 0 && nstep % sum_interval == 0);
-
-    bool sum_per_test = false;
-
-    if (sum_per > 0.0) {
-      const int num_per_old =
-        static_cast<int>(amrex::Math::floor((cumtime - dtlev) / sum_per));
-      const int num_per_new =
-        static_cast<int>(amrex::Math::floor((cumtime) / sum_per));
-
-      if (num_per_old != num_per_new) {
-        sum_per_test = true;
-      }
-    }
-
-    if (sum_int_test || sum_per_test) {
+  if (time_to_sum_integrated()) {
       sum_integrated_quantities();
-    }
   }
 }
 
@@ -746,6 +724,10 @@ CAMR::post_restart()
   amrex::Gpu::copy(
     amrex::Gpu::hostToDevice, CAMR::h_prob_parm,
     CAMR::h_prob_parm+ 1, CAMR::d_prob_parm);
+
+  if (time_to_sum_integrated()) {
+      sum_integrated_quantities();
+  }
 }
 
 void
@@ -787,29 +769,8 @@ void CAMR::post_init(amrex::Real /*stop_time*/)
     cumtime += dtlev;
   }
 
-  bool sum_int_test = false;
-
-  if (sum_interval > 0) {
-    if (nstep % sum_interval == 0) {
-      sum_int_test = true;
-    }
-  }
-
-  bool sum_per_test = false;
-
-  if (sum_per > 0.0) {
-    const int num_per_old =
-      static_cast<int>(amrex::Math::floor((cumtime - dtlev) / sum_per));
-    const int num_per_new =
-      static_cast<int>(amrex::Math::floor((cumtime) / sum_per));
-
-    if (num_per_old != num_per_new) {
-      sum_per_test = true;
-    }
-  }
-
-  if (sum_int_test || sum_per_test) {
-    sum_integrated_quantities();
+  if (time_to_sum_integrated()) {
+      sum_integrated_quantities();
   }
 }
 
@@ -906,7 +867,7 @@ CAMR::normalize_species(amrex::MultiFab& S)
 {
 #ifdef AMREX_USE_EB
     auto const& fact = dynamic_cast<amrex::EBFArrayBoxFactory const&>(S.Factory());
-    auto const& vfrac = fact.getVolFrac();
+    auto const& flag = fact.getMultiEBCellFlagFab();
 #endif
 
 #ifdef _OPENMP
@@ -918,12 +879,12 @@ CAMR::normalize_species(amrex::MultiFab& S)
 
        const auto sarr = S.array(mfi);
 #ifdef AMREX_USE_EB
-       const auto& vfrac_arr = vfrac.array(mfi);
+       auto const& flag_arr = flag.const_array(mfi);
 #endif
        amrex::ParallelFor(
          bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
 #ifdef AMREX_USE_EB
-          if (vfrac_arr(i,j,k) > 0.) {
+          if (!flag_arr(i,j,k).isCovered()) {
 #endif
              amrex::Real sum = 0.;
              for (int n = 0; n < NUM_SPECIES; n++)
@@ -939,7 +900,7 @@ CAMR::normalize_species(amrex::MultiFab& S)
                  }
              }
 #ifdef AMREX_USE_EB
-          } // vfrac
+          } // !isCovered
 #endif
          });
     }
@@ -991,8 +952,7 @@ CAMR::enforce_min_density(amrex::MultiFab& S_new)
 
 #ifdef AMREX_USE_EB
     auto const& fact = dynamic_cast<amrex::EBFArrayBoxFactory const&>(S_new.Factory());
-    auto const& flags = fact.getMultiEBCellFlagFab();
-    auto const& vfrac = fact.getVolFrac();
+    auto const& flag = fact.getMultiEBCellFlagFab();
 #endif
 
   const auto l_small_dens = small_dens;
@@ -1006,7 +966,8 @@ CAMR::enforce_min_density(amrex::MultiFab& S_new)
 
 #ifdef AMREX_USE_EB
     const amrex::Box& gbx = mfi.growntilebox();
-    const auto& flag_fab = flags[mfi];
+    const auto& flag_fab = flag[mfi];
+    const auto& flag_arr = flag.const_array(mfi);
     amrex::FabType typ = flag_fab.getType(gbx);
     if (typ == amrex::FabType::covered) {
       continue;
@@ -1014,9 +975,6 @@ CAMR::enforce_min_density(amrex::MultiFab& S_new)
 #endif
 
     const auto& Sarr      = S_new.array(mfi);
-#ifdef AMREX_USE_EB
-    const auto& vfrac_arr = vfrac.array(mfi);
-#endif
     const amrex::Box& bx = mfi.tilebox();
 
     amrex::GpuArray<int,3> lo = bx.loVect3d();
@@ -1027,7 +985,7 @@ CAMR::enforce_min_density(amrex::MultiFab& S_new)
       bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
       {
 #ifdef AMREX_USE_EB
-       if (vfrac_arr(i,j,k) > 0.) {
+       if (!flag_arr(i,j,k).isCovered()) {
 #endif
          if (Sarr(i,j,k,URHO) == 0.) {
 
@@ -1080,7 +1038,7 @@ CAMR::enforce_min_density(amrex::MultiFab& S_new)
              }
           } // Sarr < l_small_dens
 #ifdef AMREX_USE_EB
-       } // vfrac
+       } // !isCovered
 #endif
     });
   } // mfi
@@ -1187,7 +1145,7 @@ CAMR::computeTemp(amrex::MultiFab& S, int ng)
 #ifdef AMREX_USE_EB
   auto const& fact =
     dynamic_cast<amrex::EBFArrayBoxFactory const&>(S.Factory());
-  auto const& flags = fact.getMultiEBCellFlagFab();
+  auto const& flag = fact.getMultiEBCellFlagFab();
 #endif
 
 #ifdef _OPENMP
@@ -1197,7 +1155,7 @@ CAMR::computeTemp(amrex::MultiFab& S, int ng)
     const amrex::Box& bx = mfi.growntilebox(ng);
 
 #ifdef AMREX_USE_EB
-    const auto& flag_fab = flags[mfi];
+    const auto& flag_fab = flag[mfi];
     amrex::FabType typ = flag_fab.getType(bx);
     if (typ == amrex::FabType::covered) {
       continue;
@@ -1301,4 +1259,38 @@ CAMR::clean_state(amrex::MultiFab& S)
 
   int ng = S.nGrow();
   computeTemp(S,ng);
+}
+
+bool
+CAMR::time_to_sum_integrated()
+{
+  if (level == 0) {
+    int nstep = parent->levelSteps(0);
+    amrex::Real dtlev = parent->dtLevel(0);
+    amrex::Real cumtime = parent->cumTime() + dtlev;
+
+    bool sum_int_test = (sum_interval > 0 && nstep % sum_interval == 0);
+
+    bool sum_per_test = false;
+
+    if (sum_per > 0.0) {
+      const int num_per_old =
+        static_cast<int>(amrex::Math::floor((cumtime - dtlev) / sum_per));
+      const int num_per_new =
+        static_cast<int>(amrex::Math::floor((cumtime) / sum_per));
+
+      if (num_per_old != num_per_new) {
+        sum_per_test = true;
+      }
+    }
+
+    if (sum_int_test || sum_per_test) {
+        return true;
+    } else {
+        return false;
+    }
+
+  } else {
+      return false;
+  }
 }
