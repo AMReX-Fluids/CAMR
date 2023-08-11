@@ -764,7 +764,6 @@ void CAMR::post_init(amrex::Real /*stop_time*/)
     }
   }
 
-  int nstep = parent->levelSteps(0);
   if (cumtime != 0.0) {
     cumtime += dtlev;
   }
