@@ -710,7 +710,8 @@ CAMR::post_timestep(int /*iteration*/)
     }
 #endif
 
-  if (time_to_sum_integrated()) {
+  amrex::Real new_time = parent->cumTime() + parent->dtLevel(0);
+  if (time_to_sum_integrated(new_time)) {
       sum_integrated_quantities();
   }
 }
@@ -725,7 +726,8 @@ CAMR::post_restart()
     amrex::Gpu::hostToDevice, CAMR::h_prob_parm,
     CAMR::h_prob_parm+ 1, CAMR::d_prob_parm);
 
-  if (time_to_sum_integrated()) {
+  amrex::Real new_time = parent->cumTime();
+  if (time_to_sum_integrated(new_time)) {
       sum_integrated_quantities();
   }
 }
@@ -768,7 +770,7 @@ void CAMR::post_init(amrex::Real /*stop_time*/)
     cumtime += dtlev;
   }
 
-  if (time_to_sum_integrated()) {
+  if (time_to_sum_integrated(cumtime)) {
       sum_integrated_quantities();
   }
 }
@@ -1261,22 +1263,22 @@ CAMR::clean_state(amrex::MultiFab& S)
 }
 
 bool
-CAMR::time_to_sum_integrated()
+CAMR::time_to_sum_integrated(amrex::Real time)
 {
   if (level == 0) {
     int nstep = parent->levelSteps(0);
-    amrex::Real dtlev = parent->dtLevel(0);
-    amrex::Real cumtime = parent->cumTime() + dtlev;
 
     bool sum_int_test = (sum_interval > 0 && nstep % sum_interval == 0);
 
     bool sum_per_test = false;
 
+    amrex::Real dtlev = parent->dtLevel(level);
+
     if (sum_per > 0.0) {
       const int num_per_old =
-        static_cast<int>(amrex::Math::floor((cumtime - dtlev) / sum_per));
+        static_cast<int>(amrex::Math::floor((time - dtlev) / sum_per));
       const int num_per_new =
-        static_cast<int>(amrex::Math::floor((cumtime) / sum_per));
+        static_cast<int>(amrex::Math::floor((time) / sum_per));
 
       if (num_per_old != num_per_new) {
         sum_per_test = true;
