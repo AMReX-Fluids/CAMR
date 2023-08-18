@@ -190,21 +190,23 @@ plm_slope_eb (
   const amrex::IntVect ivp2(iv + 2 * dvec);
 
   // We have enough cells in the x-direction to do 4th order slopes
-  // centered on (i,j,k) with all values at cell centers
-  if ((order == 4) &&
-      flags(iv).isSingleValued() &&
-      flags(ivm).isSingleValued() &&
-      flags(ivm2).isSingleValued() &&
-      flags(ivp).isSingleValued() &&
-      flags(ivp2).isSingleValued()){
+  // centered on (i,j,k)
+  if ( (order == 4) &&
+       !flags(iv).isCovered() &&
+       !flags(ivm).isCovered() &&
+       !flags(ivm2).isCovered() &&
+       !flags(ivp).isCovered() &&
+       !flags(ivp2).isCovered())
+  {
     return plm_slope(i, j, k, n, dir, q, flat, order);
   }
   // We have enough cells in the x-direction to do 2nd order slopes
-  // centered on (i,j,k) with all values at cell centers
-  else if ((order > 1) &&
-           flags(iv).isSingleValued() &&
-           flags(ivm).isSingleValued() &&
-           flags(ivp).isSingleValued()){
+  // centered on (i,j,k)
+  else if ( (order > 1) &&
+            !flags(iv).isCovered() &&
+            !flags(ivm).isCovered() &&
+            !flags(ivp).isCovered())
+  {
     return plm_slope(i, j, k, n, dir, q, flat, 2);
   } else {
     return 0.0;
@@ -237,19 +239,21 @@ plm_pslope_eb (
   // We have enough cells in the x-direction to do 4th order slopes
   // centered on (i,j,k) with all values at cell centers
   if ((order == 4) &&
-      flags(iv).isSingleValued() &&
-      flags(ivm).isSingleValued() &&
-      flags(ivm2).isSingleValued() &&
-      flags(ivp).isSingleValued() &&
-      flags(ivp2).isSingleValued()){
+      !flags(iv).isCovered() &&
+      !flags(ivm).isCovered() &&
+      !flags(ivm2).isCovered() &&
+      !flags(ivp).isCovered() &&
+      !flags(ivp2).isCovered())
+  {
     return plm_pslope(i, j, k, n, dir, q, dx, srcQ, flat, order);
   }
   // We have enough cells in the x-direction to do 2nd order slopes
   // centered on (i,j,k) with all values at cell centers
   else if ((order > 1) &&
-           flags(iv).isSingleValued() &&
-           flags(ivm).isSingleValued() &&
-           flags(ivp).isSingleValued()){
+           !flags(iv).isCovered() &&
+           !flags(ivm).isCovered() &&
+           !flags(ivp).isCovered())
+  {
     return plm_pslope(i, j, k, n, dir, q, dx, srcQ, flat, 2);
   } else {
     return 0.0;
