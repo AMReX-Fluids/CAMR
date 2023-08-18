@@ -57,9 +57,15 @@ CAMR_transd (
   // If (dir == 1),  ivpt = (i+1,j) and ivpn = (i,j+1) and qvidx = GDU
 
   bool no_cov_face = true;
+  bool lo_face_not_covered = true;
+  bool hi_face_not_covered = true;
 #ifdef AMREX_USE_EB
    if (trans_area) {
        no_cov_face = (trans_area(ivpt) > 0.0) && (trans_area(iv) > 0.0);
+   }
+   if (norm_area) {
+       lo_face_not_covered = (norm_area(iv  ) > amrex::Real(0.0));
+       hi_face_not_covered = (norm_area(ivpn) > amrex::Real(0.0));
    }
 #endif
 
@@ -95,13 +101,6 @@ CAMR_transd (
 
     amrex::Real rr, rrnew, compo;
 
-  bool lo_face_not_covered = true;
-#ifdef AMREX_USE_EB
-   if (norm_area) {
-       lo_face_not_covered = (norm_area(iv) > amrex::Real(0.0));
-   }
-#endif
-
     if (lo_face_not_covered) {
         rr = qnormp(iv, QRHO);
         rrnew = rr - flxrho;
@@ -110,13 +109,6 @@ CAMR_transd (
     } else {
         qp(iv, nqp) = qnormp(iv, nqp);
     }
-
-  bool hi_face_not_covered = true;
-#ifdef AMREX_USE_EB
-   if (norm_area) {
-       hi_face_not_covered = (norm_area(iv) > amrex::Real(0.0));
-   }
-#endif
 
     if (hi_face_not_covered) {
         rr = qnormm(ivpn, QRHO);
@@ -133,13 +125,6 @@ CAMR_transd (
   // ****************************************************************************
   // QP
   // ****************************************************************************
-
-  bool lo_face_not_covered = true;
-#ifdef AMREX_USE_EB
-   if (norm_area) {
-       lo_face_not_covered = (norm_area(iv) > amrex::Real(0.0));
-   }
-#endif
 
   if (lo_face_not_covered)
   {
@@ -187,7 +172,6 @@ CAMR_transd (
       qp(iv,QPRES) = std::max( qp(iv,QPRES), small_pres);
 
   } else {
-
       qp(iv,QRHO  ) = qnormp(iv,QRHO  );
       qp(iv,QU    ) = qnormp(iv,QU    );
       qp(iv,QV    ) = qnormp(iv,QV    );
@@ -198,13 +182,6 @@ CAMR_transd (
   // ****************************************************************************
   // QM
   // ****************************************************************************
-
-  bool hi_face_not_covered = true;
-#ifdef AMREX_USE_EB
-   if (norm_area) {
-       hi_face_not_covered = (norm_area(iv) > amrex::Real(0.0));
-   }
-#endif
 
   if (hi_face_not_covered)
   {
