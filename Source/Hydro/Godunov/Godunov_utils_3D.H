@@ -57,11 +57,18 @@ CAMR_transdo (
   // If (dir == 2 and other_dir == 0),  ivpt = (i+1,j,k) and ivpn = (i,j,k+1) and qvidx = GDU
   // If (dir == 2 and other_dir == 1),  ivpt = (i,j+1,k) and ivpn = (i,j,k+1) and qvidx = GDV
 
-  const bool no_cov_face =
+  bool no_cov_face = true;
+  bool lo_face_not_covered = true;
+  bool hi_face_not_covered = true;
+
 #ifdef AMREX_USE_EB
-    (trans_area(ivpt) > 0.0) && (trans_area(iv) > 0.0);
-#else
-  true;
+   if (trans_area) {
+       no_cov_face = (trans_area(ivpt) > 0.0) && (trans_area(iv) > 0.0);
+   }
+   if (norm_area) {
+       lo_face_not_covered = (norm_area(iv  ) > amrex::Real(0.0));
+       hi_face_not_covered = (norm_area(ivpn) > amrex::Real(0.0));
+   }
 #endif
 
   const amrex::Real flxrho = no_cov_face ? cdtdx * (flxx(ivpt, URHO ) - flxx(iv, URHO )) : amrex::Real(0.0);
@@ -79,31 +86,25 @@ CAMR_transdo (
 
       amrex::Real rr, rrnew, compo;
 
-#ifdef AMREX_USE_EB
-      if (norm_area(iv) > amrex::Real(0.0)) {
-#endif
-        rr = qnormp(iv, QRHO);
-        rrnew = rr - flxrho;
-        compo = rr * qnormp(iv, nqp) - compn;
-        qp(iv, nqp) = compo / rrnew;
-#ifdef AMREX_USE_EB
+      if (lo_face_not_covered)
+      {
+          rr = qnormp(iv, QRHO);
+          rrnew = rr - flxrho;
+          compo = rr * qnormp(iv, nqp) - compn;
+          qp(iv, nqp) = compo / rrnew;
       } else {
-        qp(iv, nqp) = qnormp(iv, nqp);
+          qp(iv, nqp) = qnormp(iv, nqp);
       }
-#endif
 
-#ifdef AMREX_USE_EB
-      if (norm_area(ivpn) > amrex::Real(0.0)) {
-#endif
-        rr = qnormm(ivpn, QRHO);
-        rrnew = rr - flxrho;
-        compo = rr * qnormm(ivpn, nqp) - compn;
-        qm(ivpn, nqp) = compo / rrnew;
-#ifdef AMREX_USE_EB
+      if (hi_face_not_covered)
+      {
+          rr = qnormm(ivpn, QRHO);
+          rrnew = rr - flxrho;
+          compo = rr * qnormm(ivpn, nqp) - compn;
+          qm(ivpn, nqp) = compo / rrnew;
       } else {
-        qm(ivpn, nqp) = qnormm(ivpn, nqp);
+          qm(ivpn, nqp) = qnormm(ivpn, nqp);
       }
-#endif
   }
 
   // Update hydro vars
@@ -122,9 +123,7 @@ CAMR_transdo (
 
   // QP
 
-#ifdef AMREX_USE_EB
-  if (norm_area(iv) > 0.)
-#endif
+  if (lo_face_not_covered)
   {
       // Convert to conservative
       const amrex::Real rrr = qnormp(iv, QRHO);
@@ -172,21 +171,17 @@ CAMR_transdo (
       } else {
          qp(iv, QPRES) = qnormp(iv, QPRES);
       }
-#ifdef AMREX_USE_EB
   } else {
       qp(iv,QRHO  ) = qnormp(iv,QRHO  );
       qp(iv,QU    ) = qnormp(iv,QU    );
       qp(iv,QV    ) = qnormp(iv,QV    );
       qp(iv,QREINT) = qnormp(iv,QREINT);
       qp(iv,QPRES ) = qnormp(iv,QPRES );
-#endif
   }
 
   // QM
 
-#ifdef AMREX_USE_EB
-  if (norm_area(ivpn) > 0.)
-#endif
+  if (hi_face_not_covered)
   {
       // Conversion to Conservative
       const amrex::Real rrl = qnormm(ivpn, QRHO);
@@ -233,7 +228,6 @@ CAMR_transdo (
         qm(ivpn, QPRES) = qnormm(ivpn, QPRES);
       }
 
-#ifdef AMREX_USE_EB
   } else {
       qm(ivpn,QRHO  ) = qnormm(ivpn,QRHO  );
       qm(ivpn,QU    ) = qnormm(ivpn,QU    );
@@ -241,7 +235,6 @@ CAMR_transdo (
       qm(ivpn,QW    ) = qnormm(ivpn,QW    );
       qm(ivpn,QREINT) = qnormm(ivpn,QREINT);
       qm(ivpn,QPRES ) = qnormm(ivpn,QPRES );
-#endif
   }
 }
 
@@ -297,11 +290,18 @@ CAMR_transdd (
   // If (dir == 1),  ivpt0 = (i+1,j,k) and ivpt1 = (i,j,k+1) and ivpn = (i,j+1,k) and qvidx0 = GDU and qvidx1 = GVW
   // If (dir == 2),  ivpt0 = (i+1,j,k) and ivpt1 = (i,j+1,k) and ivpn = (i,j,k+1) and qvidx0 = GDU and qvidx1 = GVV
 
-  const bool no_cov_face =
+  bool no_cov_face = true;
+  bool lo_face_not_covered = true;
+  bool hi_face_not_covered = true;
 #ifdef AMREX_USE_EB
-    (trans0_area(ivpt0) > 0.0) && (trans1_area(ivpt1) > 0.0) && (trans0_area(iv) > 0.0) && (trans1_area(iv) > 0.0);
-#else
-  true;
+    if (trans0_area && trans1_area) {
+        no_cov_face = (trans0_area(ivpt0) > 0.0) && (trans1_area(ivpt1) > 0.0)
+                   && (trans0_area(iv   ) > 0.0) && (trans1_area(iv   ) > 0.0);
+    }
+    if (norm_area) {
+        lo_face_not_covered = (norm_area(iv  ) > amrex::Real(0.0));
+        hi_face_not_covered = (norm_area(ivpn) > amrex::Real(0.0));
+    }
 #endif
 
   const amrex::Real flxrho = no_cov_face ? cdtdx0 * (flxx(ivpt0, URHO) - flxx(iv, URHO)) +
@@ -339,28 +339,23 @@ CAMR_transdd (
     amrex::Real compo;
 
     // qp
-#ifdef AMREX_USE_EB
-    if (norm_area(iv) > amrex::Real(0.0)) {
-#endif
+    if (lo_face_not_covered)
+    {
       compo = rrr * qnormp(iv, nqp) - compn;
       qp(iv, nqp) = compo / rrnewr + hdt * srcpass;
-#ifdef AMREX_USE_EB
     } else {
       qp(iv, nqp) = qnormp(iv, nqp);
     }
-#endif
 
     // qm
-#ifdef AMREX_USE_EB
-    if (norm_area(ivpn) > amrex::Real(0.0)) {
-#endif
+
+    if (hi_face_not_covered)
+    {
       compo = rrl * qnormm(ivpn, nqp) - compn;
       qm(ivpn, nqp) = compo / rrnewl + hdt * srcpass;
-#ifdef AMREX_USE_EB
     } else {
       qm(ivpn, nqp) = qnormm(ivpn, nqp);
     }
-#endif
   }
 
   // Update hydro vars
@@ -389,9 +384,7 @@ CAMR_transdd (
   const amrex::Real pynew = cdtdx1 * (dAupy + pavy * dAuy * (c - 1.0));
 
   // qp state
-#ifdef AMREX_USE_EB
-  if (norm_area(iv) > 0.)
-#endif
+  if (lo_face_not_covered)
   {
     const amrex::Real rur = rrr * qnormp(iv, QU);
     const amrex::Real rvr = rrr * qnormp(iv, QV);
@@ -430,20 +423,16 @@ CAMR_transdd (
       qp(iv, QPRES) = qnormp(iv, QPRES) + hdt * srcp;
     }
     qp(iv, QPRES) = std::max( qp(iv,QPRES), small_pres);
-#ifdef AMREX_USE_EB
   } else {
       qp(iv,QRHO  ) = qnormp(iv,QRHO  );
       qp(iv,QU    ) = qnormp(iv,QU    );
       qp(iv,QV    ) = qnormp(iv,QV    );
       qp(iv,QREINT) = qnormp(iv,QREINT);
       qp(iv,QPRES ) = qnormp(iv,QPRES );
-#endif
   }
 
   // qm state
-#ifdef AMREX_USE_EB
-  if (norm_area(ivpn) > 0.)
-#endif
+  if (hi_face_not_covered)
   {
     const amrex::Real rul = rrl * qnormm(ivpn, QU);
     const amrex::Real rvl = rrl * qnormm(ivpn, QV);
@@ -481,7 +470,7 @@ CAMR_transdd (
       qm(ivpn, QPRES) = qnormm(ivpn, QPRES) + hdt * srcp;
     }
     qm(ivpn, QPRES) = std::max(qm(ivpn,QPRES), small_pres);
-#ifdef AMREX_USE_EB
+
   } else {
       qm(ivpn,QRHO  ) = qnormm(ivpn,QRHO  );
       qm(ivpn,QU    ) = qnormm(ivpn,QU    );
@@ -489,7 +478,6 @@ CAMR_transdd (
       qm(ivpn,QW    ) = qnormm(ivpn,QW    );
       qm(ivpn,QREINT) = qnormm(ivpn,QREINT);
       qm(ivpn,QPRES ) = qnormm(ivpn,QPRES );
-#endif
   }
 }
 #endif
