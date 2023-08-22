@@ -53,8 +53,10 @@ mol_slope_eb_x (int i, int j, int k,
         Real enth = (q(i,j,k,QREINT)+ q(i,j,k,QPRES))/ amrex::max(q(i,j,k,QRHO),small_dens);
         Real cs2 = qa(i,j,k,QC)*qa(i,j,k,QC);
 
-        bool left_ok = (flag(i,j,k).isConnected(-1,0,0));
-        bool rght_ok = (flag(i,j,k).isConnected( 1,0,0));
+        // The second test is needed here because outside the domain isConnected can be true
+        //     even when the neighbor is covered
+        bool left_ok = ( flag(i,j,k).isConnected(-1,0,0) && !flag(i-1,j,k).isCovered() );
+        bool rght_ok = ( flag(i,j,k).isConnected( 1,0,0) && !flag(i+1,j,k).isCovered() );
 
         if (left_ok && rght_ok)
         {
@@ -167,8 +169,10 @@ mol_slope_eb_y (int i, int j, int k,
         Real enth = (q(i,j,k,QREINT)+ q(i,j,k,QPRES))/ amrex::max(q(i,j,k,QRHO),small_dens);
         Real cs2 = qa(i,j,k,QC)*qa(i,j,k,QC);
 
-        bool left_ok = (flag(i,j,k).isConnected(0,-1,0));
-        bool rght_ok = (flag(i,j,k).isConnected(0, 1,0));
+        // The second test is needed here because outside the domain isConnected can be true
+        //     even when the neighbor is covered
+        bool left_ok = ( flag(i,j,k).isConnected(0,-1,0) && !flag(i,j-1,k).isCovered() );
+        bool rght_ok = ( flag(i,j,k).isConnected(0, 1,0) && !flag(i,j+1,k).isCovered() );
 
         if (left_ok && rght_ok) {
 
@@ -280,8 +284,10 @@ mol_slope_eb_z (int i, int j, int k,
         Real enth = (q(i,j,k,QREINT)+ q(i,j,k,QPRES))/ amrex::max(q(i,j,k,QRHO),small_dens);
         Real cs2 = qa(i,j,k,QC)*qa(i,j,k,QC);
 
-        bool left_ok = (flag(i,j,k).isConnected(0,0,-1));
-        bool rght_ok = (flag(i,j,k).isConnected(0,0, 1));
+        // The second test is needed here because outside the domain isConnected can be true
+        //     even when the neighbor is covered
+        bool left_ok = ( flag(i,j,k).isConnected(0,0,-1) && !flag(i,j,k-1).isCovered() );
+        bool rght_ok = ( flag(i,j,k).isConnected(0,0, 1) && !flag(i,j,k+1).isCovered() );
 
         if (left_ok && rght_ok)
         {
