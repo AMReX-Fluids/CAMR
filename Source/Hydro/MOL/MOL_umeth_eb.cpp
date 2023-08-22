@@ -96,7 +96,9 @@ MOL_umeth_eb (const Box& bx_to_fill,
     amrex::ParallelFor(xbx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-        if (flag(i,j,k).isConnected(-1,0,0)) {
+        // The second test is needed here because outside the domain isConnected can be true
+        //     even when the neighbor is covered
+        if (flag(i,j,k).isConnected(-1,0,0) && !flag(i-1,j,k).isCovered()) {
             mol_riemann_x(i, j, k, fx_arr, slope, q_arr, qaux_arr, q1, qxmarr, qxparr, small, small_dens, small_pres,
                           bclx, bchx, dlx, dhx, *lpmap);
         } else {
@@ -131,7 +133,9 @@ MOL_umeth_eb (const Box& bx_to_fill,
     amrex::ParallelFor(ybx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-        if (flag(i,j,k).isConnected(0,-1,0)) {
+        // The second test is needed here because outside the domain isConnected can be true
+        //     even when the neighbor is covered
+        if (flag(i,j,k).isConnected(0,-1,0) && !flag(i,j-1,k).isCovered()) {
             mol_riemann_y(i, j, k, fy_arr, slope, q_arr, qaux_arr, q2, qymarr, qyparr, small, small_dens, small_pres,
                           bcly, bchy, dly, dhy, *lpmap);
         } else {
@@ -166,7 +170,9 @@ MOL_umeth_eb (const Box& bx_to_fill,
     amrex::ParallelFor(zbx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-        if (flag(i,j,k).isConnected(0,0,-1))
+        // The second test is needed here because outside the domain isConnected can be true
+        //     even when the neighbor is covered
+        if (flag(i,j,k).isConnected(0,0,-1) && !flag(i,j,k-1).isCovered())
         {
             mol_riemann_z(i, j, k, fz_arr, slope, q_arr, qaux_arr, q3, qzmarr, qzparr, small, small_dens, small_pres,
                           bclz, bchz, dlz, dhz, *lpmap);
