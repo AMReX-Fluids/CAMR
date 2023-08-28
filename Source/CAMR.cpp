@@ -1265,7 +1265,7 @@ CAMR::clean_state(amrex::MultiFab& S)
 void
 CAMR::ZeroingOutForPlotting(amrex::MultiFab& S)
 {
-#ifdef AMREX_USE_MOVING_EB
+#ifdef CAMR_USE_MOVING_EB
   auto const& fact =
     dynamic_cast<amrex::EBFArrayBoxFactory const&>(S.Factory());
   auto const& vfrac = fact.getVolFrac();

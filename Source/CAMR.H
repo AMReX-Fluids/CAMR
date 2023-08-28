@@ -463,7 +463,7 @@ CAMR::numGrow()
   int ng;
   if(redistribution_type == "FluxRedist"){
     if(do_mol){
-          ng = 5;
+        ng = 5;
     }
     else if(ppm_type){
         ng = 6;

@@ -15,8 +15,6 @@ using namespace amrex;
 void make_eb_plane (const Geometry& geom, int max_coarsening_level, amrex::Real time)
 {
 
-    std::cout << "Value of time is " << time << "\n";
-
     RealArray point;
     point[0]=0.0 + 0.5*1.25e5*time*time;
     point[1]=0.0;

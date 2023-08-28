@@ -130,12 +130,12 @@ main(int argc, char* argv[])
   while (amrptr->okToContinue() &&
          (amrptr->levelSteps(0) < max_step || max_step < 0) &&
          (amrptr->cumTime() < stop_time || stop_time < 0.0)) {
-#ifdef AMREX_USE_MOVING_EB
+#ifdef CAMR_USE_MOVING_EB
     initialize_EB2(amrptr->Geom(amrptr->maxLevel()), amrptr->maxLevel(), amrptr->maxLevel(), amrptr->cumTime());
 #endif
     // Do a timestep
     amrptr->coarseTimeStep(stop_time);
-#ifdef AMREX_USE_MOVING_EB
+#ifdef CAMR_USE_MOVING_EB
     finalize_EB2();
 #endif
   }

@@ -580,7 +580,7 @@ CAMR::writePlotFile(
    amrex::EB_set_covered(plotMF,0.0);
 #endif
 
-#ifdef AMREX_USE_MOVING_EB
+#ifdef CAMR_USE_MOVING_EB
     ZeroingOutForPlotting(plotMF);
 #endif
 
