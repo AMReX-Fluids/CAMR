@@ -469,7 +469,7 @@ CAMR::numGrow()
         ng = 6;
     }
     else{
-        amrex::Abort("Error:: solver tyoe should be mol or ppm");
+        amrex::Abort("Error:: solver type should be mol or ppm");
     }
   }
 
@@ -481,7 +481,7 @@ CAMR::numGrow()
         ng = 7;
     }
     else{
-        amrex::Abort("Error:: solver tyoe should be mol or ppm");
+        amrex::Abort("Error:: solver type should be mol or ppm");
     }
   }
 #else
