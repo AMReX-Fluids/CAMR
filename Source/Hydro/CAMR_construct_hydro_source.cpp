@@ -71,7 +71,7 @@ CAMR::construct_hydro_source (const MultiFab& S,
 
 #ifdef AMREX_USE_EB
         EBCellFlagFab const& flagfab = ebfact.getMultiEBCellFlagFab()[mfi];
-        Array4<EBCellFlag const> const& flag = flagfab.const_array();
+        auto const& flag_arr = flagfab.const_array();
 
         if (flagfab.getType(bx) != FabType::covered) {
             auto const& vfrac_arr = volfrac->const_array(mfi);
@@ -105,7 +105,7 @@ CAMR::construct_hydro_source (const MultiFab& S,
             ParallelFor(
               qbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
 #ifdef AMREX_USE_EB
-                if (vfrac_arr(i,j,k) > 0.) {
+                if (!flag_arr(i,j,k).isCovered()) {
 #endif
                     CAMR_ctoprim(i, j, k, sarr, qarr, qauxar, *lpmap, small_num, dual_energy_eta);
 #ifdef AMREX_USE_EB
@@ -183,7 +183,7 @@ CAMR::construct_hydro_source (const MultiFab& S,
             CAMR_umdrv_eb(do_mol, bx, bxg_i, mfi, geom, &ebfact,
                           phys_bc.lo(), phys_bc.hi(),
                           sarr, hyd_src, qarr, qauxar, srcqarr,
-                          vfrac_arr, flag, dx, dxInv, flx_arr,
+                          vfrac_arr, flag_arr, dx, dxInv, flx_arr, a,
                           as_crse, p_drho_as_crse->array(), p_rrflag_as_crse->array(),
                           as_fine, dm_as_fine.array(), level_mask.const_array(mfi),
                           dt, ppm_type, plm_iorder, use_pslope,

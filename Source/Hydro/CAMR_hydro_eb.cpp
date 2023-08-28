@@ -1,5 +1,6 @@
 #include "CAMR.H"
 #include "CAMR_hydro.H"
+#include "CAMR_utils_K.H"
 #include "Godunov.H"
 #include "MOL_umeth.H"
 #include "CAMR_Constants.H"
@@ -26,6 +27,7 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
                const GpuArray<Real, AMREX_SPACEDIM> dx,
                const GpuArray<Real, AMREX_SPACEDIM> dxinv,
                const GpuArray<const Array4<Real>, AMREX_SPACEDIM>& flux_arr,
+               const amrex::GpuArray<const Array4<const Real>, AMREX_SPACEDIM> /*a*/,
                int as_crse,
                Array4<Real> const& drho_as_crse,
                Array4<int const> const& rrflag_as_crse,
@@ -62,9 +64,13 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
     const int* domlo = geom.Domain().loVect();
     const int* domhi = geom.Domain().hiVect();
 
+    // Temporary FArrayBoxes
+    FArrayBox  divu(bxg_ii, 1, amrex::The_Async_Arena());
+    auto const& divuarr = divu.array();
+
     amrex::FArrayBox qec[AMREX_SPACEDIM];
     for (int dir = 0; dir < AMREX_SPACEDIM; dir++) {
-      const Box eboxes = amrex::surroundingNodes(bxg_ii, dir);
+      const Box eboxes = amrex::surroundingNodes(grow(bxg_ii, 1), dir);
       qec[dir].resize(eboxes, NGDNV, amrex::The_Async_Arena());
     }
     amrex::GpuArray<Array4<Real>, AMREX_SPACEDIM> qec_arr{
@@ -109,19 +115,37 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
     // Also construct the redistribution weights for flux redistribution if necessary
     // ****************************************************************
     if (do_mol) {
-        MOL_umeth_eb(bx, bclo, bchi, domlo, domhi, q_arr, qaux_arr, divc_arr,
-                     AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]), vf_arr,
+        MOL_umeth_eb(Box(divc_arr), bclo, bchi, domlo, domhi, q_arr, qaux_arr,
+                     AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
                      flag_arr, dx, flux_tmp_arr, small, small_dens, small_pres,
                      plm_iorder, l_eb_weights_type);
     } else {
-        Godunov_umeth_eb(bx, bclo, bchi, domlo, domhi, q_arr, qaux_arr, src_q,
+        Godunov_umeth_eb(Box(divc_arr), bclo, bchi, domlo, domhi, q_arr, qaux_arr, src_q,
                          AMREX_D_DECL(flux_tmp_arr[0], flux_tmp_arr[1], flux_tmp_arr[2]),
                          AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
                          AMREX_D_DECL(apx, apy, apz),
-                         vf_arr, flag_arr, dx, dt,
+                         flag_arr, dx, dt,
                          small, small_dens, small_pres, ppm_type, use_pslope, use_flattening,
                          plm_iorder, transverse_reset_density);
     }
+
+    // Construct divu
+    AMREX_D_TERM(const Real dx0 = dx[0];,
+                 const Real dx1 = dx[1];,
+                 const Real dx2 = dx[2];);
+    GpuArray<int,AMREX_SPACEDIM> ldomlo{AMREX_D_DECL(domlo[0],domlo[1],domlo[2])};
+    GpuArray<int,AMREX_SPACEDIM> ldomhi{AMREX_D_DECL(domhi[0],domhi[1],domhi[2])};
+    GpuArray<int,AMREX_SPACEDIM> lbclo{AMREX_D_DECL(bclo[0],bclo[1],bclo[2])};
+    GpuArray<int,AMREX_SPACEDIM> lbchi{AMREX_D_DECL(bchi[0],bchi[1],bchi[2])};
+
+    ParallelFor(bxg_ii, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+    {
+        if (flag_arr(i,j,k).isRegular()) {
+            CAMR_divu(i, j, k, q_arr, AMREX_D_DECL(dx0, dx1, dx2), divuarr, ldomlo, ldomhi, lbclo, lbchi);
+        } else {
+            divuarr(i,j,k) = Real(0.0);
+        }
+    });
 
     adjust_fluxes_eb(bx, q_arr, uin_arr,
                      AMREX_D_DECL(apx, apy, apz),
@@ -142,7 +166,10 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
     int level_mask_not_covered = CAMRConstants::level_mask_notcovered;
     bool use_wts_in_divnc = false;
 
-    // Real fac_for_redist = (do_mol) ? Real(0.5) : Real(1.0);
+    // We need to set fac_for_redist to 1/2 for MOL because we will
+    //    compute this twice per time step, so the contribution of
+    //    each needs to be weighted by 1/2
+    Real fac_for_redist = (do_mol) ? Real(0.5) : Real(1.0);
     ApplyMLRedistribution(bx, l_ncomp,
                           dsdt_arr, divc_arr, uin_arr, redistwgt_arr,
                           flag_arr,
@@ -154,8 +181,7 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
                           as_crse, drho_as_crse, rrflag_as_crse,
                           as_fine, dm_as_fine, lev_mask,
                           level_mask_not_covered,
-                          // We will add this back in once we update amrex
-                          // fac_for_redist,
+                          fac_for_redist,
                           use_wts_in_divnc);
 
   BL_PROFILE_VAR_STOP(CAMR_umdrv_eb);

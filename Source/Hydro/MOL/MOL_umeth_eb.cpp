@@ -19,16 +19,14 @@
 using namespace amrex;
 
 void
-MOL_umeth_eb (const Box& /*bx*/,
+MOL_umeth_eb (const Box& bx_to_fill,
               const int*  bclo, const int*  bchi,
               const int* domlo, const int* domhi,
               Array4<const Real> const& q_arr,
               Array4<const Real> const& qaux_arr,
-              Array4<      Real> const& divc_arr,
               AMREX_D_DECL(Array4<Real> const& q1,
                            Array4<Real> const& q2,
                            Array4<Real> const& q3),
-              Array4<const Real      > const& vfrac,
               Array4<amrex::EBCellFlag const> const& flag,
               const GpuArray<amrex::Real, AMREX_SPACEDIM> dx,
               const GpuArray<const amrex::Array4<amrex::Real>, AMREX_SPACEDIM> flux_tmp,
@@ -57,8 +55,8 @@ MOL_umeth_eb (const Box& /*bx*/,
 
     Real l_plm_theta = 2.0; // [1,2] 1: minmod; 2: van Leer's MC
 
-    const Box& bxg_i  = Box(divc_arr);
-    const Box& bxg_ii = grow(bxg_i,1);
+    // bx_to_fill  = Box(divc_arr);
+    const Box& bxg_ii = grow(bx_to_fill,1);
 
     GpuArray<Real,AMREX_SPACEDIM> dxinv;
     AMREX_D_TERM(dxinv[0] = 1./dx[0];,
@@ -79,7 +77,7 @@ MOL_umeth_eb (const Box& /*bx*/,
     // ****************************************************************
     // x-direction
     // ****************************************************************
-    amrex::Box xbx = surroundingNodes(bxg_i,0); xbx.grow(IntVect(AMREX_D_DECL(0,1,1)));
+    amrex::Box xbx = surroundingNodes(bx_to_fill,0); xbx.grow(IntVect(AMREX_D_DECL(0,1,1)));
 
     amrex::FArrayBox qxm(xbx, QVAR, amrex::The_Async_Arena());
     amrex::FArrayBox qxp(xbx, QVAR, amrex::The_Async_Arena());
@@ -90,7 +88,7 @@ MOL_umeth_eb (const Box& /*bx*/,
     amrex::ParallelFor(bxg_ii,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-        if (vfrac(i,j,k) > 0.) {
+        if (!flag(i,j,k).isCovered()) {
             mol_slope_eb_x(i, j, k, slope, q_arr, qaux_arr, flag, small_dens, l_plm_iorder, l_plm_theta);
         }
     });
@@ -98,7 +96,9 @@ MOL_umeth_eb (const Box& /*bx*/,
     amrex::ParallelFor(xbx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-        if (flag(i,j,k).isConnected(-1,0,0)) {
+        // The second test is needed here because outside the domain isConnected can be true
+        //     even when the neighbor is covered
+        if (flag(i,j,k).isConnected(-1,0,0) && !flag(i-1,j,k).isCovered()) {
             mol_riemann_x(i, j, k, fx_arr, slope, q_arr, qaux_arr, q1, qxmarr, qxparr, small, small_dens, small_pres,
                           bclx, bchx, dlx, dhx, *lpmap);
         } else {
@@ -114,7 +114,7 @@ MOL_umeth_eb (const Box& /*bx*/,
     // ****************************************************************
     // y-direction
     // ****************************************************************
-    amrex::Box ybx = surroundingNodes(bxg_i,1); ybx.grow(IntVect(AMREX_D_DECL(1,0,1)));
+    amrex::Box ybx = surroundingNodes(bx_to_fill,1); ybx.grow(IntVect(AMREX_D_DECL(1,0,1)));
 
     amrex::FArrayBox qym(ybx, QVAR, amrex::The_Async_Arena());
     amrex::FArrayBox qyp(ybx, QVAR, amrex::The_Async_Arena());
@@ -125,7 +125,7 @@ MOL_umeth_eb (const Box& /*bx*/,
     amrex::ParallelFor(bxg_ii,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-        if (vfrac(i,j,k) > 0.) {
+        if (!flag(i,j,k).isCovered()) {
             mol_slope_eb_y(i, j, k, slope, q_arr, qaux_arr, flag, small_dens, l_plm_iorder, l_plm_theta);
         }
     });
@@ -133,7 +133,9 @@ MOL_umeth_eb (const Box& /*bx*/,
     amrex::ParallelFor(ybx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-        if (flag(i,j,k).isConnected(0,-1,0)) {
+        // The second test is needed here because outside the domain isConnected can be true
+        //     even when the neighbor is covered
+        if (flag(i,j,k).isConnected(0,-1,0) && !flag(i,j-1,k).isCovered()) {
             mol_riemann_y(i, j, k, fy_arr, slope, q_arr, qaux_arr, q2, qymarr, qyparr, small, small_dens, small_pres,
                           bcly, bchy, dly, dhy, *lpmap);
         } else {
@@ -150,7 +152,7 @@ MOL_umeth_eb (const Box& /*bx*/,
     // ****************************************************************
     // z-direction
     // ****************************************************************
-    amrex::Box zbx = surroundingNodes(bxg_i,2); zbx.grow(IntVect(1,1,0));
+    amrex::Box zbx = surroundingNodes(bx_to_fill,2); zbx.grow(IntVect(1,1,0));
 
     amrex::FArrayBox qzm(zbx, QVAR, amrex::The_Async_Arena());
     amrex::FArrayBox qzp(zbx, QVAR, amrex::The_Async_Arena());
@@ -160,7 +162,7 @@ MOL_umeth_eb (const Box& /*bx*/,
     amrex::ParallelFor(bxg_ii,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-        if (vfrac(i,j,k) > 0.) {
+        if (!flag(i,j,k).isCovered()) {
             mol_slope_eb_z(i, j, k, slope, q_arr, qaux_arr, flag, small_dens, l_plm_iorder, l_plm_theta);
         }
     });
@@ -168,7 +170,9 @@ MOL_umeth_eb (const Box& /*bx*/,
     amrex::ParallelFor(zbx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-        if (flag(i,j,k).isConnected(0,0,-1))
+        // The second test is needed here because outside the domain isConnected can be true
+        //     even when the neighbor is covered
+        if (flag(i,j,k).isConnected(0,0,-1) && !flag(i,j,k-1).isCovered())
         {
             mol_riemann_z(i, j, k, fz_arr, slope, q_arr, qaux_arr, q3, qzmarr, qzparr, small, small_dens, small_pres,
                           bclz, bchz, dlz, dhz, *lpmap);

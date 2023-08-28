@@ -1,5 +1,10 @@
 #include "Godunov.H"
-#include "Godunov_utils.H"
+#if (AMREX_SPACEDIM == 2)
+#include "Godunov_utils_2D.H"
+#elif (AMREX_SPACEDIM == 3)
+#include "Godunov_utils_3D.H"
+#endif
+#include "flatten.H"
 #include "PPM.H"
 
 void
