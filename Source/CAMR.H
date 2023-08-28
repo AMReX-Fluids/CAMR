@@ -374,7 +374,7 @@ protected:
 
   void expand_state(amrex::MultiFab& S, const amrex::Real time, const int ng);
   void clean_state(amrex::MultiFab& S);
-  void ZeroOutSolidWalls(amrex::MultiFab& S);	
+  void ZeroingOutForPlotting(amrex::MultiFab& S);	
 
   void buildMetrics();
 
