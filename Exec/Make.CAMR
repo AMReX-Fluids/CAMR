@@ -13,7 +13,7 @@ ifeq ($(USE_EB), TRUE)
 endif
 
 ifeq ($(USE_MOVING_EB), TRUE)
-  DEFINES += -DAMREX_USE_MOVING_EB
+  DEFINES += -DCAMR_USE_MOVING_EB
 endif
 
 all: $(executable)
