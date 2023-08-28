@@ -578,8 +578,10 @@ CAMR::writePlotFile(
 
 #ifdef AMREX_USE_EB
    amrex::EB_set_covered(plotMF,0.0);
+#endif
 	//plotMF.setVal(0.0, cnt, 1, nGrow);
     //amrex::MultiFab::Copy(plotMF,volFrac(),0,cnt,1,nGrow);
+#ifdef AMREX_USE_MOVING_EB
 	ZeroOutSolidWalls(plotMF);
 #endif
 

@@ -172,7 +172,7 @@ CAMR::read_params()
   if (cfl <= 0.0 || cfl > 1.0) {
     amrex::Error("Invalid CFL factor; must be between zero and one.");
   }
-  if ((do_mol == 1) && (cfl > 0.3)) {
+  if ((do_mol == 1) && (cfl > 0.3) && fixed_dt == 0.0) {
     amrex::Error("Invalid CFL factor; must be <= 0.3 when using MOL hydro");
   }
 
@@ -1323,7 +1323,6 @@ CAMR::ZeroOutSolidWalls(amrex::MultiFab& S)
 	   {
 			for (int n = 0; n < ncomp; ++n) {
 				if(Sarr(i, j, k, n) < 1e-12){
-					std::cout << "Values here is " << Sarr(i, j, k, n) << "\n";
 					Sarr(i, j, k, n) = 0.0;
 				}
 			}
