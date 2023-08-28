@@ -1276,24 +1276,24 @@ CAMR::ZeroingOutForPlotting(amrex::MultiFab& S)
   for (amrex::MFIter mfi(S, amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi) {
     const amrex::Box& bx = mfi.tilebox();
 
-	int ncomp = S.nComp();
+    int ncomp = S.nComp();
 
     const auto& Sarr = S.array(mfi);
     const auto& vfrac_arr = vfrac.array(mfi);
     amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-		if (vfrac_arr(i,j,k) == 0.0)	
-		{
-       		for (int n = 0; n < ncomp; ++n) {
-         		Sarr(i, j, k, n) = 0.0;
-			}
+        if (vfrac_arr(i,j,k) == 0.0)
+        {
+               for (int n = 0; n < ncomp; ++n) {
+                 Sarr(i, j, k, n) = 0.0;
+            }
        }
-	   {
-			for (int n = 0; n < ncomp; ++n) {
-				if(Sarr(i, j, k, n) < 1e-12){
-					Sarr(i, j, k, n) = 0.0;
-				}
-			}
-		}	
+       {
+            for (int n = 0; n < ncomp; ++n) {
+                if(Sarr(i, j, k, n) < 1e-12){
+                    Sarr(i, j, k, n) = 0.0;
+                }
+            }
+        }
 
     });
   }

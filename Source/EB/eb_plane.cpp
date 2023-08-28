@@ -15,9 +15,9 @@ using namespace amrex;
 void make_eb_plane (const Geometry& geom, int max_coarsening_level, amrex::Real time)
 {
 
-	std::cout << "Value of time is " << time << "\n";
+    std::cout << "Value of time is " << time << "\n";
 
-	RealArray point;
+    RealArray point;
     point[0]=0.0 + 0.5*1.25e5*time*time;
     point[1]=0.0;
     point[2]=0.0;
@@ -31,5 +31,5 @@ void make_eb_plane (const Geometry& geom, int max_coarsening_level, amrex::Real 
 
     EB2::GeometryShop<EB2::PlaneIF> gshop(pf);
     EB2::Build(gshop, geom, max_coarsening_level,
-               max_coarsening_level, 4, false);	
+               max_coarsening_level, 4, false);
 }

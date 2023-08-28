@@ -374,7 +374,7 @@ protected:
 
   void expand_state(amrex::MultiFab& S, const amrex::Real time, const int ng);
   void clean_state(amrex::MultiFab& S);
-  void ZeroingOutForPlotting(amrex::MultiFab& S);	
+  void ZeroingOutForPlotting(amrex::MultiFab& S);
 
   void buildMetrics();
 
@@ -462,18 +462,18 @@ CAMR::numGrow()
   // So for now we just put 7
   int ng;
   if(redistribution_type != "FluxRedist"){
-	if(do_mol){
-  		ng = 5;
-	}
-	else if(ppm_type){
-		ng = 6;
-	}
+    if(do_mol){
+          ng = 5;
+    }
+    else if(ppm_type){
+        ng = 6;
+    }
   }
   else if(redistribution_type != "StateRedist"){
      if(do_mol){
         ng = 6;
     }
-	else if(ppm_type){
+    else if(ppm_type){
         ng = 7;
     }
   }

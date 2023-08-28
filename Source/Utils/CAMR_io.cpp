@@ -581,7 +581,7 @@ CAMR::writePlotFile(
 #endif
 
 #ifdef AMREX_USE_MOVING_EB
-	ZeroingOutForPlotting(plotMF);
+    ZeroingOutForPlotting(plotMF);
 #endif
 
   // Use the Full pathname when naming the MultiFab.
