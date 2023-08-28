@@ -468,13 +468,20 @@ CAMR::numGrow()
     else if(ppm_type){
         ng = 6;
     }
+    else{
+        amrex::Abort("Error:: solver tyoe should be mol or ppm");
+    }
   }
+
   else if(redistribution_type == "StateRedist"){
      if(do_mol){
         ng = 6;
     }
     else if(ppm_type){
         ng = 7;
+    }
+    else{
+        amrex::Abort("Error:: solver tyoe should be mol or ppm");
     }
   }
 #else
