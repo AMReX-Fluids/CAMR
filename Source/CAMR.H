@@ -460,7 +460,23 @@ CAMR::numGrow()
   // IF MOL     + SRD then 6
   // IF Godunov + SRD then 7
   // So for now we just put 7
-  int ng = 7;
+  int ng;
+  if(redistribution_type != "FluxRedist"){
+	if(do_mol){
+  		ng = 5;
+	}
+	else if(ppm_type){
+		ng = 6;
+	}
+  }
+  else if(redistribution_type != "StateRedist"){
+     if(do_mol){
+        ng = 6;
+    }
+	else if(ppm_type){
+        ng = 7;
+    }
+  }
 #else
   int ng = 4;
 #endif
