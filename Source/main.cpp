@@ -16,7 +16,8 @@ std::string inputs_name;
 amrex::LevelBld* getLevelBld();
 
 #ifdef AMREX_USE_EB
-void initialize_EB2 (const amrex::Geometry& geom, const int required_level, const int max_level);
+void initialize_EB2 (const amrex::Geometry& geom, const int required_level, const int max_level, amrex::Real time);
+void finalize_EB2();
 #endif
 
 int
@@ -110,7 +111,7 @@ main(int argc, char* argv[])
     amrex::AmrLevel::SetEBSupportLevel(amrex::EBSupport::full); // need both area and volume fractions
     amrex::AmrLevel::SetEBMaxGrowCells(CAMR::numGrow(), 7, 7);
 
-    initialize_EB2(amrptr->Geom(amrptr->maxLevel()), amrptr->maxLevel(), amrptr->maxLevel());
+    initialize_EB2(amrptr->Geom(amrptr->maxLevel()), amrptr->maxLevel(), amrptr->maxLevel(), 0.0);
 #endif
 
   amrptr->init(strt_time, stop_time);
@@ -129,8 +130,14 @@ main(int argc, char* argv[])
   while (amrptr->okToContinue() &&
          (amrptr->levelSteps(0) < max_step || max_step < 0) &&
          (amrptr->cumTime() < stop_time || stop_time < 0.0)) {
+#ifdef CAMR_USE_MOVING_EB
+    initialize_EB2(amrptr->Geom(amrptr->maxLevel()), amrptr->maxLevel(), amrptr->maxLevel(), amrptr->cumTime());
+#endif
     // Do a timestep
     amrptr->coarseTimeStep(stop_time);
+#ifdef CAMR_USE_MOVING_EB
+    finalize_EB2();
+#endif
   }
 
   // Write final checkpoint

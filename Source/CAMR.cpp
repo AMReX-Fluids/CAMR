@@ -172,7 +172,7 @@ CAMR::read_params()
   if (cfl <= 0.0 || cfl > 1.0) {
     amrex::Error("Invalid CFL factor; must be between zero and one.");
   }
-  if ((do_mol == 1) && (cfl > 0.3)) {
+  if ((do_mol == 1) && (cfl > 0.3) && fixed_dt <= 0.0) {
     amrex::Error("Invalid CFL factor; must be <= 0.3 when using MOL hydro");
   }
 
@@ -1260,6 +1260,44 @@ CAMR::clean_state(amrex::MultiFab& S)
 
   int ng = S.nGrow();
   computeTemp(S,ng);
+}
+
+void
+CAMR::ZeroingOutForPlotting(amrex::MultiFab& S)
+{
+#ifdef CAMR_USE_MOVING_EB
+  auto const& fact =
+    dynamic_cast<amrex::EBFArrayBoxFactory const&>(S.Factory());
+  auto const& vfrac = fact.getVolFrac();
+
+#ifdef _OPENMP
+#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
+#endif
+  for (amrex::MFIter mfi(S, amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+    const amrex::Box& bx = mfi.tilebox();
+
+    int ncomp = S.nComp();
+
+    const auto& Sarr = S.array(mfi);
+    const auto& vfrac_arr = vfrac.array(mfi);
+    amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+        if (vfrac_arr(i,j,k) == 0.0)
+        {
+               for (int n = 0; n < ncomp; ++n) {
+                 Sarr(i, j, k, n) = 0.0;
+            }
+       }
+       {
+            for (int n = 0; n < ncomp; ++n) {
+                if(Sarr(i, j, k, n) < 1e-12){
+                    Sarr(i, j, k, n) = 0.0;
+                }
+            }
+        }
+
+    });
+  }
+#endif
 }
 
 bool

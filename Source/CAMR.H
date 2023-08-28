@@ -374,6 +374,7 @@ protected:
 
   void expand_state(amrex::MultiFab& S, const amrex::Real time, const int ng);
   void clean_state(amrex::MultiFab& S);
+  void ZeroingOutForPlotting(amrex::MultiFab& S);
 
   void buildMetrics();
 
@@ -459,7 +460,30 @@ CAMR::numGrow()
   // IF MOL     + SRD then 6
   // IF Godunov + SRD then 7
   // So for now we just put 7
-  int ng = 7;
+  int ng;
+  if(redistribution_type == "FluxRedist"){
+    if(do_mol){
+        ng = 5;
+    }
+    else if(ppm_type){
+        ng = 6;
+    }
+    else{
+        amrex::Abort("Error:: solver type should be mol or ppm");
+    }
+  }
+
+  else if(redistribution_type == "StateRedist"){
+     if(do_mol){
+        ng = 6;
+    }
+    else if(ppm_type){
+        ng = 7;
+    }
+    else{
+        amrex::Abort("Error:: solver type should be mol or ppm");
+    }
+  }
 #else
   int ng = 4;
 #endif

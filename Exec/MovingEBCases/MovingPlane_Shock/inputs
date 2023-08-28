@@ -1,0 +1,69 @@
+amrex.fpe_trap_invalid = 1
+
+max_step  = 10000
+stop_time = 0.2
+
+geometry.is_periodic = 0 0 0
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+geometry.prob_lo     =   -0.1 -0.0625 -0.0625
+geometry.prob_hi     =    0.9  0.0625  0.0625
+amr.n_cell           =   64   8  8
+
+# >>>>>>>>>>>>>  BC FLAGS <<<<<<<<<<<<<<<<
+# 0 = Interior           3 = Symmetry
+# 1 = Inflow             4 = SlipWall
+# 2 = Outflow            5 = NoSlipWall
+# >>>>>>>>>>>>>  BC FLAGS <<<<<<<<<<<<<<<<
+CAMR.lo_bc       =  Outflow  Outflow  Outflow
+CAMR.hi_bc       =  Outflow  Outflow  Outflow
+
+CAMR.fixed_dt = 1.3e-5
+#CAMR.cfl = 0.3  # cfl number for hyperbolic system
+
+CAMR.do_mol = 1
+
+CAMR.v = 2
+amr.v = 1
+
+CAMR.sum_interval = 1
+
+CAMR.redistribution_type = FluxRedist
+CAMR.redistribution_type = StateRedist
+
+# REFINEMENT / REGRIDDING
+CAMR.refine_cut_cells = 1
+amr.max_level       = 2       # maximum level number allowed
+amr.force_regrid_level_zero = 1
+#amr.loadbalance_with_workestimates = 1
+#amr.loadbalance_level0_int = 1000
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+amr.regrid_int      = 1 1 1 1 # how often to regrid
+amr.blocking_factor = 8
+amr.max_grid_size   = 8
+amr.n_error_buf     = 4 4 4 4 # number of buffer cells in error est
+amr.grid_eff        = 0.99     # what constitutes an efficient grid
+
+# CHECKPOINT FILES
+amr.checkpoint_files_output = 0
+amr.check_file              = chk    # root name of checkpoint file
+amr.check_int               = 100    # number of timesteps between checkpoints
+
+# PLOTFILES
+amr.plot_files_output = 1
+amr.plot_file         = plt     # root name of plotfile
+amr.plot_int          = 10      # number of timesteps between plotfiles
+amr.derive_plot_vars  = x_velocity y_velocity z_velocity vfrac
+
+# EB
+# Add cylinder
+CAMR.geometry         = "plane"
+
+# problem specific parameter
+prob.p_l   = 101325.0 
+prob.p_r   = 101325.0
+prob.rho_l = 1.226
+prob.rho_r = 1.226
+prob.u_l   = 0.0
+prob.u_r   = 0.0
+
