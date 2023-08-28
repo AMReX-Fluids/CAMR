@@ -30,7 +30,7 @@ DEBUG = FALSE
 
 # CAMR
 USE_EB = TRUE
-CAMR_USE_MOVING_EB = TRUE
+USE_MOVING_EB = TRUE
 Eos_Model := GammaLaw
 
 # GNU Make

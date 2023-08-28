@@ -32,7 +32,7 @@ CAMR.redistribution_type = StateRedist
 
 # REFINEMENT / REGRIDDING
 CAMR.refine_cut_cells = 1
-amr.max_level       = 3       # maximum level number allowed
+amr.max_level       = 2       # maximum level number allowed
 amr.force_regrid_level_zero = 1
 #amr.loadbalance_with_workestimates = 1
 #amr.loadbalance_level0_int = 1000
