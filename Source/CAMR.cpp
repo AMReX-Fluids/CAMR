@@ -1263,7 +1263,7 @@ CAMR::clean_state(amrex::MultiFab& S)
 }
 
 void
-CAMR::ZeroOutSolidWalls(amrex::MultiFab& S)
+CAMR::ZeroingOutForPlotting(amrex::MultiFab& S)
 {
 #ifdef AMREX_USE_MOVING_EB
   auto const& fact =
@@ -1298,6 +1298,7 @@ CAMR::ZeroOutSolidWalls(amrex::MultiFab& S)
     });
   }
 #endif
+}
 
 bool
 CAMR::time_to_sum_integrated(amrex::Real time)
