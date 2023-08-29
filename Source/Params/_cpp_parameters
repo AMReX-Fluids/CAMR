@@ -152,9 +152,6 @@ sum_interval                 int           -1
 # how often (simulation time) to compute integral sums (for runtime diagnostics)
 sum_per                      Real          -1.0e0
 
-# abort if we exceed CFL = 1 over the course of a timestep
-hard_cfl_limit               int           1
-
 # a string describing the simulation that will be copied into the
 # plotfile's {\tt job\_info} file
 job_name                     string        ""

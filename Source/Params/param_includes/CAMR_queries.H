@@ -39,6 +39,5 @@ pp.query("change_max", change_max);
 pp.query("bndry_func_thread_safe", bndry_func_thread_safe);
 pp.query("sum_interval", sum_interval);
 pp.query("sum_per", sum_per);
-pp.query("hard_cfl_limit", hard_cfl_limit);
 pp.query("job_name", job_name);
 pp.query("write_eb", write_eb);
