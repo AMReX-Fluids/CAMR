@@ -1260,10 +1260,10 @@ CAMR::clean_state(amrex::MultiFab& S)
   computeTemp(S,ng);
 }
 
+#ifdef CAMR_USE_MOVING_EB
 void
 CAMR::ZeroingOutForPlotting(amrex::MultiFab& S)
 {
-#ifdef CAMR_USE_MOVING_EB
   auto const& fact =
     dynamic_cast<amrex::EBFArrayBoxFactory const&>(S.Factory());
   auto const& vfrac = fact.getVolFrac();
@@ -1295,8 +1295,8 @@ CAMR::ZeroingOutForPlotting(amrex::MultiFab& S)
 
     });
   }
-#endif
 }
+#endif
 
 bool
 CAMR::time_to_sum_integrated(amrex::Real time)
