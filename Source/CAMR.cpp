@@ -759,11 +759,9 @@ void CAMR::post_init(amrex::Real /*stop_time*/)
 
   // Average data down from finer levels
   // so that conserved data is consistent between levels.
-  if (do_avg_down != 0) {
-    int finest_level = parent->finestLevel();
-    for (int k = finest_level - 1; k >= 0; k--) {
+  int finest_level = parent->finestLevel();
+  for (int k = finest_level - 1; k >= 0; k--) {
       getLevel(k).avgDown();
-    }
   }
 
   if (cumtime != 0.0) {
