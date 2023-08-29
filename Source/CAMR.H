@@ -374,7 +374,9 @@ protected:
 
   void expand_state(amrex::MultiFab& S, const amrex::Real time, const int ng);
   void clean_state(amrex::MultiFab& S);
+#ifdef CAMR_USE_MOVING_EB
   void ZeroingOutForPlotting(amrex::MultiFab& S);
+#endif
 
   void buildMetrics();
 
@@ -454,13 +456,12 @@ AMREX_FORCE_INLINE
 int
 CAMR::numGrow()
 {
+  int ng = 4;
 #ifdef AMREX_USE_EB
   // IF MOL     + FRD then 5
   // IF Godunov + FRD then 6
   // IF MOL     + SRD then 6
   // IF Godunov + SRD then 7
-  // So for now we just put 7
-  int ng;
   if (redistribution_type == "FluxRedist")
   {
     if (do_mol) {
@@ -469,7 +470,6 @@ CAMR::numGrow()
         ng = 6;
     }
   }
-
   else if (redistribution_type == "StateRedist")
   {
      if (do_mol) {
@@ -478,8 +478,6 @@ CAMR::numGrow()
         ng = 7;
      }
   }
-#else
-  int ng = 4;
 #endif
   return ng;
 }
