@@ -23,7 +23,7 @@ CAMR_initdata( int i, int j, int k,
 
     amrex::Real x = prob_lo[0] + (i+amrex::Real(0.5))*dx[0];
     amrex::Real Pt, rhot, uxt;
-    if (x < amrex::Real(0.5)) {
+    if (x < prob_parm.interface) {
         Pt   = prob_parm.p_l;
         rhot = prob_parm.rho_l;
         uxt  = prob_parm.u_l;
