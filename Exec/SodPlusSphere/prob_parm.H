@@ -14,15 +14,11 @@ struct ProbParmDevice
     amrex::Real rho_r = 0.125;
     amrex::Real u_l = 0.0;
     amrex::Real u_r = 0.0;
+    amrex::Real interface = 0.5;
 };
 
 struct ProbParmHost
 {
-    amrex::Gpu::DeviceVector<amrex::Real> scaled_z;
-    amrex::Gpu::DeviceVector<amrex::Real> det_density;
-    amrex::Gpu::DeviceVector<amrex::Real> det_energy;
-    amrex::Gpu::DeviceVector<amrex::Real> det_velocity;
-
 };
 
 #endif
