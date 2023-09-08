@@ -1,5 +1,5 @@
-#ifndef HYDRO_HYPFLUX_K_H
-#define HYDRO_HYPFLUX_K_H
+#ifndef HYDRO_HYPFLUX_EB_K_H
+#define HYDRO_HYPFLUX_EB_K_H
 
 #include "IndexDefines.H"
 #include <AMReX_FArrayBox.H>

@@ -1,5 +1,5 @@
-#ifndef RIEMANN_H
-#define RIEMANN_H
+#ifndef HYDRO_RIEMANN_H
+#define HYDRO_RIEMANN_H
 #include "EOS.H"
 
 AMREX_GPU_DEVICE

@@ -1,5 +1,5 @@
-#ifndef HYDRO_UTILS_H
-#define HYDRO_UTILS_H
+#ifndef HYDRO_UTILS_K_H
+#define HYDRO_UTILS_K_H
 
 #include "IndexDefines.H"
 

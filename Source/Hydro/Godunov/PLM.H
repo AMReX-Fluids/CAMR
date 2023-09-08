@@ -9,7 +9,6 @@
 
 #include "IndexDefines.H"
 
-
 // This header file contains functions and declarations for the 3D hydro portion
 // on the GPU. As per the convention of AMReX, inlined functions are
 // defined here, whereas non-inline functions are declared here.

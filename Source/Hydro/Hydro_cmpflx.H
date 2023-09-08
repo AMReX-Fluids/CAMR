@@ -1,5 +1,5 @@
-#ifndef CMPFLX_H
-#define CMPFLX_H
+#ifndef HYDRO_CMPFLX_H
+#define HYDRO_CMPFLX_H
 
 #include <AMReX_FArrayBox.H>
 #include <AMReX_IArrayBox.H>

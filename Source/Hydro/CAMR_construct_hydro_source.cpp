@@ -37,6 +37,8 @@ CAMR::construct_hydro_source (const MultiFab& S,
 
     const auto& dx    = geom.CellSizeArray();
 
+    const PassMap* lpmap = d_pass_map;
+
     Real dx1 = dx[0];
     for (int dir = 1; dir < AMREX_SPACEDIM; ++dir) {
       dx1 *= dx[dir];
@@ -100,7 +102,6 @@ CAMR::construct_hydro_source (const MultiFab& S,
             auto const& srcqarr = src_q.array();
 
             BL_PROFILE_VAR("ctoprim()", ctop);
-            const PassMap* lpmap = d_pass_map;
             const Real small_num        = CAMRConstants::small_num;
             const Real dual_energy_eta  = CAMR::dual_energy_eta1;
             ParallelFor(
@@ -174,8 +175,6 @@ CAMR::construct_hydro_source (const MultiFab& S,
               amrex::Gpu::hostToDevice, bcs.begin(), bcs.end(), bcs_d.begin());
 
             const auto& dxInv = geom.InvCellSizeArray();
-
-            const PassMap* lpmap = CAMR::d_pass_map;
 
             // Return hyd_src - centered at half-time if using Godunov method
             //                - centered at  old-time if using MOL method

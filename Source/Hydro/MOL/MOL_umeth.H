@@ -1,5 +1,5 @@
-#ifndef MOLHYDRO_H
-#define MOLHYDRO_H
+#ifndef MOL_UMETH_H
+#define MOL_UMETH_H
 
 #include "IndexDefines.H"
 

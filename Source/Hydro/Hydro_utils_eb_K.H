@@ -1,5 +1,5 @@
-#ifndef HYDRO_UTILS_EB_H
-#define HYDRO_UTILS_EB_H
+#ifndef HYDRO_UTILS_EB_K_H
+#define HYDRO_UTILS_EB_K_H
 
 #ifdef AMREX_USE_EB
 
