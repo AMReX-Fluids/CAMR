@@ -1,8 +1,11 @@
 #ifndef MOLHYDRO_H
 #define MOLHYDRO_H
 
-#include "CAMR.H"
 #include "IndexDefines.H"
+
+#ifdef AMREX_USE_EB
+#include <AMReX_EBMultiFabUtil.H>
+#endif
 
 void MOL_umeth (
                const amrex::Box& bx,
@@ -27,7 +30,9 @@ void MOL_umeth (
                const amrex::Real small,
                const amrex::Real small_dens,
                const amrex::Real small_pres,
-               const int slope_order);
+               const amrex::Real smallu,
+               const int slope_order,
+               const PassMap* lpmap);
 
 #ifdef AMREX_USE_EB
 void MOL_umeth_eb (
@@ -45,7 +50,9 @@ void MOL_umeth_eb (
                const amrex::Real small,
                const amrex::Real small_dens,
                const amrex::Real small_pres,
+               const amrex::Real smallu,
                const int l_plm_iorder,
+               const PassMap* lpmap,
                const int l_eb_weights_type);
 #endif
 #endif

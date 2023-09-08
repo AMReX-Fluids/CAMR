@@ -1,8 +1,6 @@
 #ifndef RIEMANN_H
 #define RIEMANN_H
-#include "CAMR.H"
 #include "EOS.H"
-#include "CAMR_Constants.H"
 
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
@@ -42,7 +40,8 @@ riemannus(
                amrex::Real& qint_iv1,
                amrex::Real& qint_iv2),
   amrex::Real& qint_gdpres,
-  amrex::Real& qint_gdgame)
+  amrex::Real& qint_gdgame,
+  amrex::Real  smallu)
 {
     amrex::Real wsmall = smallc * small_dens;
     amrex::Real rl = std::max(rl_in,small_dens);
@@ -59,7 +58,7 @@ riemannus(
 
     amrex::Real ro,uo,po,reo,gamco;
 
-    bool mask = std::abs(ustar) < CAMRConstants::smallu * 0.5 * (std::abs(ul) + std::abs(ur));
+    bool mask = std::abs(ustar) < smallu * 0.5 * (std::abs(ul) + std::abs(ur));
     ustar = mask ? 0.0 : ustar;
 
     if (ustar > 0.){

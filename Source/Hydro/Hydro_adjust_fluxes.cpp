@@ -1,9 +1,8 @@
-#include "CAMR.H"
-#include "CAMR_utils_K.H"
+#include "Hydro_utils_K.H"
 #include "hydro_artif_visc.H"
 
 #ifdef AMREX_USE_EB
-#include "CAMR_utils_eb_K.H"
+#include "Hydro_utils_eb_K.H"
 #endif
 
 using namespace amrex;
@@ -30,14 +29,14 @@ adjust_fluxes (
     int  bchi_dir =  bchi[dir];
     amrex::ParallelFor(fbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
 
-      CAMR_artif_visc(i, j, k, flx[dir], divu, u, dx, l_difmag, dir,
-                      domlo_dir, domhi_dir, bclo_dir, bchi_dir);
+      hydro_artif_visc(i, j, k, flx[dir], divu, u, dx, l_difmag, dir,
+                       domlo_dir, domhi_dir, bclo_dir, bchi_dir);
 
       // Normalize Species Flux
-      CAMR_norm_spec_flx(i, j, k, flx[dir]);
+      hydro_norm_spec_flx(i, j, k, flx[dir]);
 
       // Make flux extensive
-      CAMR_ext_flx(i, j, k, flx[dir], a[dir]);
+      hydro_ext_flx(i, j, k, flx[dir], a[dir]);
     });
   } // dir
 }
@@ -96,16 +95,16 @@ adjust_fluxes_eb (
 
     amrex::ParallelFor(fbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
     {
-        CAMR_artif_visc(i, j, k, fx_arr, divu_arr, u_arr, dx[0], l_difmag, 0,
+        hydro_artif_visc(i, j, k, fx_arr, divu_arr, u_arr, dx[0], l_difmag, 0,
                         domlo_dir, domhi_dir, bclo_dir, bchi_dir);
 
         // Normalize Species Flux
         if (apx(i,j,k) > 0. ) {
-          CAMR_norm_spec_flx(i, j, k, fx_arr);
+          hydro_norm_spec_flx(i, j, k, fx_arr);
         }
 
         // Make flux extensive
-        CAMR_ext_flx_eb(i, j, k, fx_arr, areafac, apx);
+        hydro_ext_flx_eb(i, j, k, fx_arr, areafac, apx);
     });
 
     // Flux alterations
@@ -123,16 +122,16 @@ adjust_fluxes_eb (
 
     amrex::ParallelFor(fby, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
 
-          CAMR_artif_visc(i, j, k, fy_arr, divu_arr, u_arr, dx[1], l_difmag, 1,
+          hydro_artif_visc(i, j, k, fy_arr, divu_arr, u_arr, dx[1], l_difmag, 1,
                           domlo_dir, domhi_dir, bclo_dir, bchi_dir);
 
           // Normalize Species Flux
           if(apy(i,j,k) > 0. ) {
-              CAMR_norm_spec_flx(i, j, k, fy_arr);
+              hydro_norm_spec_flx(i, j, k, fy_arr);
           }
 
           // Make flux extensive
-          CAMR_ext_flx_eb(i, j, k, fy_arr, areafac, apy);
+          hydro_ext_flx_eb(i, j, k, fy_arr, areafac, apy);
     });
 
 #if (AMREX_SPACEDIM ==3)
@@ -147,16 +146,16 @@ adjust_fluxes_eb (
 
     amrex::ParallelFor(fbz, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
 
-          CAMR_artif_visc(i, j, k, fz_arr, divu_arr, u_arr, dx[2], l_difmag, 2,
+          hydro_artif_visc(i, j, k, fz_arr, divu_arr, u_arr, dx[2], l_difmag, 2,
                           domlo_dir, domhi_dir, bclo_dir, bchi_dir);
 
           // Normalize Species Flux
           if(apz(i,j,k) > 0. ) {
-             CAMR_norm_spec_flx(i, j, k, fz_arr);
+             hydro_norm_spec_flx(i, j, k, fz_arr);
           }
 
           // Make flux extensive
-          CAMR_ext_flx_eb(i, j, k, fz_arr, areafac, apz);
+          hydro_ext_flx_eb(i, j, k, fz_arr, areafac, apz);
       });
 
 #endif

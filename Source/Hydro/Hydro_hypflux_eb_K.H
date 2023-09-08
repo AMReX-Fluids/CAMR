@@ -1,5 +1,5 @@
-#ifndef CAMR_HYPFLUX_K_H
-#define CAMR_HYPFLUX_K_H
+#ifndef HYDRO_HYPFLUX_K_H
+#define HYDRO_HYPFLUX_K_H
 
 #include "IndexDefines.H"
 #include <AMReX_FArrayBox.H>
@@ -20,7 +20,8 @@ compute_hyp_wallflux (int i, int j, int k,
                       const amrex::Real small,
                       const amrex::Real small_dens,
                       const amrex::Real small_pres,
-                      amrex::GpuArray<amrex::Real,NVAR>& fluxw) noexcept
+                      amrex::GpuArray<amrex::Real,NVAR>& fluxw,
+                      amrex::Real smallu) noexcept
 {
     using amrex::Real;
 
@@ -58,7 +59,8 @@ compute_hyp_wallflux (int i, int j, int k,
        cav, gamc, gamc,
        small, smallc, small_dens, small_pres, ustar,
        fluxw[URHO],  AMREX_D_DECL(momfluxn, momfluxt1, momfluxt2), fluxw[UEDEN],
-       fluxw[UEINT], AMREX_D_DECL(dummy_gu, dummy_gv, dummy_gv2), dummy_gp, dummy_gg);
+       fluxw[UEINT], AMREX_D_DECL(dummy_gu, dummy_gv, dummy_gv2), dummy_gp, dummy_gg,
+       smallu);
 
     AMREX_D_TERM(fluxw[UMX] =  (axm-axp) * momfluxn;,
                  fluxw[UMY] =  (aym-ayp) * momfluxn;,

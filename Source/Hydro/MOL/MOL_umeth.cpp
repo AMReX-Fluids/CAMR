@@ -1,6 +1,6 @@
 #include "MOL_hydro_K.H"
 #include "MOL_riemann_K.H"
-#include "CAMR_utils_K.H"
+#include "Hydro_utils_K.H"
 #include "IndexDefines.H"
 #include "AMReX_MultiFabUtil.H"
 
@@ -33,9 +33,11 @@ MOL_umeth (const Box& bx,
            const amrex::Real small,
            const amrex::Real small_dens,
            const amrex::Real small_pres,
-           const int iorder)
+           const amrex::Real smallu,
+           const int iorder,
+           const PassMap* lpmap)
 {
-    BL_PROFILE("CAMR::MOL_umeth()");
+    BL_PROFILE("MOL_umeth()");
 
     AMREX_D_TERM(const int bclx = bclo[0];,
                  const int bcly = bclo[1];,
@@ -55,10 +57,6 @@ MOL_umeth (const Box& bx,
     const Box& bxg1 = amrex::grow(bx,1);
     slopetmp.resize(bxg1,QVAR);
     auto const& slope = slopetmp.array();
-
-//    amrex::Real slope[QVAR]
-
-    const PassMap* lpmap = CAMR::d_pass_map;
 
     Real l_plm_theta = 2.0; // [1,2] 1: minmod; 2: van Leer's MC
 
@@ -83,7 +81,7 @@ MOL_umeth (const Box& bx,
     amrex::ParallelFor(xflxbx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-        mol_riemann_x(i, j, k, fx, slope, q, qa, q1, qxmarr, qxparr, small, small_dens, small_pres,
+        mol_riemann_x(i, j, k, fx, slope, q, qa, q1, qxmarr, qxparr, small, small_dens, small_pres, smallu,
                       bclx, bchx, dlx, dhx, *lpmap);
     });
 
@@ -105,7 +103,7 @@ MOL_umeth (const Box& bx,
     amrex::ParallelFor(yflxbx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-        mol_riemann_y(i, j, k, fy, slope, q, qa, q2, qymarr, qyparr, small, small_dens, small_pres,
+        mol_riemann_y(i, j, k, fy, slope, q, qa, q2, qymarr, qyparr, small, small_dens, small_pres, smallu,
                       bcly, bchy, dly, dhy, *lpmap);
     });
 
@@ -129,7 +127,7 @@ MOL_umeth (const Box& bx,
     amrex::ParallelFor(zflxbx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-        mol_riemann_z(i, j, k, fz, slope, q, qa, q3, qzmarr, qzparr, small, small_dens, small_pres,
+        mol_riemann_z(i, j, k, fz, slope, q, qa, q3, qzmarr, qzparr, small, small_dens, small_pres, smallu,
                       bclz, bchz, dlz, dhz, *lpmap);
     });
 
@@ -137,7 +135,7 @@ MOL_umeth (const Box& bx,
 
    // Construct p div{U}
    amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-     CAMR_pdivu(i, j, k, pdivu, AMREX_D_DECL(q1, q2, q3), AMREX_D_DECL(a1, a2, a3), vol);
+     hydro_pdivu(i, j, k, pdivu, AMREX_D_DECL(q1, q2, q3), AMREX_D_DECL(a1, a2, a3), vol);
    });
 
    Gpu::streamSynchronize();

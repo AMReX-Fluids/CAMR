@@ -4,7 +4,7 @@
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 void
-CAMR_artif_visc(
+hydro_artif_visc(
     const int i,
     const int j,
     const int k,

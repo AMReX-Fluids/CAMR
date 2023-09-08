@@ -12,7 +12,7 @@
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 void
-CAMR_cmpflx(
+hydro_cmpflx(
   const int i,
   const int j,
   const int k,
@@ -29,7 +29,8 @@ CAMR_cmpflx(
   PassMap const& pmap,
   const amrex::Real small,
   const amrex::Real small_dens,
-  const amrex::Real small_pres)
+  const amrex::Real small_pres,
+  const amrex::Real smallu)
 {
     amrex::ignore_unused(k);
     amrex::Real cav = 0.0, ustar;
@@ -127,7 +128,8 @@ CAMR_cmpflx(
 #if (AMREX_SPACEDIM == 3)
        q(i, j, k, GV2),
 #endif
-       q(i, j, k, GDPRES), q(i, j, k, GDGAME));
+       q(i, j, k, GDPRES), q(i, j, k, GDGAME),
+       smallu);
 
     amrex::Real flxrho = flx(i, j, k, URHO);
     for (int ipass = 0; ipass < NPASSIVE; ++ipass) {
@@ -148,7 +150,7 @@ CAMR_cmpflx(
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 void
-CAMR_cmpflx(
+hydro_cmpflx(
   const int i,
   const int j,
   const int k,
@@ -165,7 +167,8 @@ CAMR_cmpflx(
   PassMap const& pmap,
   const amrex::Real small,
   const amrex::Real small_dens,
-  const amrex::Real small_pres)
+  const amrex::Real small_pres,
+  const amrex::Real smallu)
 {
     amrex::ignore_unused(k);
     amrex::Real cav, ustar;
@@ -289,7 +292,8 @@ CAMR_cmpflx(
                     flx(i, j, k, f_idx[2])),
        flx(i, j, k, UEDEN), flx(i, j, k, UEINT),
        q(i, j, k, GU), q(i, j, k, GV), q(i, j, k, GV2),
-       q(i, j, k, GDPRES), q(i, j, k, GDGAME));
+       q(i, j, k, GDPRES), q(i, j, k, GDGAME),
+       smallu);
 
     amrex::Real flxrho = flx(i, j, k, URHO);
     for (int ipass = 0; ipass < NPASSIVE; ++ipass) {

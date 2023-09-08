@@ -4,7 +4,6 @@
 #include <AMReX_FArrayBox.H>
 #include <AMReX_IArrayBox.H>
 
-#include "CAMR_Constants.H"
 #include "IndexDefines.H"
 
 constexpr int im2 = 0;

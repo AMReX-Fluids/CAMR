@@ -1,15 +1,15 @@
-#ifndef CAMR_UTILS_EB_H
-#define CAMR_UTILS_EB_H
+#ifndef HYDRO_UTILS_EB_H
+#define HYDRO_UTILS_EB_H
 
 #ifdef AMREX_USE_EB
 
 #include "IndexDefines.H"
 #include <AMReX_EBFluxRegister.H>
-#include <CAMR_hypflux_eb_K.H>
+#include <Hydro_hypflux_eb_K.H>
 
 AMREX_GPU_DEVICE AMREX_FORCE_INLINE
 void
-CAMR_ext_flx_eb(
+hydro_ext_flx_eb(
   const int i,
   const int j,
   const int k,
@@ -304,6 +304,7 @@ void eb_compute_div (int i, int j, int k, int n,
                      const amrex::Real small,
                      const amrex::Real small_dens,
                      const amrex::Real small_pres,
+                     const amrex::Real smallu,
                      int eb_weights_type)
 {
     AMREX_D_TERM(bool x_high = (i == bhi[0]);,
@@ -395,7 +396,7 @@ void eb_compute_div (int i, int j, int k, int n,
         for(int nnn=0; nnn<NVAR; nnn++) flux_hyp_wall[nnn]=0.;
         compute_hyp_wallflux(i,j,k,q,qaux,
                              apx(i,j,k),apx(i+1,j,k),apy(i,j,k),apy(i,j+1,k),
-                             small,small_dens,small_pres,flux_hyp_wall);
+                             small,small_dens,small_pres,flux_hyp_wall,smallu);
 
         // Here we assume dx == dy == dz
         divu(i,j,k,n) +=  flux_hyp_wall[n]*dxinv[0]/vfrc(i,j,k);
@@ -542,7 +543,7 @@ void eb_compute_div (int i, int j, int k, int n,
         for(int nnn=0; nnn<NVAR; nnn++) flux_hyp_wall[nnn]=0.;
         compute_hyp_wallflux(i,j,k,q,qaux,
                              apx(i,j,k),apx(i+1,j,k),apy(i,j,k),apy(i,j+1,k),
-                             apz(i,j,k),apz(i,j,k+1),small,small_dens,small_pres,flux_hyp_wall);
+                             apz(i,j,k),apz(i,j,k+1),small,small_dens,small_pres,flux_hyp_wall,smallu);
 
         // With EB we assume dx == dy == dz
         // NOTE: we have already made the fluxes extensive so we define by dx*dy*dz here ...

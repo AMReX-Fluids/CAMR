@@ -1,6 +1,5 @@
-#include "CAMR.H"
-#include "CAMR_hydro.H"
-#include "CAMR_utils_K.H"
+#include "Hydro.H"
+#include "Hydro_utils_K.H"
 #include "Godunov.H"
 #include "MOL_umeth.H"
 #include "CAMR_Constants.H"
@@ -12,7 +11,7 @@ using namespace amrex;
 
 #ifdef AMREX_USE_EB
 void
-CAMR_umdrv_eb( const bool do_mol, Box const& bx,
+hydro_umdrv_eb( const bool do_mol, Box const& bx,
                Box const& bxg_i, const MFIter& mfi,
                Geometry const& geom,
                const EBFArrayBoxFactory* ebfact,
@@ -43,12 +42,14 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
                const Real small,
                const Real small_dens,
                const Real small_pres,
+               const Real smallu,
                const  Real difmag,
                const BCRec* bcs_d_ptr,
                const std::string& l_redistribution_type,
+               const PassMap* lpmap,
                const int l_eb_weights_type)
 {
-    BL_PROFILE_VAR("CAMR_umdrv_eb()", CAMR_umdrv_eb);
+    BL_PROFILE_VAR("umdrv_eb()", umdrv_eb);
 
     const Box& bxg_ii = grow(bxg_i,1);
 
@@ -117,16 +118,18 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
     if (do_mol) {
         MOL_umeth_eb(Box(divc_arr), bclo, bchi, domlo, domhi, q_arr, qaux_arr,
                      AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
-                     flag_arr, dx, flux_tmp_arr, small, small_dens, small_pres,
-                     plm_iorder, l_eb_weights_type);
+                     flag_arr, dx, flux_tmp_arr,
+                     small, small_dens, small_pres, smallu,
+                     plm_iorder, lpmap, l_eb_weights_type);
     } else {
         Godunov_umeth_eb(Box(divc_arr), bclo, bchi, domlo, domhi, q_arr, qaux_arr, src_q,
                          AMREX_D_DECL(flux_tmp_arr[0], flux_tmp_arr[1], flux_tmp_arr[2]),
                          AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
                          AMREX_D_DECL(apx, apy, apz),
                          flag_arr, dx, dt,
-                         small, small_dens, small_pres, ppm_type, use_pslope, use_flattening,
-                         plm_iorder, transverse_reset_density);
+                         small, small_dens, small_pres, smallu,
+                         ppm_type, use_pslope, use_flattening,
+                         plm_iorder, lpmap, transverse_reset_density);
     }
 
     // Construct divu
@@ -141,7 +144,7 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
     ParallelFor(bxg_ii, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
     {
         if (flag_arr(i,j,k).isRegular()) {
-            CAMR_divu(i, j, k, q_arr, AMREX_D_DECL(dx0, dx1, dx2), divuarr, ldomlo, ldomhi, lbclo, lbchi);
+            hydro_divu(i, j, k, q_arr, AMREX_D_DECL(dx0, dx1, dx2), divuarr, ldomlo, ldomhi, lbclo, lbchi);
         } else {
             divuarr(i,j,k) = Real(0.0);
         }
@@ -152,15 +155,15 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
                      vf_arr, dx, dxinv, flux_tmp_arr,
                      domlo, domhi, bclo, bchi, difmag);
 
-    CAMR_consup_eb(bx, q_arr, qaux_arr,
-                   divc_arr, redistwgt_arr,
-                   AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
-                   AMREX_D_DECL(apx, apy, apz),
-                   AMREX_D_DECL(fcx, fcy, fcz),
-                   vf_arr, flag_arr, dxinv,
-                   flux_tmp_arr, flux_arr,
-                   small, small_dens, small_pres,
-                   l_eb_weights_type);
+    hydro_consup_eb(bx, q_arr, qaux_arr,
+                    divc_arr, redistwgt_arr,
+                    AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
+                    AMREX_D_DECL(apx, apy, apz),
+                    AMREX_D_DECL(fcx, fcy, fcz),
+                    vf_arr, flag_arr, dxinv,
+                    flux_tmp_arr, flux_arr,
+                    small, small_dens, small_pres, smallu,
+                    l_eb_weights_type);
 
     int l_ncomp = dsdt_arr.nComp();
     int level_mask_not_covered = CAMRConstants::level_mask_notcovered;
@@ -184,6 +187,6 @@ CAMR_umdrv_eb( const bool do_mol, Box const& bx,
                           fac_for_redist,
                           use_wts_in_divnc);
 
-  BL_PROFILE_VAR_STOP(CAMR_umdrv_eb);
+  BL_PROFILE_VAR_STOP(umdrv_eb);
 }
 #endif

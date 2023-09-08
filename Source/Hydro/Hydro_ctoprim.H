@@ -1,16 +1,14 @@
-#ifndef CTOPRIM_H
-#define CTOPRIM_H
+#ifndef HYDRO_CTOPRIM_H
+#define HYDRO_CTOPRIM_H
 
 #include <AMReX_FArrayBox.H>
-#include "CAMR_Constants.H"
 #include "IndexDefines.H"
-#include "CAMR.H"
 #include "EOS.H"
 
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 void
-CAMR_ctoprim(
+hydro_ctoprim(
   const int i,
   const int j,
   const int k,
@@ -100,7 +98,7 @@ CAMR_ctoprim(
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 void
-CAMR_srctoprim(
+hydro_srctoprim(
   const int i,
   const int j,
   const int k,

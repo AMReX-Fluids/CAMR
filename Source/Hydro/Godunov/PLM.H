@@ -7,12 +7,11 @@
 #include <AMReX_IArrayBox.H>
 #include <AMReX_Box.H>
 
-#include "CAMR_Constants.H"
 #include "IndexDefines.H"
 
 
 // This header file contains functions and declarations for the 3D hydro portion
-// of CAMR on the GPU. As per the convention of AMReX, inlined functions are
+// on the GPU. As per the convention of AMReX, inlined functions are
 // defined here, whereas non-inline functions are declared here.
 
 AMREX_GPU_DEVICE
@@ -264,7 +263,7 @@ plm_pslope_eb (
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 void
-CAMR_plm_d (
+hydro_plm_d (
   const int i,
   const int j,
   const int k,

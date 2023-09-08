@@ -37,10 +37,12 @@ void Godunov_umeth (
   const amrex::Real small,
   const amrex::Real small_dens,
   const amrex::Real small_pres,
+  const amrex::Real smallu,
   const int ppm_type,
   const int use_pslope,
   const int use_flattening,
   const int iorder,
+  const PassMap* lpmap,
   const int transverse_reset_density);
 
 #ifdef AMREX_USE_EB
@@ -66,10 +68,12 @@ void Godunov_umeth_eb (
   const amrex::Real small,
   const amrex::Real small_dens,
   const amrex::Real small_pres,
+  const amrex::Real smallu,
   const int ppm_type,
   const int use_pslope,
   const int use_flattening,
   const int iorder,
+  const PassMap* lpmap,
   const int transverse_reset_density);
 #endif
 
@@ -95,10 +99,12 @@ void Godunov_umeth (
   const amrex::Real small,
   const amrex::Real small_dens,
   const amrex::Real small_pres,
+  const amrex::Real smallu,
   const int ppm_type,
   const int use_pslope,
   const int use_flattening,
   const int iorder,
+  const PassMap* lpmap,
   const int transverse_reset_density);
 
 #ifdef AMREX_USE_EB
@@ -121,10 +127,12 @@ void Godunov_umeth_eb (
   const amrex::Real small,
   const amrex::Real small_dens,
   const amrex::Real small_pres,
+  const amrex::Real smallu,
   const int ppm_type,
   const int use_pslope,
   const int use_flattening,
   const int iorder,
+  const PassMap* lpmap,
   const int transverse_reset_density);
 #endif
 #endif

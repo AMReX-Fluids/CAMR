@@ -1,5 +1,5 @@
 #include "Godunov.H"
-#include "CAMR_utils_K.H"
+#include "Hydro_utils_K.H"
 #include "Godunov_utils_2D.H"
 #include "Hydro_cmpflx.H"
 #include "flatten.H"
@@ -30,13 +30,15 @@ Godunov_umeth (
   const amrex::Real small,
   const amrex::Real small_dens,
   const amrex::Real small_pres,
+  const amrex::Real smallu,
   const int ppm_type,
   const int use_pslope,
   const int use_flattening,
   const int iorder,
+  const PassMap* lpmap,
   const int l_transverse_reset_density)
 {
-  BL_PROFILE("CAMR::Godunov_umeth()");
+  BL_PROFILE("Hydro::Godunov_umeth()");
   amrex::Real const dx = del[0];
   amrex::Real const dy = del[1];
   amrex::Real const hdt = 0.5 * dt;
@@ -73,7 +75,6 @@ Godunov_umeth (
   auto const& qymarr = qym.array();
   auto const& qyparr = qyp.array();
 
-  const PassMap* lpmap = CAMR::d_pass_map;
   if (ppm_type == 0) {
     amrex::ParallelFor(
       bxg2, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
@@ -97,7 +98,7 @@ Godunov_umeth (
           else
               slope[n] = plm_slope(i, j, k, n, 0, q, flat, iorder);
         }
-        CAMR_plm_d(
+        hydro_plm_d(
           i, j, k, 0, qxmarr, qxparr, slope, q, qaux(i, j, k, QC), dx, dt,
           small_dens, small_pres, *lpmap);
 
@@ -109,7 +110,7 @@ Godunov_umeth (
           else
               slope[n] = plm_slope(i, j, k, n, 1, q, flat, iorder);
         }
-        CAMR_plm_d(
+        hydro_plm_d(
           i, j, k, 1, qymarr, qyparr, slope, q, qaux(i, j, k, QC), dy, dt,
           small_dens, small_pres, *lpmap);
       });
@@ -132,7 +133,7 @@ Godunov_umeth (
       small_dens, small_pres, lpmap);
 
   } else {
-    amrex::Error("CAMR::ppm_type must be 0 (PLM) or 1 (PPM)");
+    amrex::Error("ppm_type must be 0 (PLM) or 1 (PPM)");
   }
 
   // These are the first flux estimates as per the corner-transport-upwind
@@ -144,8 +145,8 @@ Godunov_umeth (
   auto const& gdtemp = qgdx.array();
   amrex::ParallelFor(xflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
-      CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qxmarr, qxparr, fxarr, gdtemp, qaux,
-                  cdir, *lpmap, small, small_dens, small_pres);
+      hydro_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qxmarr, qxparr, fxarr, gdtemp, qaux,
+                  cdir, *lpmap, small, small_dens, small_pres, smallu);
   });
 
   // Y initial fluxes
@@ -154,8 +155,8 @@ Godunov_umeth (
   auto const& fyarr = fy.array();
   amrex::ParallelFor( yflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
-      CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qymarr, qyparr, fyarr, q2, qaux,
-                  cdir, *lpmap, small, small_dens, small_pres);
+      hydro_cmpflx(i, j, k, bcly, bchy, dly, dhy, qymarr, qyparr, fyarr, q2, qaux,
+                  cdir, *lpmap, small, small_dens, small_pres, smallu);
   });
 
   // X interface corrections
@@ -168,7 +169,7 @@ Godunov_umeth (
 
   amrex::ParallelFor(tybx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
-      CAMR_transd(i, j, k, cdir, qmarr, qparr, qxmarr, qxparr, fyarr, srcQ, qaux, q2, hdt,
+      hydro_transd(i, j, k, cdir, qmarr, qparr, qxmarr, qxparr, fyarr, srcQ, qaux, q2, hdt,
                   hdtdy, *lpmap, l_transverse_reset_density, small_pres);
   });
 
@@ -176,8 +177,8 @@ Godunov_umeth (
 
   // Final Riemann problem X
   amrex::ParallelFor(xfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-      CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qmarr, qparr, flx1, q1, qaux,
-                  cdir, *lpmap, small, small_dens, small_pres);
+      hydro_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qmarr, qparr, flx1, q1, qaux,
+                  cdir, *lpmap, small, small_dens, small_pres, smallu);
   });
 
   // Y interface corrections
@@ -186,7 +187,7 @@ Godunov_umeth (
 
   amrex::ParallelFor(txbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
-      CAMR_transd(i, j, k, cdir, qmarr, qparr, qymarr, qyparr, fxarr, srcQ, qaux, gdtemp,
+      hydro_transd(i, j, k, cdir, qmarr, qparr, qymarr, qyparr, fxarr, srcQ, qaux, gdtemp,
                   hdt, hdtdx, *lpmap, l_transverse_reset_density, small_pres);
   });
 
@@ -194,13 +195,13 @@ Godunov_umeth (
   const amrex::Box& yfxbx = surroundingNodes(bx, cdir);
   amrex::ParallelFor(yfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
-      CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qmarr, qparr, flx2, q2, qaux,
-                  cdir, *lpmap, small, small_dens, small_pres);
+      hydro_cmpflx(i, j, k, bcly, bchy, dly, dhy, qmarr, qparr, flx2, q2, qaux,
+                  cdir, *lpmap, small, small_dens, small_pres, smallu);
   });
 
   // Construct p div{U}
   amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-    CAMR_pdivu(i, j, k, pdivu, q1, q2, ax, ay, vol);
+    hydro_pdivu(i, j, k, pdivu, q1, q2, ax, ay, vol);
   });
 }
 #endif
