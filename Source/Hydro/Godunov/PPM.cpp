@@ -156,13 +156,13 @@ trace_ppm(
         ppm_int_profile(sm, sp, s[2], un, cc, dtdx, Ip[QVAR], Im[QVAR]);
     }
 
-    // CAMR does source term tracing in CAMR_transx, CAMR_transy, and
-    // CAMR_transz. So to be consistent we remove the source term
+    // We do source term tracing in hydro_transx, hydro_transy, and
+    // hydro_transz. So to be consistent we remove the source term
     // tracing here. However, Nyx and Castro do the source term
     // tracing here instead of in the trans routines. If we wanted
     // to do the tracing here, we would have to 1) remove the tracing
-    // in the trans routines AND 2) add the tracing in the CAMR_plm_x,
-    // CAMR_plm_y, CAMR_plm_z routines.
+    // in the trans routines AND 2) add the tracing in the hydro_plm_x,
+    // hydro_plm_y, hydro_plm_z routines.
     //
     // To do the tracing here: Uncomment the chunk below and
     // anything that uses Im_src and Ip_src.

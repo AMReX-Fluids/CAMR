@@ -1,6 +1,7 @@
 #include "CAMR.H"
-#include "CAMR_hydro.H"
-#include "CAMR_ctoprim.H"
+#include "Hydro.H"
+#include "Hydro_ctoprim.H"
+#include "CAMR_Constants.H"
 
 using namespace amrex;
 
@@ -35,6 +36,8 @@ CAMR::construct_hydro_source (const MultiFab& S,
     int finest_level = parent->finestLevel();
 
     const auto& dx    = geom.CellSizeArray();
+
+    const PassMap* lpmap = d_pass_map;
 
     Real dx1 = dx[0];
     for (int dir = 1; dir < AMREX_SPACEDIM; ++dir) {
@@ -98,8 +101,7 @@ CAMR::construct_hydro_source (const MultiFab& S,
             auto const& qauxar  = qaux.array();
             auto const& srcqarr = src_q.array();
 
-            BL_PROFILE_VAR("CAMR::ctoprim()", ctop);
-            const PassMap* lpmap = d_pass_map;
+            BL_PROFILE_VAR("ctoprim()", ctop);
             const Real small_num        = CAMRConstants::small_num;
             const Real dual_energy_eta  = CAMR::dual_energy_eta1;
             ParallelFor(
@@ -107,7 +109,7 @@ CAMR::construct_hydro_source (const MultiFab& S,
 #ifdef AMREX_USE_EB
                 if (!flag_arr(i,j,k).isCovered()) {
 #endif
-                    CAMR_ctoprim(i, j, k, sarr, qarr, qauxar, *lpmap, small_num, dual_energy_eta);
+                    hydro_ctoprim(i, j, k, sarr, qarr, qauxar, *lpmap, small_num, dual_energy_eta);
 #ifdef AMREX_USE_EB
                 } else {
                    for (int n=0; n<QVAR; n++) qarr(i,j,k,n) = 0.;
@@ -126,7 +128,7 @@ CAMR::construct_hydro_source (const MultiFab& S,
             const auto& src_in = sources_for_hydro.array(mfi);
             ParallelFor(
               qbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-                CAMR_srctoprim(i, j, k, qarr, qauxar, src_in, srcqarr, *lpmap);
+                hydro_srctoprim(i, j, k, qarr, qauxar, src_in, srcqarr, *lpmap);
               });
         }
 
@@ -180,7 +182,7 @@ CAMR::construct_hydro_source (const MultiFab& S,
             // The dt we pass in here is used if (do_mol == 0), i.e.
             //      in the Godunov prediction, but also if we do StateRedistribution
             //
-            CAMR_umdrv_eb(do_mol, bx, bxg_i, mfi, geom, &ebfact,
+            hydro_umdrv_eb(do_mol, bx, bxg_i, mfi, geom, &ebfact,
                           phys_bc.lo(), phys_bc.hi(),
                           sarr, hyd_src, qarr, qauxar, srcqarr,
                           vfrac_arr, flag_arr, dx, dxInv, flx_arr, a,
@@ -188,8 +190,8 @@ CAMR::construct_hydro_source (const MultiFab& S,
                           as_fine, dm_as_fine.array(), level_mask.const_array(mfi),
                           dt, ppm_type, plm_iorder, use_pslope,
                           use_flattening, transverse_reset_density,
-                          small, small_dens, small_pres, difmag,
-                          bcs_d.data(), redistribution_type, eb_weights_type);
+                          small, small_dens, small_pres, CAMRConstants::smallu, difmag,
+                          bcs_d.data(), redistribution_type, lpmap, eb_weights_type);
 
             //
             // Here fac_for_reflux = 1.0 if doing Godunov, 0.5 if doing MOL
@@ -199,6 +201,7 @@ CAMR::construct_hydro_source (const MultiFab& S,
                      getFluxReg(level + 1).CrseAdd(mfi,
                         {{AMREX_D_DECL(&(flux[0]), &(flux[1]), &(flux[2]))}},
                         dxDp, fac_for_reflux*dt, (*volfrac)[mfi],
+                        // dxDp, 0.0*dt, (*volfrac)[mfi],
                         {AMREX_D_DECL(&(*areafrac[0])[mfi], &(*areafrac[1])[mfi], &(*areafrac[2])[mfi])},
                         amrex::RunOn::Device);
                 }
@@ -206,6 +209,7 @@ CAMR::construct_hydro_source (const MultiFab& S,
                     getFluxReg(level).FineAdd(mfi,
                        {{AMREX_D_DECL(&(flux[0]), &(flux[1]), &(flux[2]))}},
                        dxDp, fac_for_reflux*dt, (*volfrac)[mfi],
+                       // dxDp, 0.0*dt, (*volfrac)[mfi],
                        {AMREX_D_DECL(&(*areafrac[0])[mfi], &(*areafrac[1])[mfi], &(*areafrac[2])[mfi])},
                        dm_as_fine, amrex::RunOn::Device);
                 } // level > 0
@@ -218,12 +222,12 @@ CAMR::construct_hydro_source (const MultiFab& S,
             // Note that the dt here is only used if (do_mol == 0), i.e.
             //      in the Godunov prediction
             //
-            CAMR_umdrv(do_mol, bx, geom, phys_bc.lo(), phys_bc.hi(),
+            hydro_umdrv(do_mol, bx, geom, phys_bc.lo(), phys_bc.hi(),
                        sarr, hyd_src, qarr, qauxar, srcqarr, dx,
                        dt, ppm_type, plm_iorder, use_pslope,
                        use_flattening, transverse_reset_density,
-                       small, small_dens, small_pres, difmag,
-                       flx_arr, a, volume.array(mfi));
+                       small, small_dens, small_pres, CAMRConstants::smallu, difmag,
+                       flx_arr, a, volume.array(mfi), lpmap);
 
             //
             // Here fac_for_reflux = 1.0 if doing Godunov, 0.5 if doing MOL

@@ -18,7 +18,9 @@ mol_riemann_x (int i, int j, int k,
                amrex::Array4<amrex::Real      > const& ql,
                amrex::Array4<amrex::Real      > const& qr,
                amrex::Real small,
-               amrex::Real small_dens, amrex::Real small_pres,
+               amrex::Real small_dens,
+               amrex::Real small_pres,
+               amrex::Real smallu,
                const int bclo,
                const int bchi,
                const int domlo,
@@ -161,7 +163,7 @@ mol_riemann_x (int i, int j, int k,
     qr(i,j,k,QREINT) = q(i,j,k,QREINT) - 0.5*(dq(i,j,k,QREINT)+enth*(dq(i,j,k,0)+dq(i,j,k,2))/cspeed);
 
     int dir = 0;
-    CAMR_cmpflx(i,j,k,bclo,bchi,domlo,domhi,ql,qr,fx,q1,qa,dir,pmap,small,small_dens,small_pres);
+    hydro_cmpflx(i,j,k,bclo,bchi,domlo,domhi,ql,qr,fx,q1,qa,dir,pmap,small,small_dens,small_pres,smallu);
 }
 
 AMREX_GPU_DEVICE AMREX_FORCE_INLINE
@@ -175,7 +177,9 @@ mol_riemann_y (int i, int j, int k,
                amrex::Array4<amrex::Real      > const& ql,
                amrex::Array4<amrex::Real      > const& qr,
                amrex::Real small,
-               amrex::Real small_dens, amrex::Real small_pres,
+               amrex::Real small_dens,
+               amrex::Real small_pres,
+               amrex::Real smallu,
                const int bclo,
                const int bchi,
                const int domlo,
@@ -316,7 +320,7 @@ mol_riemann_y (int i, int j, int k,
     qr(i,j,k,QREINT) = q(i,j,k,QREINT) - 0.5*(dq(i,j,k,QREINT)+enth*(dq(i,j,k,0)+dq(i,j,k,2))/cspeed);
 
     int dir = 1;
-    CAMR_cmpflx(i,j,k,bclo,bchi,domlo,domhi,ql,qr,fy,q2,qa,dir,pmap,small,small_dens,small_pres);
+    hydro_cmpflx(i,j,k,bclo,bchi,domlo,domhi,ql,qr,fy,q2,qa,dir,pmap,small,small_dens,small_pres,smallu);
 }
 
 #if (AMREX_SPACEDIM == 3)
@@ -331,7 +335,9 @@ mol_riemann_z (int i, int j, int k,
                amrex::Array4<amrex::Real      > const& ql,
                amrex::Array4<amrex::Real      > const& qr,
                amrex::Real small,
-               amrex::Real small_dens, amrex::Real small_pres,
+               amrex::Real small_dens,
+               amrex::Real small_pres,
+               amrex::Real smallu,
                const int bclo,
                const int bchi,
                const int domlo,
@@ -478,7 +484,7 @@ mol_riemann_z (int i, int j, int k,
     qr(i,j,k,QREINT) = q(i,j,k,QREINT) - 0.5*(dq(i,j,k,QREINT)+enth*(dq(i,j,k,0)+dq(i,j,k,2))/cspeed);
 
     int dir = 2;
-    CAMR_cmpflx(i,j,k,bclo,bchi,domlo,domhi,ql,qr,fz,q3,qa,dir,pmap,small,small_dens,small_pres);
+    hydro_cmpflx(i,j,k,bclo,bchi,domlo,domhi,ql,qr,fz,q3,qa,dir,pmap,small,small_dens,small_pres,smallu);
 }
 #endif
 

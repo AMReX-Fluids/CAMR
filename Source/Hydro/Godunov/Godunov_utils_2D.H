@@ -20,7 +20,7 @@
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 void
-CAMR_transd (
+hydro_transd (
   const int i,
   const int j,
   const int k,

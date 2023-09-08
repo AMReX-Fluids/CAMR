@@ -1,21 +1,21 @@
 #C++ files
 CEXE_sources += GravitySrc.cpp
-CEXE_sources += CAMR_adjust_fluxes.cpp
+CEXE_sources += Hydro_adjust_fluxes.cpp
 CEXE_sources += CAMR_construct_hydro_source.cpp
-CEXE_sources += CAMR_consup.cpp
-CEXE_sources += CAMR_hydro.cpp
+CEXE_sources += Hydro_consup.cpp
+CEXE_sources += Hydro_umdrv.cpp
 
 ifeq ($(USE_EB), TRUE)
-CEXE_sources += CAMR_hydro_eb.cpp
-CEXE_headers += CAMR_utils_eb_K.H
-CEXE_headers += CAMR_hypflux_eb_K.H
+CEXE_sources += Hydro_umdrv_eb.cpp
+CEXE_headers += Hydro_utils_eb_K.H
+CEXE_headers += Hydro_hypflux_eb_K.H
 endif
 
 #C++ headers
 CEXE_headers += hydro_artif_visc.H
 CEXE_headers += Hydro_cmpflx.H
 CEXE_headers += Hydro_riemann.H
-CEXE_headers += CAMR_ctoprim.H
-CEXE_headers += CAMR_hydro.H
-CEXE_headers += CAMR_utils_K.H
+CEXE_headers += Hydro_ctoprim.H
+CEXE_headers += Hydro.H
+CEXE_headers += Hydro_utils_K.H
 

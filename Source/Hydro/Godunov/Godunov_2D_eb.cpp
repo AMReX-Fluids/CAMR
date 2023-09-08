@@ -1,7 +1,7 @@
 #include "Godunov.H"
 #include "Godunov_utils_2D.H"
 #include "Hydro_cmpflx.H"
-#include "CAMR_utils_K.H"
+#include "Hydro_utils_K.H"
 #include "flatten.H"
 #include "PLM.H"
 #include "PPM.H"
@@ -32,13 +32,15 @@ Godunov_umeth_eb (
   const Real small,
   const Real small_dens,
   const Real small_pres,
+  const Real smallu,
   const int ppm_type,
   const int use_pslope,
   const int use_flattening,
   const int iorder,
+  const PassMap* lpmap,
   const int l_transverse_reset_density)
 {
-  BL_PROFILE("CAMR::Godunov_umeth_2D_eb()");
+  BL_PROFILE("Godunov_umeth_2D_eb()");
 
   Real const dx = del[0];
   Real const dy = del[1];
@@ -76,8 +78,6 @@ Godunov_umeth_eb (
   auto const& qymarr = qym.array();
   auto const& qyparr = qyp.array();
 
-  const PassMap* lpmap = CAMR::d_pass_map;
-
   if (ppm_type == 0)
   {
       ParallelFor(bxg2, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
@@ -107,7 +107,7 @@ Godunov_umeth_eb (
                 slope[n] = plm_slope_eb(i, j, k, n, 0, flag_arr, q, flat, iorder);
             }
           }
-          CAMR_plm_d(i, j, k, 0, qxmarr, qxparr, slope, q, qaux(i, j, k, QC), dx, dt,
+          hydro_plm_d(i, j, k, 0, qxmarr, qxparr, slope, q, qaux(i, j, k, QC), dx, dt,
                      small_dens, small_pres, *lpmap, apx);
 
           //
@@ -121,7 +121,7 @@ Godunov_umeth_eb (
                   slope[n] = plm_slope_eb(i, j, k, n, 1, flag_arr, q, flat, iorder);
               }
           }
-          CAMR_plm_d(i, j, k, 1, qymarr, qyparr, slope, q, qaux(i, j, k, QC), dy, dt,
+          hydro_plm_d(i, j, k, 1, qymarr, qyparr, slope, q, qaux(i, j, k, QC), dy, dt,
                      small_dens, small_pres, *lpmap, apy);
         });
 
@@ -143,7 +143,7 @@ Godunov_umeth_eb (
         small_dens, small_pres, lpmap);
 
     } else {
-        amrex::Error("CAMR::ppm_type must be 0 (PLM) or 1 (PPM)");
+        amrex::Error("ppm_type must be 0 (PLM) or 1 (PPM)");
     }
 
   // *******************************************************************************
@@ -159,8 +159,8 @@ Godunov_umeth_eb (
     xflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
     {
         if (apx(i,j,k) > 0.) {
-            CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qxmarr, qxparr, fxarr, gdtemp, qaux,
-                        cdir, *lpmap, small, small_dens, small_pres);
+            hydro_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qxmarr, qxparr, fxarr, gdtemp, qaux,
+                        cdir, *lpmap, small, small_dens, small_pres, smallu);
         }
     });
 
@@ -174,8 +174,8 @@ Godunov_umeth_eb (
   ParallelFor( yflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
       if (apy(i,j,k) > 0.) {
-          CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qymarr, qyparr, fyarr, q2, qaux,
-                      cdir, *lpmap, small, small_dens, small_pres);
+          hydro_cmpflx(i, j, k, bcly, bchy, dly, dhy, qymarr, qyparr, fyarr, q2, qaux,
+                      cdir, *lpmap, small, small_dens, small_pres, smallu);
       }
   });
 
@@ -192,7 +192,7 @@ Godunov_umeth_eb (
   ParallelFor(tybx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
       if (!flag_arr(i,j,k).isCovered()) {
-          CAMR_transd(i, j, k, cdir, qmarr, qparr, qxmarr, qxparr, fyarr, srcQ, qaux, q2, hdt,
+          hydro_transd(i, j, k, cdir, qmarr, qparr, qxmarr, qxparr, fyarr, srcQ, qaux, q2, hdt,
                       hdtdy, *lpmap, l_transverse_reset_density, small_pres, apx, apy);
       }
   });
@@ -205,8 +205,8 @@ Godunov_umeth_eb (
   ParallelFor(xfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
       if (apx(i,j,k) > 0.) {
-          CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qmarr, qparr, flx1, q1, qaux,
-                      cdir, *lpmap, small, small_dens, small_pres);
+          hydro_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qmarr, qparr, flx1, q1, qaux,
+                      cdir, *lpmap, small, small_dens, small_pres, smallu);
       }
   });
 
@@ -219,7 +219,7 @@ Godunov_umeth_eb (
   ParallelFor(txbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
       if (!flag_arr(i,j,k).isCovered()) {
-          CAMR_transd(i, j, k, cdir, qmarr, qparr, qymarr, qyparr, fxarr, srcQ, qaux, gdtemp,
+          hydro_transd(i, j, k, cdir, qmarr, qparr, qymarr, qyparr, fxarr, srcQ, qaux, gdtemp,
                       hdt, hdtdx, *lpmap, l_transverse_reset_density, small_pres, apy, apx);
       }
   });
@@ -232,8 +232,8 @@ Godunov_umeth_eb (
   ParallelFor(yfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
       if (apy(i,j,k) > 0.) {
-          CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qmarr, qparr, flx2, q2, qaux,
-                      cdir, *lpmap, small, small_dens, small_pres);
+          hydro_cmpflx(i, j, k, bcly, bchy, dly, dhy, qmarr, qparr, flx2, q2, qaux,
+                      cdir, *lpmap, small, small_dens, small_pres, smallu);
       }
   });
 }

@@ -1,36 +1,39 @@
-#include "CAMR.H"
 #include "Godunov.H"
-#include "CAMR_hydro.H"
-#include "CAMR_utils_K.H"
+#include "Hydro.H"
+#include "Hydro_utils_K.H"
 #include "MOL_umeth.H"
+
+#include "AMReX_MultiFab.H"
 
 using namespace amrex;
 
 void
-CAMR_umdrv (bool do_mol, Box const& bx,
-            amrex::Geometry const& geom,
-            const int* bclo, const int* bchi,
-            Array4<const Real> const& uin_arr,
-            Array4<      Real> const& dsdt_arr,
-            Array4<const Real> const& q_arr,
-            Array4<const Real> const& qaux_arr,
-            Array4<const Real> const& src_q,
-            const amrex::GpuArray<Real, AMREX_SPACEDIM> dx,
-            const Real dt,
-            const int ppm_type,
-            const int plm_iorder,
-            const int use_pslope,
-            const int use_flattening,
-            const int transverse_reset_density,
-            const Real small,
-            const Real small_dens,
-            const Real small_pres,
-            const Real l_difmag,
-            const amrex::GpuArray<const Array4<Real>, AMREX_SPACEDIM> flx,
-            const amrex::GpuArray<const Array4<const Real>, AMREX_SPACEDIM> a,
-            Array4<Real> const& vol)
+hydro_umdrv (bool do_mol, Box const& bx,
+             amrex::Geometry const& geom,
+             const int* bclo, const int* bchi,
+             Array4<const Real> const& uin_arr,
+             Array4<      Real> const& dsdt_arr,
+             Array4<const Real> const& q_arr,
+             Array4<const Real> const& qaux_arr,
+             Array4<const Real> const& src_q,
+             const amrex::GpuArray<Real, AMREX_SPACEDIM> dx,
+             const Real dt,
+             const int ppm_type,
+             const int plm_iorder,
+             const int use_pslope,
+             const int use_flattening,
+             const int transverse_reset_density,
+             const Real small,
+             const Real small_dens,
+             const Real small_pres,
+             const Real smallu,
+             const Real l_difmag,
+             const amrex::GpuArray<const Array4<Real>, AMREX_SPACEDIM> flx,
+             const amrex::GpuArray<const Array4<const Real>, AMREX_SPACEDIM> a,
+             Array4<Real> const& vol,
+             const PassMap* lpmap)
 {
-    BL_PROFILE_VAR("CAMR::umdrv()", umdrv);
+    BL_PROFILE_VAR("umdrv()", umdrv);
 
     // Set Up for Hydro Flux Calculations
     auto const& bxg2 = grow(bx, 2);
@@ -56,7 +59,7 @@ CAMR_umdrv (bool do_mol, Box const& bx,
                   AMREX_D_DECL(flx[0], flx[1], flx[2]),
                   AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
                   AMREX_D_DECL(a[0], a[1], a[2]), pdivuarr, vol,
-                  small, small_dens, small_pres, plm_iorder);
+                  small, small_dens, small_pres, smallu, plm_iorder, lpmap);
 
     } else {
         Godunov_umeth(bx, bclo, bchi, domlo, domhi, q_arr, qaux_arr, src_q,
@@ -64,8 +67,9 @@ CAMR_umdrv (bool do_mol, Box const& bx,
                       AMREX_D_DECL(qec_arr[0], qec_arr[1], qec_arr[2]),
                       AMREX_D_DECL(a[0], a[1], a[2]),
                       pdivuarr, vol, dx, dt,
-                      small, small_dens, small_pres, ppm_type, use_pslope, use_flattening,
-                      plm_iorder, transverse_reset_density);
+                      small, small_dens, small_pres, smallu,
+                      ppm_type, use_pslope, use_flattening,
+                      plm_iorder, lpmap, transverse_reset_density);
     }
 
     // Construct divu
@@ -77,13 +81,13 @@ CAMR_umdrv (bool do_mol, Box const& bx,
     GpuArray<int,AMREX_SPACEDIM> lbclo{AMREX_D_DECL(bclo[0],bclo[1],bclo[2])};
     GpuArray<int,AMREX_SPACEDIM> lbchi{AMREX_D_DECL(bchi[0],bchi[1],bchi[2])};
     ParallelFor(bxg2, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-        CAMR_divu(i, j, k, q_arr, AMREX_D_DECL(dx0, dx1, dx2), divuarr, ldomlo, ldomhi, lbclo, lbchi);
+        hydro_divu(i, j, k, q_arr, AMREX_D_DECL(dx0, dx1, dx2), divuarr, ldomlo, ldomhi, lbclo, lbchi);
     });
 
     // Adjust the fluxes with artificial viscosity and area-weight them
     adjust_fluxes(bx, uin_arr, flx, a, divuarr, dx, domlo, domhi, bclo, bchi, l_difmag);
 
-    CAMR_consup  (bx, dsdt_arr, flx, vol, pdivuarr);
+    hydro_consup  (bx, dsdt_arr, flx, vol, pdivuarr);
 
     BL_PROFILE_VAR_STOP(umdrv);
 }

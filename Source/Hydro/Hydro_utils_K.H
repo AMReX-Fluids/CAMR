@@ -1,13 +1,15 @@
-#ifndef CAMR_UTILS_H
-#define CAMR_UTILS_H
+#ifndef HYDRO_UTILS_K_H
+#define HYDRO_UTILS_K_H
 
-#include "CAMR.H"
 #include "IndexDefines.H"
+
+#include <AMReX_Array4.H>
+#include <AMReX_Gpu.H>
 
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 void
-CAMR_divu (
+hydro_divu (
   const int i,
   const int j,
   const int k,
@@ -170,7 +172,7 @@ CAMR_divu (
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 void
-CAMR_pdivu (
+hydro_pdivu (
     const int i,
     const int j,
     const int k,
@@ -202,7 +204,7 @@ CAMR_pdivu (
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 void
-CAMR_norm_spec_flx (
+hydro_norm_spec_flx (
   const int i, const int j, const int k, amrex::Array4<amrex::Real> const& flx)
 {
   const int num = NUM_SPECIES + UFS;
@@ -219,7 +221,7 @@ CAMR_norm_spec_flx (
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 void
-CAMR_ext_flx (
+hydro_ext_flx (
   const int i,
   const int j,
   const int k,
@@ -234,7 +236,7 @@ CAMR_ext_flx (
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 void
-CAMR_update (
+hydro_update (
     const int i,
     const int j,
     const int k,

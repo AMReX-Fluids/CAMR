@@ -1,16 +1,16 @@
-#include "CAMR.H"
-#include "MOL_umeth.H"
-#include "CAMR_hydro.H"
-#include "CAMR_utils_K.H"
+#include "Hydro.H"
+#include "Hydro_utils_K.H"
+
+#include "AMReX_MultiFab.H"
 
 #ifdef AMREX_USE_EB
-#include "CAMR_utils_eb_K.H"
+#include "Hydro_utils_eb_K.H"
 #endif
 
 using namespace amrex;
 
 void
-CAMR_consup(
+hydro_consup(
     Box const& bx,
     Array4<Real> const& update,
     const amrex::GpuArray<const Array4<     Real>, AMREX_SPACEDIM> flx,
@@ -20,35 +20,35 @@ CAMR_consup(
     // Take divergence of fluxes to define conservative update
     amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
     {
-        CAMR_update(i,j,k,update,flx,vol,pdivu);
+        hydro_update(i,j,k,update,flx,vol,pdivu);
     });
 }
 
 #ifdef AMREX_USE_EB
 void
-CAMR_consup_eb( const Box& bx,
-                Array4<const Real> const& q_arr,
-                Array4<const Real> const& qaux_arr,
-                Array4<      Real> const& divc_arr,
-                Array4<      Real> const& redistwgt_arr,
-                AMREX_D_DECL(Array4<Real> const& q1,
-                             Array4<Real> const& q2,
-                             Array4<Real> const& q3),
-                AMREX_D_DECL(
-                Array4<Real       const> const& apx,
-                Array4<Real       const> const& apy,
-                Array4<Real       const> const& apz),
-                AMREX_D_DECL(
-                Array4<Real       const> const& fcx,
-                Array4<Real       const> const& fcy,
-                Array4<Real       const> const& fcz),
-                Array4<const Real      > const& vfrac,
-                Array4<amrex::EBCellFlag const> const& flag,
-                const GpuArray<amrex::Real, AMREX_SPACEDIM> dxinv,
-                const GpuArray<const amrex::Array4<amrex::Real>, AMREX_SPACEDIM> flux_tmp,
-                const GpuArray<const amrex::Array4<amrex::Real>, AMREX_SPACEDIM> flux,
-                Real small, Real small_dens, Real small_pres,
-                const int l_eb_weights_type)
+hydro_consup_eb( const Box& bx,
+                 Array4<const Real> const& q_arr,
+                 Array4<const Real> const& qaux_arr,
+                 Array4<      Real> const& divc_arr,
+                 Array4<      Real> const& redistwgt_arr,
+                 AMREX_D_DECL(Array4<Real> const& q1,
+                              Array4<Real> const& q2,
+                              Array4<Real> const& q3),
+                 AMREX_D_DECL(
+                 Array4<Real       const> const& apx,
+                 Array4<Real       const> const& apy,
+                 Array4<Real       const> const& apz),
+                 AMREX_D_DECL(
+                 Array4<Real       const> const& fcx,
+                 Array4<Real       const> const& fcy,
+                 Array4<Real       const> const& fcz),
+                 Array4<const Real      > const& vfrac,
+                 Array4<amrex::EBCellFlag const> const& flag,
+                 const GpuArray<amrex::Real, AMREX_SPACEDIM> dxinv,
+                 const GpuArray<const amrex::Array4<amrex::Real>, AMREX_SPACEDIM> flux_tmp,
+                 const GpuArray<const amrex::Array4<amrex::Real>, AMREX_SPACEDIM> flux,
+                 Real small, Real small_dens, Real small_pres, Real smallu,
+                 const int l_eb_weights_type)
 {
     const Box& bxg_i  = Box(divc_arr);
 
@@ -79,7 +79,7 @@ CAMR_consup_eb( const Box& bx,
                            flag, vfrac, redistwgt_arr,
                            AMREX_D_DECL(apx, apy, apz),
                            AMREX_D_DECL(fcx, fcy, fcz), dxinv,
-                           small, small_dens, small_pres, l_eb_weights_type);
+                           small, small_dens, small_pres, smallu, l_eb_weights_type);
         }
     });
 

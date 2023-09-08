@@ -2,7 +2,7 @@
 #include "Godunov.H"
 #include "Godunov_utils_3D.H"
 #include "Hydro_cmpflx.H"
-#include "CAMR_utils_K.H"
+#include "Hydro_utils_K.H"
 #include "flatten.H"
 #include "PLM.H"
 #include "PPM.H"
@@ -36,13 +36,15 @@ Godunov_umeth_eb (
   const Real small,
   const Real small_dens,
   const Real small_pres,
+  const Real smallu,
   const int ppm_type,
   const int use_pslope,
   const int use_flattening,
   const int iorder,
+  const PassMap* lpmap,
   const int l_transverse_reset_density)
 {
-  BL_PROFILE("CAMR::Godunov_umeth_3D_eb()");
+  BL_PROFILE("Godunov_umeth_3D_eb()");
 
  int cdir;
 
@@ -83,9 +85,6 @@ Godunov_umeth_eb (
   const Box& zmbx = growHi(bxg2, cdir, 1);
   FArrayBox qzm(zmbx, QVAR, amrex::The_Async_Arena()); auto const& qzmarr = qzm.array();
   FArrayBox qzp(bxg2, QVAR, amrex::The_Async_Arena()); auto const& qzparr = qzp.array();
-
-
-  const PassMap* lpmap = CAMR::d_pass_map;
   //
   // Put the PLM and slopes in the same kernel launch to avoid unnecessary launch overhead
   // Note that we compute the qm and qp values on bxg2
@@ -117,7 +116,7 @@ Godunov_umeth_eb (
               slope[n] = plm_slope_eb(i, j, k, n, 0, flag_arr, q, flat, iorder);
         }
         // cells -5,-5,-5
-        CAMR_plm_d(i, j, k, idir, qxmarr, qxparr, slope, q, qaux(i, j, k, QC), dx, dt,
+        hydro_plm_d(i, j, k, idir, qxmarr, qxparr, slope, q, qaux(i, j, k, QC), dx, dt,
                    small_dens, small_pres, *lpmap, apx);
 
         // Y slopes and interp
@@ -129,7 +128,7 @@ Godunov_umeth_eb (
               slope[n] = plm_slope_eb(i, j, k, n, 1, flag_arr, q, flat, iorder);
         }
         // cells -5,-5,-5
-        CAMR_plm_d(i, j, k, idir, qymarr, qyparr, slope, q, qaux(i, j, k, QC), dy, dt,
+        hydro_plm_d(i, j, k, idir, qymarr, qyparr, slope, q, qaux(i, j, k, QC), dy, dt,
                    small_dens, small_pres, *lpmap, apy);
 
         // Z slopes and interp
@@ -141,7 +140,7 @@ Godunov_umeth_eb (
               slope[n] = plm_slope_eb(i, j, k, n, 2, flag_arr, q, flat, iorder);
         }
         // cells -5,-5,-5
-        CAMR_plm_d(i, j, k, idir, qzmarr, qzparr, slope, q, qaux(i, j, k, QC), dz, dt,
+        hydro_plm_d(i, j, k, idir, qzmarr, qzparr, slope, q, qaux(i, j, k, QC), dz, dt,
                    small_dens, small_pres, *lpmap, apz);
       });
   } else if (ppm_type == 1) {
@@ -161,7 +160,7 @@ Godunov_umeth_eb (
                 small_dens, small_pres, lpmap);
 
   } else {
-      amrex::Error("CAMR::ppm_type must be 0 (PLM) or 1 (PPM)");
+      amrex::Error("ppm_type must be 0 (PLM) or 1 (PPM)");
   }
 
 
@@ -182,8 +181,8 @@ Godunov_umeth_eb (
   // -4,-5,-5
   ParallelFor(xflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
     if (apx(i,j,k) > 0.) {
-      CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qxmarr, qxparr, fxarr, gdtempx,
-                  qaux, cdir, *lpmap, small, small_dens, small_pres);
+      hydro_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qxmarr, qxparr, fxarr, gdtempx,
+                  qaux, cdir, *lpmap, small, small_dens, small_pres, smallu);
     }
   });
 
@@ -202,8 +201,8 @@ Godunov_umeth_eb (
   // -5,-4,-5
   ParallelFor(yflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
     if (apy(i,j,k) > 0.) {
-      CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qymarr, qyparr, fyarr, gdtempy,
-                  qaux, cdir, *lpmap, small, small_dens, small_pres);
+      hydro_cmpflx(i, j, k, bcly, bchy, dly, dhy, qymarr, qyparr, fyarr, gdtempy,
+                  qaux, cdir, *lpmap, small, small_dens, small_pres, smallu);
     }
   });
 
@@ -222,8 +221,8 @@ Godunov_umeth_eb (
   // -5,-5,-4
   ParallelFor(zflxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
     if (apz(i,j,k) > 0.) {
-      CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qzmarr, qzparr, fzarr, gdtempz,
-                  qaux, cdir, *lpmap, small, small_dens, small_pres);
+      hydro_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qzmarr, qzparr, fzarr, gdtempz,
+                  qaux, cdir, *lpmap, small, small_dens, small_pres, smallu);
     }
   });
 
@@ -250,7 +249,7 @@ Godunov_umeth_eb (
       // this loop is over cells to   -5,-4,-5
       if (!flag_arr(i,j,k).isCovered()) {
         // X|Y
-        CAMR_transdo(i, j, k, cdir, 1, qmxy, qpxy, qxmarr, qxparr, fyarr, qaux, gdtempy, cdtdy,
+        hydro_transdo(i, j, k, cdir, 1, qmxy, qpxy, qxmarr, qxparr, fyarr, qaux, gdtempy, cdtdy,
                      *lpmap, l_transverse_reset_density, small_pres, apx, apy);
       }
   });
@@ -263,7 +262,7 @@ Godunov_umeth_eb (
       // this loop is over cells to   -5,-5,-4
       if (!flag_arr(i,j,k).isCovered()) {
         // X|Z
-        CAMR_transdo(i, j, k, cdir, 2, qmxz, qpxz, qxmarr, qxparr, fzarr, qaux, gdtempz, cdtdz,
+        hydro_transdo(i, j, k, cdir, 2, qmxz, qpxz, qxmarr, qxparr, fzarr, qaux, gdtempz, cdtdz,
                      *lpmap, l_transverse_reset_density, small_pres, apx, apz);
       }
   });
@@ -288,8 +287,8 @@ Godunov_umeth_eb (
   {
       // X|Y
       if (apx(i,j,k) > 0.) {
-          CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qmxy, qpxy, flxy, qxy, qaux,
-                      cdir, *lpmap, small, small_dens, small_pres);
+          hydro_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qmxy, qpxy, flxy, qxy, qaux,
+                      cdir, *lpmap, small, small_dens, small_pres, smallu);
     }
   });
 
@@ -301,8 +300,8 @@ Godunov_umeth_eb (
   {
       // X|Z
       if (apx(i,j,k) > 0.) {
-          CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qmxz, qpxz, flxz, qxz, qaux,
-                      cdir, *lpmap, small, small_dens, small_pres);
+          hydro_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qmxz, qpxz, flxz, qxz, qaux,
+                      cdir, *lpmap, small, small_dens, small_pres, smallu);
     }
   });
   qxym.clear();
@@ -331,7 +330,7 @@ Godunov_umeth_eb (
   {
       // Y|X
       if (!flag_arr(i, j, k).isCovered()) {
-          CAMR_transdo(i, j, k, cdir, 0, qmyx, qpyx, qymarr, qyparr, fxarr, qaux,
+          hydro_transdo(i, j, k, cdir, 0, qmyx, qpyx, qymarr, qyparr, fxarr, qaux,
                        gdtempx, cdtdx, *lpmap, l_transverse_reset_density,
                        small_pres, apy, apx);
       }
@@ -343,7 +342,7 @@ Godunov_umeth_eb (
   {
       // Y|Z
       if (!flag_arr(i, j, k).isCovered()) {
-          CAMR_transdo(i, j, k, cdir, 2, qmyz, qpyz, qymarr, qyparr, fzarr, qaux,
+          hydro_transdo(i, j, k, cdir, 2, qmyz, qpyz, qymarr, qyparr, fzarr, qaux,
                        gdtempz, cdtdz, *lpmap, l_transverse_reset_density,
                        small_pres, apy, apz);
     }
@@ -370,8 +369,8 @@ Godunov_umeth_eb (
   {
       // Y|X
       if (apy(i,j,k) > 0.) {
-           CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qmyx, qpyx, flyx, qyx, qaux,
-                       cdir, *lpmap, small, small_dens, small_pres);
+           hydro_cmpflx(i, j, k, bcly, bchy, dly, dhy, qmyx, qpyx, flyx, qyx, qaux,
+                       cdir, *lpmap, small, small_dens, small_pres, smallu);
       }
   });
 
@@ -382,8 +381,8 @@ Godunov_umeth_eb (
   {
       // Y|Z
       if (apy(i,j,k) > 0.) {
-          CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qmyz, qpyz, flyz, qyz, qaux,
-                      cdir, *lpmap, small, small_dens, small_pres);
+          hydro_cmpflx(i, j, k, bcly, bchy, dly, dhy, qmyz, qpyz, flyz, qyz, qaux,
+                      cdir, *lpmap, small, small_dens, small_pres, smallu);
       }
   });
 
@@ -414,7 +413,7 @@ Godunov_umeth_eb (
   {
       // Z|X
       if (!flag_arr(i, j, k).isCovered()) {
-          CAMR_transdo(i, j, k, cdir, 0, qmzx, qpzx, qzmarr, qzparr, fxarr, qaux,
+          hydro_transdo(i, j, k, cdir, 0, qmzx, qpzx, qzmarr, qzparr, fxarr, qaux,
                        gdtempx, cdtdx, *lpmap, l_transverse_reset_density,
                        small_pres, apz, apx);
       }
@@ -426,7 +425,7 @@ Godunov_umeth_eb (
   {
       // Z|Y
       if (!flag_arr(i, j, k).isCovered()) {
-          CAMR_transdo(i, j, k, cdir, 1, qmzy, qpzy, qzmarr, qzparr, fyarr, qaux,
+          hydro_transdo(i, j, k, cdir, 1, qmzy, qpzy, qzmarr, qzparr, fyarr, qaux,
                        gdtempy, cdtdy, *lpmap, l_transverse_reset_density,
                        small_pres, apz, apy);
       }
@@ -457,8 +456,8 @@ Godunov_umeth_eb (
   {
       // Z|X
       if (apz(i,j,k) > 0.) {
-          CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qmzx, qpzx, flzx, qzx, qaux,
-                      cdir, *lpmap, small, small_dens, small_pres);
+          hydro_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qmzx, qpzx, flzx, qzx, qaux,
+                      cdir, *lpmap, small, small_dens, small_pres, smallu);
       }
   });
 
@@ -469,8 +468,8 @@ Godunov_umeth_eb (
   {
       // Z|Y
       if (apz(i,j,k) > 0.) {
-          CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qmzy, qpzy, flzy, qzy, qaux,
-                      cdir, *lpmap, small, small_dens, small_pres);
+          hydro_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qmzy, qpzy, flzy, qzy, qaux,
+                      cdir, *lpmap, small, small_dens, small_pres, smallu);
       }
   });
 
@@ -494,7 +493,7 @@ Godunov_umeth_eb (
   ParallelFor(bxg1, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
       if (!flag_arr(i, j, k).isCovered()) {
-          CAMR_transdd(i, j, k, cdir, qm, qp, qxmarr, qxparr, flyz, flzy, qyz, qzy,
+          hydro_transdd(i, j, k, cdir, qm, qp, qxmarr, qxparr, flyz, flzy, qyz, qzy,
                        qaux, srcQ, hdt, hdtdy, hdtdz, *lpmap,
                        l_transverse_reset_density, small_pres, apx, apy, apz);
       }
@@ -512,8 +511,8 @@ Godunov_umeth_eb (
   ParallelFor(xfbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
       if (apx(i,j,k) > 0.) {
-          CAMR_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qm, qp, flx1, q1, qaux, cdir,
-                      *lpmap, small, small_dens, small_pres);
+          hydro_cmpflx(i, j, k, bclx, bchx, dlx, dhx, qm, qp, flx1, q1, qaux, cdir,
+                      *lpmap, small, small_dens, small_pres, smallu);
       }
   });
 
@@ -526,7 +525,7 @@ Godunov_umeth_eb (
   ParallelFor(bxg1, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
       if (!flag_arr(i, j, k).isCovered()) {
-          CAMR_transdd(i, j, k, cdir, qm, qp, qymarr, qyparr, flxz, flzx, qxz, qzx,
+          hydro_transdd(i, j, k, cdir, qm, qp, qymarr, qyparr, flxz, flzx, qxz, qzx,
                        qaux, srcQ, hdt, hdtdx, hdtdz, *lpmap,
                        l_transverse_reset_density, small_pres, apy, apx, apz);
       }
@@ -544,8 +543,8 @@ Godunov_umeth_eb (
   ParallelFor(yfbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
       if (apy(i,j,k) > 0.) {
-          CAMR_cmpflx(i, j, k, bcly, bchy, dly, dhy, qm, qp, flx2, q2, qaux, cdir,
-                      *lpmap, small, small_dens, small_pres);
+          hydro_cmpflx(i, j, k, bcly, bchy, dly, dhy, qm, qp, flx2, q2, qaux, cdir,
+                      *lpmap, small, small_dens, small_pres, smallu);
       }
   });
 
@@ -556,7 +555,7 @@ Godunov_umeth_eb (
   // amrex::Print() << "DOING TRANSDD FOR Y " << bxg1 << std::endl;
   ParallelFor(bxg1, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
       if (!flag_arr(i, j, k).isCovered()) {
-          CAMR_transdd(i, j, k, cdir, qm, qp, qzmarr, qzparr, flxy, flyx, qxy, qyx,
+          hydro_transdd(i, j, k, cdir, qm, qp, qzmarr, qzparr, flxy, flyx, qxy, qyx,
                        qaux, srcQ, hdt, hdtdx, hdtdy, *lpmap,
                        l_transverse_reset_density, small_pres, apz, apx, apy);
       }
@@ -574,8 +573,8 @@ Godunov_umeth_eb (
   ParallelFor(zfbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
   {
       if (apz(i,j,k) > 0.) {
-          CAMR_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qm, qp, flx3, q3, qaux, cdir,
-                      *lpmap, small, small_dens, small_pres);
+          hydro_cmpflx(i, j, k, bclz, bchz, dlz, dhz, qm, qp, flx3, q3, qaux, cdir,
+                      *lpmap, small, small_dens, small_pres, smallu);
       }
   });
   qmfab.clear();

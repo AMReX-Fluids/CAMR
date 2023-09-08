@@ -1,6 +1,5 @@
-#include "CAMR.H"
 #include "Godunov.H"
-#include "CAMR_hydro.H"
+#include "Hydro.H"
 #include "MOL_umeth.H"
 #include "IndexDefines.H"
 #include "MOL_hydro_eb_K.H"
@@ -33,7 +32,9 @@ MOL_umeth_eb (const Box& bx_to_fill,
               const amrex::Real small,
               const amrex::Real small_dens,
               const amrex::Real small_pres,
+              const amrex::Real smallu,
               const int l_plm_iorder,
+              const PassMap* lpmap,
               const int /*l_eb_weights_type*/)
 {
     BL_PROFILE("MOL_umeth_eb()");
@@ -50,8 +51,6 @@ MOL_umeth_eb (const Box& bx_to_fill,
     AMREX_D_TERM(const int dhx = domhi[0];,
                  const int dhy = domhi[1];,
                  const int dhz = domhi[2];);
-
-    const PassMap* lpmap = CAMR::d_pass_map;
 
     Real l_plm_theta = 2.0; // [1,2] 1: minmod; 2: van Leer's MC
 
@@ -99,7 +98,8 @@ MOL_umeth_eb (const Box& bx_to_fill,
         // The second test is needed here because outside the domain isConnected can be true
         //     even when the neighbor is covered
         if (flag(i,j,k).isConnected(-1,0,0) && !flag(i-1,j,k).isCovered()) {
-            mol_riemann_x(i, j, k, fx_arr, slope, q_arr, qaux_arr, q1, qxmarr, qxparr, small, small_dens, small_pres,
+            mol_riemann_x(i, j, k, fx_arr, slope, q_arr, qaux_arr, q1, qxmarr, qxparr,
+                          small, small_dens, small_pres, smallu,
                           bclx, bchx, dlx, dhx, *lpmap);
         } else {
            for (int n = 0; n < NGDNV; n++) {
@@ -136,7 +136,8 @@ MOL_umeth_eb (const Box& bx_to_fill,
         // The second test is needed here because outside the domain isConnected can be true
         //     even when the neighbor is covered
         if (flag(i,j,k).isConnected(0,-1,0) && !flag(i,j-1,k).isCovered()) {
-            mol_riemann_y(i, j, k, fy_arr, slope, q_arr, qaux_arr, q2, qymarr, qyparr, small, small_dens, small_pres,
+            mol_riemann_y(i, j, k, fy_arr, slope, q_arr, qaux_arr, q2, qymarr, qyparr,
+                          small, small_dens, small_pres, smallu,
                           bcly, bchy, dly, dhy, *lpmap);
         } else {
            for (int n = 0; n < NGDNV; n++) {
@@ -174,7 +175,8 @@ MOL_umeth_eb (const Box& bx_to_fill,
         //     even when the neighbor is covered
         if (flag(i,j,k).isConnected(0,0,-1) && !flag(i,j,k-1).isCovered())
         {
-            mol_riemann_z(i, j, k, fz_arr, slope, q_arr, qaux_arr, q3, qzmarr, qzparr, small, small_dens, small_pres,
+            mol_riemann_z(i, j, k, fz_arr, slope, q_arr, qaux_arr, q3, qzmarr, qzparr,
+                          small, small_dens, small_pres, smallu,
                           bclz, bchz, dlz, dhz, *lpmap);
         } else {
            for (int n = 0; n < NGDNV; n++) {
