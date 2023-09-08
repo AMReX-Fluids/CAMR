@@ -4,6 +4,7 @@ CEXE_sources += CAMR.cpp
 CEXE_sources += CAMR_advance.cpp
 CEXE_sources += CAMR_react.cpp
 CEXE_sources += CAMR_sources.cpp
+CEXE_sources += GravitySrc.cpp
 
 #C++ headers
 CEXE_headers += CAMR.H

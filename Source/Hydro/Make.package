@@ -1,5 +1,4 @@
 #C++ files
-CEXE_sources += GravitySrc.cpp
 CEXE_sources += Hydro_adjust_fluxes.cpp
 CEXE_sources += CAMR_construct_hydro_source.cpp
 CEXE_sources += Hydro_consup.cpp
