@@ -3,6 +3,9 @@
 
 #include "IndexDefines.H"
 
+#include <AMReX_Array4.H>
+#include <AMReX_Gpu.H>
+
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 void

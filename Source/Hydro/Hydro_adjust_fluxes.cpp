@@ -1,6 +1,8 @@
 #include "Hydro_utils_K.H"
 #include "hydro_artif_visc.H"
 
+#include "AMReX_MultiFab.H"
+
 #ifdef AMREX_USE_EB
 #include "Hydro_utils_eb_K.H"
 #endif

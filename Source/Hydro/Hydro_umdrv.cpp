@@ -3,6 +3,8 @@
 #include "Hydro_utils_K.H"
 #include "MOL_umeth.H"
 
+#include "AMReX_MultiFab.H"
+
 using namespace amrex;
 
 void
