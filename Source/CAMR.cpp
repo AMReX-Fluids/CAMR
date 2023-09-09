@@ -184,8 +184,9 @@ CAMR::read_params()
   }
 
 #ifdef AMREX_USE_EB
-  if (do_mol == 0) {
-      amrex::Warning("EBGodunov is still a WIP");
+  // We only support PLM (not PPM) with using EB
+  if (do_mol == 0 && ppm_type != 0) {
+      amrex::Abort("Must use ppm_type = 0 when running with EBGodunov");
   }
 
   if ( (redistribution_type != "FluxRedist" ) &&

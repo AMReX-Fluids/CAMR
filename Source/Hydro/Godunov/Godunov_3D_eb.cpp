@@ -144,24 +144,8 @@ Godunov_umeth_eb (
         hydro_plm_d_eb(i, j, k, idir, qzmarr, qzparr, slope, q, qaux(i, j, k, QC), dz, dt,
                        small_dens, small_pres, *lpmap, apz);
       });
-  } else if (ppm_type == 1) {
-
-      // Compute the normal interface states by reconstructing
-      // the primitive variables using the piecewise parabolic method
-      // and doing characteristic tracing.  We do not apply the
-      // transverse terms here.
-
-      trace_ppm(bxg2, 0, q, qaux, srcQ, qxmarr, qxparr, bxg2, dt, del, use_flattening,
-                small_dens, small_pres, lpmap);
-
-      trace_ppm(bxg2, 1, q, qaux, srcQ, qymarr, qyparr, bxg2, dt, del, use_flattening,
-                small_dens, small_pres, lpmap);
-
-      trace_ppm(bxg2, 2, q, qaux, srcQ, qzmarr, qzparr, bxg2, dt, del, use_flattening,
-                small_dens, small_pres, lpmap);
-
   } else {
-      amrex::Error("ppm_type must be 0 (PLM) or 1 (PPM)");
+      amrex::Error("ppm_type must be 0 (PLM) when using EB");
   }
 
 
