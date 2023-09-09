@@ -5,6 +5,7 @@
 #include "Hydro_utils_K.H"
 #include "flatten.H"
 #include "PLM.H"
+#include "PLM_eb.H"
 #include "PPM.H"
 
 #if (AMREX_SPACEDIM == 3)
@@ -116,8 +117,8 @@ Godunov_umeth_eb (
               slope[n] = plm_slope_eb(i, j, k, n, 0, flag_arr, q, flat, iorder);
         }
         // cells -5,-5,-5
-        hydro_plm_d(i, j, k, idir, qxmarr, qxparr, slope, q, qaux(i, j, k, QC), dx, dt,
-                   small_dens, small_pres, *lpmap, apx);
+        hydro_plm_d_eb(i, j, k, idir, qxmarr, qxparr, slope, q, qaux(i, j, k, QC), dx, dt,
+                       small_dens, small_pres, *lpmap, apx);
 
         // Y slopes and interp
         idir = 1;
@@ -128,8 +129,8 @@ Godunov_umeth_eb (
               slope[n] = plm_slope_eb(i, j, k, n, 1, flag_arr, q, flat, iorder);
         }
         // cells -5,-5,-5
-        hydro_plm_d(i, j, k, idir, qymarr, qyparr, slope, q, qaux(i, j, k, QC), dy, dt,
-                   small_dens, small_pres, *lpmap, apy);
+        hydro_plm_d_eb(i, j, k, idir, qymarr, qyparr, slope, q, qaux(i, j, k, QC), dy, dt,
+                       small_dens, small_pres, *lpmap, apy);
 
         // Z slopes and interp
         idir = 2;
@@ -140,27 +141,11 @@ Godunov_umeth_eb (
               slope[n] = plm_slope_eb(i, j, k, n, 2, flag_arr, q, flat, iorder);
         }
         // cells -5,-5,-5
-        hydro_plm_d(i, j, k, idir, qzmarr, qzparr, slope, q, qaux(i, j, k, QC), dz, dt,
-                   small_dens, small_pres, *lpmap, apz);
+        hydro_plm_d_eb(i, j, k, idir, qzmarr, qzparr, slope, q, qaux(i, j, k, QC), dz, dt,
+                       small_dens, small_pres, *lpmap, apz);
       });
-  } else if (ppm_type == 1) {
-
-      // Compute the normal interface states by reconstructing
-      // the primitive variables using the piecewise parabolic method
-      // and doing characteristic tracing.  We do not apply the
-      // transverse terms here.
-
-      trace_ppm(bxg2, 0, q, qaux, srcQ, qxmarr, qxparr, bxg2, dt, del, use_flattening,
-                small_dens, small_pres, lpmap);
-
-      trace_ppm(bxg2, 1, q, qaux, srcQ, qymarr, qyparr, bxg2, dt, del, use_flattening,
-                small_dens, small_pres, lpmap);
-
-      trace_ppm(bxg2, 2, q, qaux, srcQ, qzmarr, qzparr, bxg2, dt, del, use_flattening,
-                small_dens, small_pres, lpmap);
-
   } else {
-      amrex::Error("ppm_type must be 0 (PLM) or 1 (PPM)");
+      amrex::Error("ppm_type must be 0 (PLM) when using EB");
   }
 
 

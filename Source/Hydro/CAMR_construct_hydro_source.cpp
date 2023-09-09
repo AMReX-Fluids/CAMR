@@ -130,7 +130,15 @@ CAMR::construct_hydro_source (const MultiFab& S,
             const auto& src_in = sources_for_hydro.array(mfi);
             ParallelFor(
               qbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-                hydro_srctoprim(i, j, k, qarr, qauxar, src_in, srcqarr, *lpmap);
+#ifdef AMREX_USE_EB
+                if (!flag_arr(i,j,k).isCovered()) {
+#endif
+                    hydro_srctoprim(i, j, k, qarr, qauxar, src_in, srcqarr, *lpmap);
+#ifdef AMREX_USE_EB
+                } else {
+                   for (int n=0; n<QVAR; n++) srcqarr(i,j,k,n) = 0.;
+                }
+#endif
               });
         }
 
