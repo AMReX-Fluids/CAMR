@@ -109,8 +109,9 @@ CAMR::construct_hydro_source (const MultiFab& S,
 #ifdef AMREX_USE_EB
                 if (!flag_arr(i,j,k).isCovered()) {
 #endif
+                    int l_allow_negative_energy = allow_negative_energy;
                     hydro_ctoprim(i, j, k, sarr, qarr, qauxar, *lpmap,
-                                  small_num, dual_energy_eta, allow_negative_energy);
+                                  small_num, dual_energy_eta, l_allow_negative_energy);
 #ifdef AMREX_USE_EB
                 } else {
                    for (int n=0; n<QVAR; n++) qarr(i,j,k,n) = 0.;
