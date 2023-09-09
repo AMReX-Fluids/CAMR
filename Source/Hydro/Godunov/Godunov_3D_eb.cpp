@@ -5,6 +5,7 @@
 #include "Hydro_utils_K.H"
 #include "flatten.H"
 #include "PLM.H"
+#include "PLM_eb.H"
 #include "PPM.H"
 
 #if (AMREX_SPACEDIM == 3)
@@ -116,8 +117,8 @@ Godunov_umeth_eb (
               slope[n] = plm_slope_eb(i, j, k, n, 0, flag_arr, q, flat, iorder);
         }
         // cells -5,-5,-5
-        hydro_plm_d(i, j, k, idir, qxmarr, qxparr, slope, q, qaux(i, j, k, QC), dx, dt,
-                   small_dens, small_pres, *lpmap, apx);
+        hydro_plm_d_eb(i, j, k, idir, qxmarr, qxparr, slope, q, qaux(i, j, k, QC), dx, dt,
+                       small_dens, small_pres, *lpmap, apx);
 
         // Y slopes and interp
         idir = 1;
@@ -128,8 +129,8 @@ Godunov_umeth_eb (
               slope[n] = plm_slope_eb(i, j, k, n, 1, flag_arr, q, flat, iorder);
         }
         // cells -5,-5,-5
-        hydro_plm_d(i, j, k, idir, qymarr, qyparr, slope, q, qaux(i, j, k, QC), dy, dt,
-                   small_dens, small_pres, *lpmap, apy);
+        hydro_plm_d_eb(i, j, k, idir, qymarr, qyparr, slope, q, qaux(i, j, k, QC), dy, dt,
+                       small_dens, small_pres, *lpmap, apy);
 
         // Z slopes and interp
         idir = 2;
@@ -140,8 +141,8 @@ Godunov_umeth_eb (
               slope[n] = plm_slope_eb(i, j, k, n, 2, flag_arr, q, flat, iorder);
         }
         // cells -5,-5,-5
-        hydro_plm_d(i, j, k, idir, qzmarr, qzparr, slope, q, qaux(i, j, k, QC), dz, dt,
-                   small_dens, small_pres, *lpmap, apz);
+        hydro_plm_d_eb(i, j, k, idir, qzmarr, qzparr, slope, q, qaux(i, j, k, QC), dz, dt,
+                       small_dens, small_pres, *lpmap, apz);
       });
   } else if (ppm_type == 1) {
 

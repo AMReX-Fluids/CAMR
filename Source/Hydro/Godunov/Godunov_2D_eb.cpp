@@ -4,6 +4,7 @@
 #include "Hydro_utils_K.H"
 #include "flatten.H"
 #include "PLM.H"
+#include "PLM_eb.H"
 #include "PPM.H"
 
 #if (AMREX_SPACEDIM == 2)
@@ -107,8 +108,8 @@ Godunov_umeth_eb (
                 slope[n] = plm_slope_eb(i, j, k, n, 0, flag_arr, q, flat, iorder);
             }
           }
-          hydro_plm_d(i, j, k, 0, qxmarr, qxparr, slope, q, qaux(i, j, k, QC), dx, dt,
-                     small_dens, small_pres, *lpmap, apx);
+          hydro_plm_d_eb(i, j, k, 0, qxmarr, qxparr, slope, q, qaux(i, j, k, QC), dx, dt,
+                         small_dens, small_pres, *lpmap, apx);
 
           //
           // Y slopes and interp
@@ -121,8 +122,8 @@ Godunov_umeth_eb (
                   slope[n] = plm_slope_eb(i, j, k, n, 1, flag_arr, q, flat, iorder);
               }
           }
-          hydro_plm_d(i, j, k, 1, qymarr, qyparr, slope, q, qaux(i, j, k, QC), dy, dt,
-                     small_dens, small_pres, *lpmap, apy);
+          hydro_plm_d_eb(i, j, k, 1, qymarr, qyparr, slope, q, qaux(i, j, k, QC), dy, dt,
+                         small_dens, small_pres, *lpmap, apy);
         });
 
   } else if (ppm_type == 1) {

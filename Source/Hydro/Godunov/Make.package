@@ -9,4 +9,5 @@ CEXE_headers += PPM.H
 
 ifeq ($(USE_EB),TRUE)
 CEXE_sources += Godunov_$(DIM)D_eb.cpp
+CEXE_headers += PLM_eb.H
 endif
