@@ -18,7 +18,7 @@ hydro_ctoprim(
   PassMap const& pmap,
   amrex::Real l_small_num,
   amrex::Real l_dual_energy_eta1,
-  bool l_allow_negative_energy)
+  const int l_allow_negative_energy)
 {
     const amrex::Real rho = u(i, j, k, URHO);
 
