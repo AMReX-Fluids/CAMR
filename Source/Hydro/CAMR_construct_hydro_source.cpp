@@ -104,12 +104,14 @@ CAMR::construct_hydro_source (const MultiFab& S,
             BL_PROFILE_VAR("ctoprim()", ctop);
             const Real small_num        = CAMRConstants::small_num;
             const Real dual_energy_eta  = CAMR::dual_energy_eta1;
+            int l_allow_negative_energy = CAMR::allow_negative_energy;
             ParallelFor(
               qbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
 #ifdef AMREX_USE_EB
                 if (!flag_arr(i,j,k).isCovered()) {
 #endif
-                    hydro_ctoprim(i, j, k, sarr, qarr, qauxar, *lpmap, small_num, dual_energy_eta);
+                    hydro_ctoprim(i, j, k, sarr, qarr, qauxar, *lpmap,
+                                  small_num, dual_energy_eta, l_allow_negative_energy);
 #ifdef AMREX_USE_EB
                 } else {
                    for (int n=0; n<QVAR; n++) qarr(i,j,k,n) = 0.;

@@ -16,8 +16,9 @@ hydro_ctoprim(
   amrex::Array4<      amrex::Real> const& q,
   amrex::Array4<      amrex::Real> const& qa,
   PassMap const& pmap,
-  amrex::Real small_num,
-  amrex::Real dual_energy_eta1)
+  amrex::Real l_small_num,
+  amrex::Real l_dual_energy_eta1,
+  const int l_allow_negative_energy)
 {
     const amrex::Real rho = u(i, j, k, URHO);
 
@@ -51,9 +52,11 @@ hydro_ctoprim(
          // of the separately updated internal energy equation.
          // Otherwise, we'll set e = E - K.
 
-        AMREX_ALWAYS_ASSERT(u(i,j,k,UEDEN) > 0.);
+        if (!l_allow_negative_energy) {
+            AMREX_ALWAYS_ASSERT(u(i,j,k,UEDEN) > 0.);
+        }
 
-        if ( (u(i,j,k,UEDEN) - kineng) / u(i,j,k,UEDEN) > dual_energy_eta1) {
+        if ( (u(i,j,k,UEDEN) - kineng) / u(i,j,k,UEDEN) > l_dual_energy_eta1) {
            q(i,j,k,QREINT) = (u(i,j,k,UEDEN) - kineng) * rhoinv;
         } else {
            q(i,j,k,QREINT) = u(i,j,k,UEINT) * rhoinv;
@@ -61,7 +64,9 @@ hydro_ctoprim(
 
         const amrex::Real e = q(i,j,k,QREINT);
 
-        AMREX_ALWAYS_ASSERT(u(i,j,k,UEINT) > 0.);
+        if (!l_allow_negative_energy) {
+            AMREX_ALWAYS_ASSERT(u(i,j,k,UEINT) > 0.);
+        }
 
         amrex::Real T = u(i, j, k, UTEMP);
         amrex::Real massfrac[NUM_SPECIES];
@@ -91,7 +96,7 @@ hydro_ctoprim(
         qa(i, j, k, QGAMC) = gam1;
         cs =  std::sqrt(gam1*p/rho);
         qa(i, j, k, QC) = cs;
-        qa(i, j, k, QCSML) = std::max(small_num, small_num * cs);
+        qa(i, j, k, QCSML) = std::max(l_small_num, l_small_num * cs);
     }
 }
 

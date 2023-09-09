@@ -91,7 +91,7 @@ dual_energy_eta2             Real          1.0e-4
 use_pslope                   int           0
 
 # Whether or not to allow internal energy to be less than zero
-allow_negative_energy        int           1
+allow_negative_energy        int           0
 
 # Whether or not to allow the internal energy to be less than the
 # internal energy corresponding to small\_temp
