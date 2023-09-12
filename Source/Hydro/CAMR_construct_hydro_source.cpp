@@ -211,7 +211,6 @@ CAMR::construct_hydro_source (const MultiFab& S,
                      getFluxReg(level + 1).CrseAdd(mfi,
                         {{AMREX_D_DECL(&(flux[0]), &(flux[1]), &(flux[2]))}},
                         dxDp, fac_for_reflux*dt, (*volfrac)[mfi],
-                        // dxDp, 0.0*dt, (*volfrac)[mfi],
                         {AMREX_D_DECL(&(*areafrac[0])[mfi], &(*areafrac[1])[mfi], &(*areafrac[2])[mfi])},
                         amrex::RunOn::Device);
                 }
@@ -219,7 +218,6 @@ CAMR::construct_hydro_source (const MultiFab& S,
                     getFluxReg(level).FineAdd(mfi,
                        {{AMREX_D_DECL(&(flux[0]), &(flux[1]), &(flux[2]))}},
                        dxDp, fac_for_reflux*dt, (*volfrac)[mfi],
-                       // dxDp, 0.0*dt, (*volfrac)[mfi],
                        {AMREX_D_DECL(&(*areafrac[0])[mfi], &(*areafrac[1])[mfi], &(*areafrac[2])[mfi])},
                        dm_as_fine, amrex::RunOn::Device);
                 } // level > 0

@@ -57,7 +57,7 @@ adjust_fluxes_eb (
               const GpuArray<amrex::Real, AMREX_SPACEDIM> dx,
               const GpuArray<amrex::Real, AMREX_SPACEDIM> dxinv,
               const GpuArray<const amrex::Array4<amrex::Real>, AMREX_SPACEDIM> flux,
-              const int* domlo, const int* domhi,
+              const Geometry& geom,
               const int*  bclo, const int*  bchi,
               Real l_difmag)
 {
@@ -74,12 +74,13 @@ adjust_fluxes_eb (
     FArrayBox divu(bx_divu,NVAR);
     divu.setVal<RunOn::Device>(0.0);
 
+    Box nddom = amrex::convert(geom.growPeriodicDomain(16), IntVect(1));
+    bx_divu &= nddom;
+
     auto const& divu_arr = divu.array();
     amrex::ParallelFor(bx_divu, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-        if (vfrac(i,j,k) > 0.) {
-            eb_divu(i, j, k, q_arr, divu_arr, vfrac, dxinv);
-        }
+        eb_divu(i, j, k, q_arr, divu_arr, vfrac, dxinv);
     });
 
     // Flux alterations
@@ -89,6 +90,9 @@ adjust_fluxes_eb (
 #elif (AMREX_SPACEDIM == 3)
     areafac = dx[1]*dx[2];
 #endif
+
+    auto const* domlo = geom.Domain().loVect();
+    auto const* domhi = geom.Domain().hiVect();
 
     int domlo_dir = domlo[0];
     int domhi_dir = domhi[0];
