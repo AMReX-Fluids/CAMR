@@ -153,7 +153,7 @@ hydro_umdrv_eb( const bool do_mol, Box const& bx,
     adjust_fluxes_eb(bx, q_arr, uin_arr,
                      AMREX_D_DECL(apx, apy, apz),
                      vf_arr, dx, dxinv, flux_tmp_arr,
-                     domlo, domhi, bclo, bchi, difmag);
+                     geom, bclo, bchi, difmag);
 
     hydro_consup_eb(bx, q_arr, qaux_arr,
                     divc_arr, redistwgt_arr,
