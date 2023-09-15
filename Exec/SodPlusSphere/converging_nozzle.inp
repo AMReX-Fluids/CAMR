@@ -1,0 +1,73 @@
+amrex.fpe_trap_invalid = 1
+amrex.fpe_trap_zero = 1
+amrex.fpe_trap_overflow = 1
+
+max_step  = 1
+stop_time = 0.2
+
+geometry.is_periodic = 0 0 0
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+geometry.prob_lo     =  0.0 -6 -6
+geometry.prob_hi     =  18 6 6
+amr.n_cell           =  72 48 48
+
+# >>>>>>>>>>>>>  BC FLAGS <<<<<<<<<<<<<<<<
+# 0 = Interior           3 = Symmetry
+# 1 = Inflow             4 = SlipWall
+# 2 = Outflow            5 = NoSlipWall
+# >>>>>>>>>>>>>  BC FLAGS <<<<<<<<<<<<<<<<
+CAMR.lo_bc       =  Outflow  SlipWall   SlipWall
+CAMR.hi_bc       =  Outflow  SlipWall   SlipWall
+
+CAMR.cfl = 0.3  # cfl number for hyperbolic system
+
+CAMR.do_mol = 1
+
+CAMR.v = 2
+amr.v = 1
+
+CAMR.sum_interval = 1
+
+CAMR.redistribution_type = FluxRedist
+CAMR.redistribution_type = StateRedist
+
+# LOAD BALANCE
+amr.loadbalance_with_workestimates = 0
+
+# REFINEMENT / REGRIDDING
+amr.max_level       = 0       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+amr.blocking_factor = 8
+amr.max_grid_size   = 64
+amr.n_error_buf     = 0 0 0 0 # number of buffer cells in error est
+
+# CHECKPOINT FILES
+amr.checkpoint_files_output = 0
+amr.check_file              = chk    # root name of checkpoint file
+amr.check_int               = 100    # number of timesteps between checkpoints
+
+# PLOTFILES
+amr.plot_files_output = 1
+amr.plot_file         = plt     # root name of plotfile
+amr.plot_int          = 1      # number of timesteps between plotfiles
+amr.derive_plot_vars  = x_velocity y_velocity z_velocity vfrac
+
+# EB
+CAMR.geometry = "converging-nozzle"
+converging_nozzle.d_inlet = 10.0
+converging_nozzle.l_inlet = 4.5
+converging_nozzle.l_nozzle = 9.0
+converging_nozzle.d_exit = 7.0710678119
+eb2.small_volfrac=1.e-6
+# problem specific parameter
+prob.rho_l = 3.6737153092795505
+prob.u_l   = 3.8260444105770732
+prob.p_l   = 22.613625000000006
+prob.rho_r = 1.0
+prob.u_r   = 0.0
+prob.p_r   = 2.5
+prob.interface = -10.0
+
+CAMR.hydro_tile_size=1024 8 8
