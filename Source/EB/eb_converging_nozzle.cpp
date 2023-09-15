@@ -24,7 +24,7 @@ void make_eb_converging_nozzle (const Geometry& geom, int required_coarsening_le
   pp.query("l_inlet", l_inlet);
   pp.query("l_nozzle", l_nozzle);
   pp.query("d_exit", d_exit);
-  
+
   amrex::EB2::CylinderIF main(
     0.5 * d_inlet, 0,
     {AMREX_D_DECL(static_cast<amrex::Real>(0.5 * l_inlet), 0, 0)}, true);
