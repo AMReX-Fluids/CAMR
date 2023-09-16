@@ -4,6 +4,7 @@ CEXE_sources += eb_cylinder.cpp
 CEXE_sources += eb_regular.cpp
 CEXE_sources += eb_sphere.cpp
 CEXE_sources += eb_plane.cpp
+CEXE_sources += eb_converging_nozzle.cpp
 CEXE_sources += writeEBsurface.cpp
 
 CEXE_headers += eb_if.H

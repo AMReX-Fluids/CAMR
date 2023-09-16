@@ -10,6 +10,7 @@ void make_eb_sphere(const Geometry& geom, int required_coarsening_level);
 void make_eb_box(const Geometry& geom, int required_coarsening_level);
 void make_eb_cylinder(const Geometry& geom, int required_coarsening_level);
 void make_eb_plane(const Geometry& geom, int required_coarsening_level, amrex::Real time);
+void make_eb_converging_nozzle(const Geometry& geom, int required_coarsening_level);
 
 void
 initialize_EB2 (const Geometry& geom, const int required_coarsening_level,
@@ -49,6 +50,10 @@ initialize_EB2 (const Geometry& geom, const int required_coarsening_level,
     else if(geom_type == "plane")
     {
         make_eb_plane(geom, max_coarsening_level, time);
+    }
+    else if(geom_type == "converging-nozzle")
+    {
+        make_eb_converging_nozzle(geom, max_coarsening_level);
     }
     else
     {
