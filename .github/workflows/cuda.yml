@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   cuda_eb_2d:
-    if: ${{ github.repository == 'AMReX-Codes/CAMR' || github.event_name != 'schedule' }}
+    if: ${{ github.repository == 'AMReX-Fluids/CAMR' || github.event_name != 'schedule' }}
     name: CUDA EB 2D
     runs-on: ubuntu-20.04
     steps:
@@ -57,7 +57,7 @@ jobs:
         du -hs ~/.cache/ccache
 
   cuda_no_eb_2d:
-    if: ${{ github.repository == 'AMReX-Codes/CAMR' || github.event_name != 'schedule' }}
+    if: ${{ github.repository == 'AMReX-Fluids/CAMR' || github.event_name != 'schedule' }}
     name: CUDA NO EB 2D
     runs-on: ubuntu-20.04
     steps:

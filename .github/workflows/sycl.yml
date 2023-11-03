@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   sycl_no_eb_3d:
-    if: ${{ github.repository == 'AMReX-Codes/CAMR' || github.event_name != 'schedule' }}
+    if: ${{ github.repository == 'AMReX-Fluids/CAMR' || github.event_name != 'schedule' }}
     name: SYCL NO EB 3D
     runs-on: ubuntu-latest
     steps:
