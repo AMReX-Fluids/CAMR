@@ -166,8 +166,8 @@ eb_pdivu (int i, int j, int k,
                       (q1(i+1,j,k, GDU   ) - q1(i,j,k, GDU   )) *dxinv[0]
                      +(q2(i,j+1,k, GDPRES) + q2(i,j,k, GDPRES)) *
                       (q2(i,j+1,k, GDV   ) - q2(i,j,k, GDV   )) * dxinv[1]
-                     +(q2(i,j,k+1, GDPRES) + q2(i,j,k, GDPRES)) *
-                      (q2(i,j,k+1, GDW   ) - q2(i,j,k, GDW   )) * dxinv[2]);
+                     +(q3(i,j,k+1, GDPRES) + q3(i,j,k, GDPRES)) *
+                      (q3(i,j,k+1, GDW   ) - q3(i,j,k, GDW   )) * dxinv[2]);
 
         divu(i,j,k,UEINT) += pdivu;
     }
