@@ -274,7 +274,7 @@ hydro_plm_d_eb (
       qp(iv, n) = 0.0;
     }
 
-    if (area(iv) > 0.0)
+    if (area(ivp) > 0.0)
     {
       const amrex::Real spzero = vel_ad >= 0 ? vel_ad * dtdx : 1.0;
       const amrex::Real acmpleft = 0.5 * (1.0 - spzero) * slope[n];

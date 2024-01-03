@@ -104,7 +104,7 @@ eb_pdivu (int i, int j, int k,
                        (q1(i + 1, j, k, GDU   ) - q1(i, j, k, GDU   )) *dxinv[0]
                       +(q2(i, j + 1, k, GDPRES) + q2(i, j, k, GDPRES)) *
                        (q2(i, j + 1, k, GDV   ) - q2(i, j, k, GDV   )) * dxinv[1]);
-        divu(i,j,k,UEINT) += pdivu;
+        divu(i,j,k,UEINT) -= pdivu;
     }
     else if (!flag(i,j,k).isCovered())
     {
@@ -153,7 +153,7 @@ eb_pdivu (int i, int j, int k,
             fyp = amrex::Real(0.0);
         }
 
-        divu(i,j,k,UEINT) += (1.0/vfrc(i,j,k)) * q(i,j,k,QPRES)*
+        divu(i,j,k,UEINT) -= (1.0/vfrc(i,j,k)) * q(i,j,k,QPRES)*
             ( dxinv[0] * (apx(i+1,j,k)*fxp-apx(i,j,k)*fxm)
             + dxinv[1] * (apy(i,j+1,k)*fyp-apy(i,j,k)*fym) );
     }
@@ -166,10 +166,10 @@ eb_pdivu (int i, int j, int k,
                       (q1(i+1,j,k, GDU   ) - q1(i,j,k, GDU   )) *dxinv[0]
                      +(q2(i,j+1,k, GDPRES) + q2(i,j,k, GDPRES)) *
                       (q2(i,j+1,k, GDV   ) - q2(i,j,k, GDV   )) * dxinv[1]
-                     +(q2(i,j,k+1, GDPRES) + q2(i,j,k, GDPRES)) *
-                      (q2(i,j,k+1, GDW   ) - q2(i,j,k, GDW   )) * dxinv[2]);
+                     +(q3(i,j,k+1, GDPRES) + q3(i,j,k, GDPRES)) *
+                      (q3(i,j,k+1, GDW   ) - q3(i,j,k, GDW   )) * dxinv[2]);
 
-        divu(i,j,k,UEINT) += pdivu;
+        divu(i,j,k,UEINT) -= pdivu;
     }
     else if (!flag(i,j,k).isCovered())
     {
@@ -271,7 +271,7 @@ eb_pdivu (int i, int j, int k,
                 fzp = amrex::Real(0.0);
         }
 
-        divu(i,j,k,UEINT) += (1.0/vfrc(i,j,k)) * q(i,j,k,QPRES)*
+        divu(i,j,k,UEINT) -= (1.0/vfrc(i,j,k)) * q(i,j,k,QPRES)*
             ( dxinv[0] * (apx(i+1,j,k)*fxp-apx(i,j,k)*fxm)
             + dxinv[1] * (apy(i,j+1,k)*fyp-apy(i,j,k)*fym)
             + dxinv[2] * (apz(i,j,k+1)*fzp-apz(i,j,k)*fzm) );
