@@ -2,6 +2,7 @@
 #define HYDRO_H
 
 #include "IndexDefines.H"
+#include <AMReX_BCRec.H>
 
 #ifdef AMREX_USE_EB
 #include <AMReX_EBFluxRegister.H>
