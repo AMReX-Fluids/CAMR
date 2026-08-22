@@ -42,7 +42,7 @@ void make_eb_cylinder (const Geometry& geom, int required_coarsening_level)
     amrex::Print() << " Direction: " << direction << std::endl;
     amrex::Print() << " Rotation angle(rad): " << rotation << std::endl;
     amrex::Print() << " Rotation axis: " << rotation_axe << std::endl;
-#if (AMREX_SPACDEIM == 3)
+#if (AMREX_SPACEDIM == 3)
     amrex::Print() << " Center:    " << center[0] << ", " << center[1] << ", " << center[2]
                    << std::endl;
 #else
