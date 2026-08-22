@@ -290,6 +290,10 @@ CAMR::writeJobInfo(const std::string& dir)
 void
 CAMR::writeBuildInfo(std::ostream& os)
 {
+  // NOTE: this routine is called from main() *before* amrex::Initialize, so
+  //       everything here must write to "os" -- amrex::Print() cannot be used
+  //       because its constructor reads the ParallelContext frame stack, which
+  //       only amrex::Initialize populates.
   std::string PrettyLine = std::string(78, '=') + "\n";
   // std::string OtherLine = std::string(78, '-') + "\n";
   // std::string SkipSpace = std::string(8, ' ');
@@ -309,8 +313,8 @@ CAMR::writeBuildInfo(std::ostream& os)
   os << "COMP:          " << amrex::buildInfoGetComp() << "\n";
   os << "COMP version:  " << amrex::buildInfoGetCompVersion() << "\n";
 
-  amrex::Print() << "C++ compiler:  " << amrex::buildInfoGetCXXName() << "\n";
-  amrex::Print() << "C++ flags:     " << amrex::buildInfoGetCXXFlags() << "\n";
+  os << "C++ compiler:  " << amrex::buildInfoGetCXXName() << "\n";
+  os << "C++ flags:     " << amrex::buildInfoGetCXXFlags() << "\n";
 
   os << "\n";
 
@@ -319,8 +323,8 @@ CAMR::writeBuildInfo(std::ostream& os)
 
   os << "\n";
 
-  amrex::Print() << "Link flags:    " << amrex::buildInfoGetLinkFlags() << "\n";
-  amrex::Print() << "Libraries:     " << amrex::buildInfoGetLibraries() << "\n";
+  os << "Link flags:    " << amrex::buildInfoGetLinkFlags() << "\n";
+  os << "Libraries:     " << amrex::buildInfoGetLibraries() << "\n";
 
   os << "\n";
 
@@ -393,15 +397,62 @@ CAMR::writeBuildInfo(std::ostream& os)
      << std::endl;
 #endif
 
+  os << "\n\n";
+}
+
+void
+CAMR::buildAndWritePlotMF(
+  const amrex::Vector<std::pair<int, int>>& plot_var_map,
+  const std::list<std::string>& derive_names,
+  int n_data_items,
+  amrex::Real cur_time,
+  const std::string& FullPath,
+  const std::string& BaseName,
+  amrex::VisMF::How how)
+{
+  // We combine all of the multifabs -- state, derived, etc -- into one
+  // multifab -- plotMF.
+  // NOTE: we are assuming that each state variable has one component,
+  // but a derived variable is allowed to have multiple components.
+  int cnt = 0;
+  const int nGrow = 0;
+  amrex::MultiFab plotMF(
+    grids, dmap, n_data_items, nGrow, amrex::MFInfo(), Factory());
+
+  // Cull data from state variables -- use no ghost cells.
+  for (int i = 0; i < plot_var_map.size(); i++) {
+    int typ = plot_var_map[i].first;
+    int comp = plot_var_map[i].second;
+    amrex::MultiFab* this_dat = &state[typ].newData();
+    amrex::MultiFab::Copy(plotMF, *this_dat, comp, cnt, 1, nGrow);
+    cnt++;
+  }
+
+  // Cull data from derived variables.
+  for (const auto& derive_name : derive_names) {
+    const amrex::DeriveRec* rec = derive_lst.get(derive_name);
+    int ncomp = rec->numDerive();
+
+    auto derive_dat = derive(derive_name, cur_time, nGrow);
+    amrex::MultiFab::Copy(plotMF, *derive_dat, 0, cnt, ncomp, nGrow);
+    cnt += ncomp;
+  }
+
+  // Mask out cells covered by the EB.  This must stay here, in the shared
+  //    path, so that plotfiles and small plotfiles cannot disagree about
+  //    what is written in covered regions.
 #ifdef AMREX_USE_EB
-  os << std::setw(35) << std::left << "AMREX_USE_EB " << std::setw(6) << "ON"
-     << std::endl;
-#else
-  os << std::setw(35) << std::left << "AMREX_USE_EB " << std::setw(6) << "OFF"
-     << std::endl;
+   amrex::EB_set_covered(plotMF,0.0);
 #endif
 
-  os << "\n\n";
+#ifdef CAMR_USE_MOVING_EB
+    ZeroingOutForPlotting(plotMF);
+#endif
+
+  // Use the Full pathname when naming the MultiFab.
+  std::string TheFullPath = FullPath;
+  TheFullPath += BaseName;
+  amrex::VisMF::Write(plotMF, TheFullPath, how, true);
 }
 
 void
@@ -546,48 +597,8 @@ CAMR::writePlotFile(
     }
   }
 
-  // We combine all of the multifabs -- state, derived, etc -- into one
-  // multifab -- plotMF.
-  // NOTE: we are assuming that each state variable has one component,
-  // but a derived variable is allowed to have multiple components.
-  int cnt = 0;
-  const int nGrow = 0;
-  amrex::MultiFab plotMF(
-    grids, dmap, n_data_items, nGrow, amrex::MFInfo(), Factory());
-
-  // Cull data from state variables -- use no ghost cells.
-  for (int i = 0; i < plot_var_map.size(); i++) {
-    int typ = plot_var_map[i].first;
-    int comp = plot_var_map[i].second;
-    amrex::MultiFab* this_dat = &state[typ].newData();
-    amrex::MultiFab::Copy(plotMF, *this_dat, comp, cnt, 1, nGrow);
-    cnt++;
-  }
-
-  // Cull data from derived variables.
-  if (!derive_names.empty()) {
-    for (const auto& derive_name : derive_names) {
-      const amrex::DeriveRec* rec = derive_lst.get(derive_name);
-      int ncomp = rec->numDerive();
-
-      auto derive_dat = derive(derive_name, cur_time, nGrow);
-      amrex::MultiFab::Copy(plotMF, *derive_dat, 0, cnt, ncomp, nGrow);
-      cnt += ncomp;
-    }
-  }
-
-#ifdef AMREX_USE_EB
-   amrex::EB_set_covered(plotMF,0.0);
-#endif
-
-#ifdef CAMR_USE_MOVING_EB
-    ZeroingOutForPlotting(plotMF);
-#endif
-
-  // Use the Full pathname when naming the MultiFab.
-  std::string TheFullPath = FullPath;
-  TheFullPath += BaseName;
-  amrex::VisMF::Write(plotMF, TheFullPath, how, true);
+  buildAndWritePlotMF(plot_var_map, derive_names, n_data_items, cur_time,
+                      FullPath, BaseName, how);
 }
 
 void
@@ -712,26 +723,8 @@ CAMR::writeSmallPlotFile(
     }
   }
 
-  // We combine all of the multifabs -- state, derived, etc -- into one
-  // multifab -- plotMF.
-  // NOTE: we are assuming that each state variable has one component,
-  // but a derived variable is allowed to have multiple components.
-  int cnt = 0;
-  const int nGrow = 0;
-  amrex::MultiFab plotMF(
-    grids, dmap, n_data_items, nGrow, amrex::MFInfo(), Factory());
-
-  // Cull data from state variables -- use no ghost cells.
-  for (int i = 0; i < plot_var_map.size(); i++) {
-    int typ = plot_var_map[i].first;
-    int comp = plot_var_map[i].second;
-    amrex::MultiFab* this_dat = &state[typ].newData();
-    amrex::MultiFab::Copy(plotMF, *this_dat, comp, cnt, 1, nGrow);
-    cnt++;
-  }
-
-  // Use the Full pathname when naming the MultiFab.
-  std::string TheFullPath = FullPath;
-  TheFullPath += BaseName;
-  amrex::VisMF::Write(plotMF, TheFullPath, how, true);
+  // Small plotfiles hold state variables only, so there are no derived
+  //    names to pass along.
+  buildAndWritePlotMF(plot_var_map, std::list<std::string>(), n_data_items,
+                      cur_time, FullPath, BaseName, how);
 }

@@ -65,14 +65,13 @@ hydro_umdrv_eb( const bool do_mol, Box const& bx,
     const int* domlo = geom.Domain().loVect();
     const int* domhi = geom.Domain().hiVect();
 
-    // Temporary FArrayBoxes
-    FArrayBox  divu(bxg_ii, 1, amrex::The_Async_Arena());
-    auto const& divuarr = divu.array();
-
     amrex::FArrayBox qec[AMREX_SPACEDIM];
     for (int dir = 0; dir < AMREX_SPACEDIM; dir++) {
       const Box eboxes = amrex::surroundingNodes(grow(bxg_ii, 1), dir);
       qec[dir].resize(eboxes, NGDNV, amrex::The_Async_Arena());
+      // Set to zero since the Godunov path fills these only on faces with
+      //    non-zero area fraction, but eb_pdivu interpolates from neighboring faces
+      qec[dir].setVal<RunOn::Device>(0.);
     }
     amrex::GpuArray<Array4<Real>, AMREX_SPACEDIM> qec_arr{
       {AMREX_D_DECL(qec[0].array(), qec[1].array(), qec[2].array())}};
@@ -132,23 +131,7 @@ hydro_umdrv_eb( const bool do_mol, Box const& bx,
                          plm_iorder, lpmap, transverse_reset_density);
     }
 
-    // Construct divu
-    AMREX_D_TERM(const Real dx0 = dx[0];,
-                 const Real dx1 = dx[1];,
-                 const Real dx2 = dx[2];);
-    GpuArray<int,AMREX_SPACEDIM> ldomlo{AMREX_D_DECL(domlo[0],domlo[1],domlo[2])};
-    GpuArray<int,AMREX_SPACEDIM> ldomhi{AMREX_D_DECL(domhi[0],domhi[1],domhi[2])};
-    GpuArray<int,AMREX_SPACEDIM> lbclo{AMREX_D_DECL(bclo[0],bclo[1],bclo[2])};
-    GpuArray<int,AMREX_SPACEDIM> lbchi{AMREX_D_DECL(bchi[0],bchi[1],bchi[2])};
-
-    ParallelFor(bxg_ii, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
-    {
-        if (flag_arr(i,j,k).isRegular()) {
-            hydro_divu(i, j, k, q_arr, AMREX_D_DECL(dx0, dx1, dx2), divuarr, ldomlo, ldomhi, lbclo, lbchi);
-        } else {
-            divuarr(i,j,k) = Real(0.0);
-        }
-    });
+    // Note: divu for the artificial viscosity is computed inside adjust_fluxes_eb
 
     adjust_fluxes_eb(bx, q_arr, uin_arr,
                      AMREX_D_DECL(apx, apy, apz),
