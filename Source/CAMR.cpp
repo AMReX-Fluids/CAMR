@@ -1084,8 +1084,11 @@ CAMR::derive(const std::string& name, amrex::Real time, int ngrow)
 {
 #ifdef AMREX_USE_EB
   if (name == "vfrac" || name == "volfrac") {
-    std::unique_ptr<amrex::MultiFab> derive_dat(new amrex::MultiFab(grids, dmap, 1, 0));
-    amrex::MultiFab::Copy(*derive_dat, *volfrac, 0, 0, 1, 0);
+    std::unique_ptr<amrex::MultiFab> derive_dat(
+      new amrex::MultiFab(grids, dmap, 1, ngrow, amrex::MFInfo(), Factory()));
+    derive_dat->setVal(0.0);
+    amrex::MultiFab::Copy(*derive_dat, *volfrac, 0, 0, 1,
+                          std::min(ngrow, volfrac->nGrow()));
     return derive_dat;
   }
 #endif
@@ -1098,7 +1101,7 @@ CAMR::derive(
 {
 #ifdef AMREX_USE_EB
   if (name == "vfrac" || name == "volfrac") {
-    amrex::MultiFab::Copy(mf_to_fill, *volfrac, 0, 0, 1, 0);
+    amrex::MultiFab::Copy(mf_to_fill, *volfrac, 0, dcomp, 1, 0);
   } else
 #endif
   {
