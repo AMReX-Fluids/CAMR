@@ -30,9 +30,9 @@ CAMR_initdata( int i, int j, int k,
 #if (AMREX_SPACEDIM == 3)
     for(int inside_i = 0; inside_i <= n_pts+1; inside_i++){
         for(int inside_j = 0; inside_j <= n_pts+1; inside_j++){
-        idot = (prob_lo[0] + (i+amrex::Real(inside_i/(n_pts+1)))*dx[0]);
+        idot = (prob_lo[0] + (i+amrex::Real(inside_i)/amrex::Real(n_pts+1))*dx[0]);
             for(int inside_k = 0;inside_k <= n_pts+1;inside_k++){
-        jdot = (prob_lo[1] + (j+amrex::Real(inside_j/(n_pts+1)))*dx[1]);
+        jdot = (prob_lo[1] + (j+amrex::Real(inside_j)/amrex::Real(n_pts+1))*dx[1]);
         if( idot  < (amrex::Real(-sqrt(1.0/3.0))*jdot)){
                     Pt  += prob_parm.p_l/((n_pts+2)*(n_pts+2)*(n_pts+2));
                     rhot += prob_parm.rho_l/((n_pts+2)*(n_pts+2)*(n_pts+2));
@@ -50,9 +50,9 @@ CAMR_initdata( int i, int j, int k,
 
 #if (AMREX_SPACEDIM == 2)
     for(int inside_i = 0; inside_i <= n_pts+1; inside_i++){
-        idot = (prob_lo[0] + (i+amrex::Real(inside_i/(n_pts+1)))*dx[0]);
+        idot = (prob_lo[0] + (i+amrex::Real(inside_i)/amrex::Real(n_pts+1))*dx[0]);
         for(int inside_j = 0; inside_j <= n_pts+1; inside_j++){
-            jdot = (prob_lo[1] + (j+amrex::Real(inside_j/(n_pts+1)))*dx[1]);
+            jdot = (prob_lo[1] + (j+amrex::Real(inside_j)/amrex::Real(n_pts+1))*dx[1]);
             if(idot < (amrex::Real(-sqrt(1.0/3.0))*jdot)){
             Pt  += prob_parm.p_l/((n_pts+2)*(n_pts+2));
                 rhot += prob_parm.rho_l/((n_pts+2)*(n_pts+2));
