@@ -82,7 +82,7 @@ mol_riemann_x (int i, int j, int k,
     if (sum < small_dens) {
         for (int n=0; n < NUM_SPECIES ; n++)
         {
-            ql(i,j,k,QFS+n) = q(i,j,k,QFS+n);
+            ql(i,j,k,QFS+n) = q(i-1,j,k,QFS+n);
         }
     } else {
         for (int n=0; n < NUM_SPECIES ; n++)
@@ -240,7 +240,7 @@ mol_riemann_y (int i, int j, int k,
     if (sum < small_dens) {
         for (int n=0; n < NUM_SPECIES ; n++)
         {
-            ql(i,j,k,QFS+n) = q(i,j,k,QFS+n);
+            ql(i,j,k,QFS+n) = q(i,j-1,k,QFS+n);
         }
     } else {
         for (int n=0; n < NUM_SPECIES ; n++)
@@ -400,7 +400,7 @@ mol_riemann_z (int i, int j, int k,
     if (sum < small_dens) {
         for (int n=0; n < NUM_SPECIES ; n++)
         {
-            ql(i,j,k,QFS+n) = q(i,j,k,QFS+n);
+            ql(i,j,k,QFS+n) = q(i,j,k-1,QFS+n);
         }
     } else {
         for (int n=0; n < NUM_SPECIES ; n++)
