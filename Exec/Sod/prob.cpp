@@ -14,6 +14,11 @@ extern "C" {
         amrex::ParmParse pp("prob");
 
         pp.query("type",  CAMR::h_prob_parm->type);
+#if (AMREX_SPACEDIM < 3)
+        if (CAMR::h_prob_parm->type == 2) {
+            amrex::Abort("Sod: prob.type = 2 is the z-direction problem and requires DIM = 3");
+        }
+#endif
         pp.query("p_l",   CAMR::h_prob_parm->p_l);
         pp.query("p_r",   CAMR::h_prob_parm->p_r);
         pp.query("rho_l", CAMR::h_prob_parm->rho_l);
