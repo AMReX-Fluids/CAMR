@@ -83,6 +83,20 @@ public:
     const std::string& dir, std::ostream& os, amrex::VisMF::How how) override;
   void writeSmallPlotFile(
     const std::string& dir, std::ostream& os, amrex::VisMF::How how) override;
+
+  // Shared tail of writePlotFile / writeSmallPlotFile: build the combined
+  //    plotfile MultiFab, mask out EB-covered cells, and write it.  Both
+  //    writers must go through this so their covered-cell treatment cannot
+  //    drift apart.  Pass an empty derive_names to write state data only.
+  void buildAndWritePlotMF(
+    const amrex::Vector<std::pair<int, int>>& plot_var_map,
+    const std::list<std::string>& derive_names,
+    int n_data_items,
+    amrex::Real cur_time,
+    const std::string& FullPath,
+    const std::string& BaseName,
+    amrex::VisMF::How how);
+
   void writeJobInfo(const std::string& dir);
   static void writeBuildInfo(std::ostream& os);
 

@@ -55,7 +55,7 @@ adjust_fluxes_eb (
               Array4<Real       const> const& apz),
               Array4<const Real      > const& vfrac,
               const GpuArray<amrex::Real, AMREX_SPACEDIM> dx,
-              const GpuArray<amrex::Real, AMREX_SPACEDIM> dxinv,
+              const GpuArray<amrex::Real, AMREX_SPACEDIM> /*dxinv*/,
               const GpuArray<const amrex::Array4<amrex::Real>, AMREX_SPACEDIM> flux,
               const Geometry& geom,
               const int*  bclo, const int*  bchi,
@@ -77,10 +77,18 @@ adjust_fluxes_eb (
     Box nddom = amrex::convert(geom.growPeriodicDomain(16), IntVect(1));
     bx_divu &= nddom;
 
+    auto const* domlo = geom.Domain().loVect();
+    auto const* domhi = geom.Domain().hiVect();
+
+    GpuArray<int,AMREX_SPACEDIM> ldomlo{AMREX_D_DECL(domlo[0],domlo[1],domlo[2])};
+    GpuArray<int,AMREX_SPACEDIM> ldomhi{AMREX_D_DECL(domhi[0],domhi[1],domhi[2])};
+    GpuArray<int,AMREX_SPACEDIM> lbclo{AMREX_D_DECL(bclo[0],bclo[1],bclo[2])};
+    GpuArray<int,AMREX_SPACEDIM> lbchi{AMREX_D_DECL(bchi[0],bchi[1],bchi[2])};
+
     auto const& divu_arr = divu.array();
     amrex::ParallelFor(bx_divu, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-        eb_divu(i, j, k, q_arr, divu_arr, vfrac, dxinv);
+        eb_divu(i, j, k, q_arr, divu_arr, vfrac, dx, ldomlo, ldomhi, lbclo, lbchi);
     });
 
     // Flux alterations
@@ -90,9 +98,6 @@ adjust_fluxes_eb (
 #elif (AMREX_SPACEDIM == 3)
     areafac = dx[1]*dx[2];
 #endif
-
-    auto const* domlo = geom.Domain().loVect();
-    auto const* domhi = geom.Domain().hiVect();
 
     int domlo_dir = domlo[0];
     int domhi_dir = domhi[0];

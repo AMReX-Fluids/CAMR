@@ -6,6 +6,7 @@
 #include "IndexDefines.H"
 #include <AMReX_EBFluxRegister.H>
 #include <Hydro_hypflux_eb_K.H>
+#include <Hydro_utils_K.H>
 
 AMREX_GPU_DEVICE AMREX_FORCE_INLINE
 void
@@ -32,7 +33,11 @@ eb_divu (int i, int j, int k,
          amrex::Array4<amrex::Real const> const& q,
          amrex::Array4<amrex::Real> const& divu,
          amrex::Array4<amrex::Real const> const& vfrac,
-         amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxInv)
+         amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
+         amrex::GpuArray<int,AMREX_SPACEDIM> const& domlo,
+         amrex::GpuArray<int,AMREX_SPACEDIM> const& domhi,
+         amrex::GpuArray<int,AMREX_SPACEDIM> const& bclo,
+         amrex::GpuArray<int,AMREX_SPACEDIM> const& bchi)
 {
 #if (AMREX_SPACEDIM == 2)
     amrex::Real surrounding_vol = vfrac(i,j  ,k  ) + vfrac(i-1,j  ,k  ) +
@@ -49,31 +54,11 @@ eb_divu (int i, int j, int k,
     divu(i, j, k) = 0.0;
 
     if (surrounding_vol >= cutoff) {
-
-#if (AMREX_SPACEDIM == 2)
-        amrex::Real ux = 0.5 *
-                         (q(i, j, k, QU) - q(i - 1, j, k, QU) + q(i, j - 1, k, QU) -
-                          q(i - 1, j - 1, k, QU)) * dxInv[0];
-        amrex::Real vy = 0.5 *
-                         (q(i, j, k, QV) - q(i, j - 1, k, QV) + q(i - 1, j, k, QV) -
-                          q(i - 1, j - 1, k, QV)) * dxInv[1];
-#elif (AMREX_SPACEDIM == 3)
-        amrex::Real ux = 0.25 *
-           (q(i, j, k, QU) - q(i - 1, j, k, QU) + q(i, j, k - 1, QU) -
-            q(i - 1, j, k - 1, QU) + q(i, j - 1, k, QU) - q(i - 1, j - 1, k, QU) +
-            q(i, j - 1, k - 1, QU) - q(i - 1, j - 1, k - 1, QU)) * dxInv[0];
-
-        amrex::Real vy = 0.25 *
-          (q(i, j, k, QV) - q(i, j - 1, k, QV) + q(i, j, k - 1, QV) -
-           q(i, j - 1, k - 1, QV) + q(i - 1, j, k, QV) - q(i - 1, j - 1, k, QV) +
-           q(i - 1, j, k - 1, QV) - q(i - 1, j - 1, k - 1, QV)) * dxInv[1];
-
-        amrex::Real wz = 0.25 *
-          (q(i, j, k, QW) - q(i, j, k - 1, QW) + q(i - 1, j, k, QW) -
-           q(i - 1, j, k - 1, QW) + q(i, j - 1, k, QW) - q(i, j - 1, k - 1, QW) +
-           q(i - 1, j - 1, k, QW) - q(i - 1, j - 1, k - 1, QW)) * dxInv[2];
-#endif
-      divu(i, j, k) = AMREX_D_TERM(ux, +vy, +wz);
+        // All the cells surrounding this node are regular, so we use the same
+        //    formula as in the non-EB case, which includes the one-sided
+        //    differences at NoSlipWall boundaries
+        hydro_divu(i, j, k, q, AMREX_D_DECL(dx[0], dx[1], dx[2]), divu,
+                   domlo, domhi, bclo, bchi);
     }
 }
 
