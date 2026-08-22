@@ -208,8 +208,16 @@ CAMR_dereint1(
   auto const dat = datfab.const_array();
   auto e = derfab.array();
 
+#ifdef AMREX_USE_EB
+amrex::Real local_small_den = 1.e-20;
+#endif
+
   amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+#ifdef AMREX_USE_EB
+    const amrex::Real rhoInv = 1.0 / std::max(dat(i, j, k, URHO), local_small_den);
+#else
     const amrex::Real rhoInv = 1.0 / dat(i, j, k, URHO);
+#endif
     const amrex::Real ux = dat(i, j, k, UMX) * rhoInv;
     const amrex::Real uy = dat(i, j, k, UMY) * rhoInv;
 #if (AMREX_SPACEDIM == 2)
