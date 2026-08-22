@@ -980,6 +980,21 @@ CAMR::enforce_min_density(amrex::MultiFab& S_new)
     amrex::GpuArray<int,3> lo = bx.loVect3d();
     amrex::GpuArray<int,3> hi = bx.hiVect3d();
 
+    // Snapshot the density over this tile.  The donor search below must see the
+    //    original densities, never a cell that another thread is concurrently
+    //    resetting -- otherwise a just-floored neighbor could win the search and
+    //    we would copy from a cell that is still being rewritten.
+    // Only the density needs saving: a neighbor wins the search only if its
+    //    original density is at least small_dens, and such a cell is never itself
+    //    reset, so its remaining components are guaranteed not to be changing
+    //    while we copy them out of Sarr below.
+    amrex::FArrayBox rho_orig_fab(bx, 1, amrex::The_Async_Arena());
+    const auto& rho_orig = rho_orig_fab.array();
+    amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+    {
+        rho_orig(i,j,k) = Sarr(i,j,k,URHO);
+    });
+
     // This corresponds to (density_reset_method == 1) from CAMR
     amrex::ParallelFor(
       bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
@@ -994,7 +1009,7 @@ CAMR::enforce_min_density(amrex::MultiFab& S_new)
          } else if (Sarr(i,j,k,URHO) < l_small_dens) {
 
              // Reset to the characteristics of the adjacent state with the highest density.
-             amrex::Real max_dens = Sarr(i,j,k,URHO);
+             amrex::Real max_dens = rho_orig(i,j,k);
              int i_set = i;
              int j_set = j;
              int k_set = k;
@@ -1002,12 +1017,16 @@ CAMR::enforce_min_density(amrex::MultiFab& S_new)
              for (int jj = -1; jj <= 1; jj++) {
              for (int ii = -1; ii <= 1; ii++) {
                  if ( (i+ii>=lo[0]) && (j+jj>=lo[1]) && (k+kk>=lo[2]) &&
-                      (i+ii<=hi[0]) && (j+jj<=hi[1]) && (k+kk<=hi[2]) ) {
-                         if (Sarr(i+ii,j+jj,k+kk,URHO) > max_dens) {
+                      (i+ii<=hi[0]) && (j+jj<=hi[1]) && (k+kk<=hi[2])
+#ifdef AMREX_USE_EB
+                      && !flag_arr(i+ii,j+jj,k+kk).isCovered()
+#endif
+                    ) {
+                         if (rho_orig(i+ii,j+jj,k+kk) > max_dens) {
                             i_set = i+ii;
                             j_set = j+jj;
                             k_set = k+kk;
-                            max_dens = Sarr(i_set,j_set,k_set,URHO);
+                            max_dens = rho_orig(i_set,j_set,k_set);
                          }
                      }
              }
