@@ -166,7 +166,7 @@ hydro_transd (
           pnewr += hdt * srcp;
           qp(iv, QPRES) = pnewr;
       } else {
-          qp(iv, QPRES) = qnormp(iv,QPRES);
+          qp(iv, QPRES) = qnormp(iv,QPRES) + hdt * srcp;
       }
 
       qp(iv,QPRES) = std::max( qp(iv,QPRES), small_pres);
