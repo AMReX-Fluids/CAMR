@@ -25,8 +25,13 @@ CAMR::construct_hydro_source (const MultiFab& S,
 
     AMREX_ASSERT(S.nGrow() == numGrow());
 
-    // Fill the source terms to go into the hydro with only the old-time sources
-    int ng = 0;
+    // Fill the source terms to go into the hydro with only the old-time sources.
+    //
+    // The Godunov trace reads srcQ in the ghost cells, so we must include the
+    // ghost cells of the old-time sources here -- the FillBoundary below only
+    // copies valid data from the same level, so it cannot fill the ghost cells
+    // at a coarse-fine boundary.  (The MOL path never builds srcQ.)
+    int ng = (do_mol) ? 0 : numGrow();
 
     for (int n = 0; n < src_list.size(); ++n) {
         MultiFab::Saxpy(sources_for_hydro, 1.0, *old_sources[src_list[n]], 0, 0, NVAR, ng);

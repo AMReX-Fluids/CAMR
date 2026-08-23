@@ -157,17 +157,24 @@ public:
                                       amrex::Real time,
                                       amrex::Real dt);
 
+  //
+  // Build the old-time source terms on the valid region plus ng ghost cells.
+  // S must be a state with at least ng ghost cells filled (i.e. Sborder, not
+  // the state data itself) since the sources are evaluated cell-by-cell from it.
+  //
   void construct_old_source (
     int src,
+    const amrex::MultiFab& S,
     amrex::Real time,
-    amrex::Real dt);
+    amrex::Real dt,
+    int ng);
 
   void construct_new_source (
     int src,
     amrex::Real time,
     amrex::Real dt);
 
-  void construct_old_ext_source(amrex::Real time, amrex::Real dt);
+  void construct_old_ext_source(const amrex::MultiFab& S, amrex::Real time, amrex::Real dt, int ng);
   void construct_new_ext_source(amrex::Real time, amrex::Real dt);
 
   static void fill_ext_source (
@@ -178,7 +185,7 @@ public:
     amrex::MultiFab& ext_src,
     int ng);
 
-  void construct_old_grav_source (amrex::Real time, amrex::Real dt);
+  void construct_old_grav_source (const amrex::MultiFab& S, amrex::Real time, amrex::Real dt, int ng);
   void construct_new_grav_source (amrex::Real time, amrex::Real dt);
 
   static void fill_grav_source (const amrex::MultiFab& S, amrex::MultiFab& grav_src, int ng);

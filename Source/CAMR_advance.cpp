@@ -111,9 +111,15 @@ CAMR::CAMR_advance (Real time,
     // Initialize the new-time data.
     MultiFab::Copy(S_new, Sborder, 0, 0, NVAR, S_new.nGrow());
 
-    // Build sources at t_old, then add them to S_new
+    // Build sources at t_old, then add them to S_new.
+    //
+    // The Godunov hydro reads these sources (via sources_for_hydro --> srcQ) in
+    // the ghost cells as well, so we must build them over the full numGrow()
+    // footprint, using Sborder since the state itself carries no ghost cells.
+    // The MOL hydro never builds srcQ, so there we only need the valid region.
+    int ng_src = (do_mol) ? 0 : numGrow();
     for (int n = 0; n < src_list.size(); ++n) {
-        construct_old_source(src_list[n], time, dt);
+        construct_old_source(src_list[n], Sborder, time, dt, ng_src);
         MultiFab::Saxpy(S_new, dt, *old_sources[src_list[n]], 0, 0, NVAR, 0);
     }
 
