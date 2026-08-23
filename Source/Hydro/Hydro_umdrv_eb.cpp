@@ -79,7 +79,11 @@ hydro_umdrv_eb( const bool do_mol, Box const& bx,
     // ****************************************************************
     // Quantities for redistribution
     // ****************************************************************
-    FArrayBox divc,redistwgt;
+    // These are put on the async arena (like qec above) because the
+    // redistribution kernels that read them are still in flight when this
+    // function returns -- only the FluxRedist branch of ApplyMLRedistribution
+    // ends with a stream synchronize.
+    FArrayBox divc(amrex::The_Async_Arena()), redistwgt(amrex::The_Async_Arena());
 
     if (l_redistribution_type == "StateRedist") {
              divc.resize(bxg_i,NVAR); // This will hold "dUdt" before redistribution
@@ -103,7 +107,8 @@ hydro_umdrv_eb( const bool do_mol, Box const& bx,
     // ****************************************************************
     FArrayBox flux_tmp[AMREX_SPACEDIM];
     for (int idim=0; idim < AMREX_SPACEDIM; ++idim) {
-        flux_tmp[idim].resize(amrex::surroundingNodes(bxg_ii,idim),NVAR);
+        flux_tmp[idim].resize(amrex::surroundingNodes(bxg_ii,idim),NVAR,
+                              amrex::The_Async_Arena());
         flux_tmp[idim].setVal<RunOn::Device>(0.);
     }
 

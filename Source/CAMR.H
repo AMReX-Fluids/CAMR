@@ -479,11 +479,16 @@ CAMR::numGrow()
 {
   int ng = 4;
 #ifdef AMREX_USE_EB
-  // IF MOL     + FRD then 5
-  // IF Godunov + FRD then 6
-  // IF MOL     + SRD then 6
-  // IF Godunov + SRD then 7
-  if (redistribution_type == "FluxRedist")
+  // IF MOL     + FRD  then 5
+  // IF Godunov + FRD  then 6
+  // IF MOL     + SRD  then 6
+  // IF Godunov + SRD  then 7
+  // IF MOL     + none then 5
+  // IF Godunov + none then 6
+  //
+  // NoRedist takes the same ngrow_bx = 2 as FluxRedist in
+  //    construct_hydro_source, so it needs the same number of ghost cells
+  if (redistribution_type == "FluxRedist" || redistribution_type == "NoRedist")
   {
     if (do_mol) {
         ng = 5;

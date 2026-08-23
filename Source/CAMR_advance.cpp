@@ -123,7 +123,6 @@ CAMR::CAMR_advance (Real time,
         MultiFab::Saxpy(S_new, dt, *old_sources[src_list[n]], 0, 0, NVAR, 0);
     }
 
-    sources_for_hydro.setVal(0.0);
     //
     // Now build and add the hydro source term(s) to S_new
     //
@@ -139,6 +138,16 @@ CAMR::CAMR_advance (Real time,
         // S^{n+1} = 0.5 * (S^{n} + S^{n+1,*}) + 0.5 * dt * dSdt^{n+1,*}
         MultiFab::LinComb(S_new, 0.5, Sborder, 0, 0.5, S_old, 0, 0, NVAR, 0);
         MultiFab::Saxpy  (S_new, 0.5*dt, new_hydro_source, 0, 0, NVAR, 0);
+
+        // The LinComb above averaged S^{n+1,*} -- which already held
+        // dt * old_sources -- against S^n, which does not, so only half of the
+        // old-time sources survived.  Put the other half back, so that once the
+        // new-source correction (which is only 0.5*(Src_new - Src_old)) is
+        // added below the state carries the time-centered
+        // 0.5 * dt * (Src_old + Src_new), just as the Godunov branch does.
+        for (int n = 0; n < src_list.size(); ++n) {
+            MultiFab::Saxpy(S_new, 0.5*dt, *old_sources[src_list[n]], 0, 0, NVAR, 0);
+        }
 
     } else {
         construct_hydro_source(Sborder, hydro_source, time, dt);
