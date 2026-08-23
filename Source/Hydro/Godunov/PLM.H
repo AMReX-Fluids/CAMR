@@ -56,7 +56,7 @@ plm_slope (
         dfm = dsgn * std::min(dlim, std::abs(dcen));
 
         dlft = qp - qc;
-        drgt = (order == 4) ? qp2 - qp : 0.0;
+        drgt = qp2 - qp;
         dcen = 0.5 * (dlft + drgt);
         dsgn = amrex::Math::copysign(1.0, dcen);
         dlim = (dlft * drgt >= 0.0)
@@ -72,7 +72,9 @@ plm_slope (
       dlim = (dlft * drgt >= 0.0)
                ? 2.0 * std::min(std::abs(dlft), std::abs(drgt)) : 0.0;
 
-      dtemp = 4.0 / 3.0 * dcen - 1.0 / 6.0 * (dfp + dfm);
+      // The fourth-order blend only applies if we computed dfm/dfp above;
+      // for order == 2 this is just the MC-limited centered slope
+      dtemp = (order == 4) ? 4.0 / 3.0 * dcen - 1.0 / 6.0 * (dfp + dfm) : dcen;
 
       return flat * dsgn * std::min(dlim, std::abs(dtemp));
   }
@@ -155,7 +157,9 @@ plm_pslope (
       dlim = (dlft * drgt >= 0.0)
                ? 2.0 * std::min(std::abs(dlft), std::abs(drgt)) : 0.0;
 
-      dtemp = 4.0 / 3.0 * dcen - 1.0 / 6.0 * (dfp + dfm);
+      // The fourth-order blend only applies if we computed dfm/dfp above;
+      // for order == 2 this is just the MC-limited centered slope
+      dtemp = (order == 4) ? 4.0 / 3.0 * dcen - 1.0 / 6.0 * (dfp + dfm) : dcen;
 
       amrex::Real dp = flat * dsgn * std::min<amrex::Real>(dlim, std::abs(dtemp));
 

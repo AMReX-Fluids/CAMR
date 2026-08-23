@@ -183,6 +183,14 @@ CAMR::read_params()
     }
   }
 
+  // Check on PLM slope order -- the slope routines only distinguish
+  // between 1 (piecewise constant), 2 (MC-limited centered slope) and
+  // 4 (fourth-order blend), so any other value would silently be
+  // treated as if it were 2.
+  if (plm_iorder != 1 && plm_iorder != 2 && plm_iorder != 4) {
+    amrex::Error("CAMR::plm_iorder must be 1, 2 or 4");
+  }
+
 #ifdef AMREX_USE_EB
   // We only support PLM (not PPM) with using EB
   if (do_mol == 0 && ppm_type != 0) {

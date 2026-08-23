@@ -78,6 +78,16 @@ hydro_transdo (
   const amrex::Real flxe   = no_cov_face ? cdtdx * (flxx(ivpt, UEDEN) - flxx(iv, UEDEN)) : amrex::Real(0.0);
   const amrex::Real      c = qa(iv, QGAMC);
 
+  // If the transverse update would make the density negative then we reset the
+  // state below.  We must test for that here as well so that the passive
+  // variables are reset along with the rest of the state -- otherwise they
+  // would be divided by the negative pre-reset density.  These predicates must
+  // stay identical to the ones used in the QP / QM blocks below.
+  const bool reset_state_r = (transverse_reset_density == 1 &&
+                              qnormp(iv  , QRHO) - flxrho < amrex::Real(0.0));
+  const bool reset_state_l = (transverse_reset_density == 1 &&
+                              qnormm(ivpn, QRHO) - flxrho < amrex::Real(0.0));
+
   // Update passive variables
   for (int ipass = 0; ipass < NPASSIVE; ++ipass) {
       const int n = pmap.upassMap[ipass];
@@ -86,7 +96,7 @@ hydro_transdo (
 
       amrex::Real rr, rrnew, compo;
 
-      if (lo_face_not_covered)
+      if (lo_face_not_covered && !reset_state_r)
       {
           rr = qnormp(iv, QRHO);
           rrnew = rr - flxrho;
@@ -96,7 +106,7 @@ hydro_transdo (
           qp(iv, nqp) = qnormp(iv, nqp);
       }
 
-      if (hi_face_not_covered)
+      if (hi_face_not_covered && !reset_state_l)
       {
           rr = qnormm(ivpn, QRHO);
           rrnew = rr - flxrho;
@@ -143,15 +153,14 @@ hydro_transdo (
       amrex::Real rwnewr = rwr - flxw;
       amrex::Real renewr = rer - flxe;
 
-      bool reset_state = false;
+      const bool reset_state = reset_state_r;
 
-      if (transverse_reset_density == 1 && rrnewr < 0.) {
+      if (reset_state) {
          rrnewr = rrr;
          runewr = rur;
          rvnewr = rvr;
          rwnewr = rwr;
          renewr = rer;
-         reset_state = true;
       }
 
       // Convert back to primitive
@@ -201,14 +210,13 @@ hydro_transdo (
       amrex::Real rwnewl = rwl - flxw;
       amrex::Real renewl = rel - flxe;
 
-      bool reset_state = false;
-      if (transverse_reset_density == 1 && rrnewl < 0.) {
+      const bool reset_state = reset_state_l;
+      if (reset_state) {
          rrnewl = rrl;
          runewl = rul;
          rvnewl = rvl;
          rwnewl = rwl;
          renewl = rel;
-         reset_state = true;
       }
 
       qm(ivpn, QRHO) = rrnewl;
@@ -328,6 +336,14 @@ hydro_transdd (
   amrex::Real rrnewl = rrl - flxrho;
   amrex::Real rrnewr = rrr - flxrho;
 
+  // If the transverse update would make the density negative then we reset the
+  // state below.  We must test for that here as well so that the passive
+  // variables are reset along with the rest of the state -- otherwise they
+  // would be divided by the negative pre-reset density.  These predicates must
+  // stay identical to the ones used in the qp / qm blocks below.
+  const bool reset_state_r = (transverse_reset_density == 1 && rrnewr < 0.);
+  const bool reset_state_l = (transverse_reset_density == 1 && rrnewl < 0.);
+
   for (int ipass = 0; ipass < NPASSIVE; ++ipass) {
     const int n = pmap.upassMap[ipass];
     const int nqp = pmap.qpassMap[ipass];
@@ -341,8 +357,12 @@ hydro_transdd (
     // qp
     if (lo_face_not_covered)
     {
-      compo = rrr * qnormp(iv, nqp) - compn;
-      qp(iv, nqp) = compo / rrnewr + hdt * srcpass;
+      if (reset_state_r) {
+        qp(iv, nqp) = qnormp(iv, nqp) + hdt * srcpass;
+      } else {
+        compo = rrr * qnormp(iv, nqp) - compn;
+        qp(iv, nqp) = compo / rrnewr + hdt * srcpass;
+      }
     } else {
       qp(iv, nqp) = qnormp(iv, nqp);
     }
@@ -351,8 +371,12 @@ hydro_transdd (
 
     if (hi_face_not_covered)
     {
-      compo = rrl * qnormm(ivpn, nqp) - compn;
-      qm(ivpn, nqp) = compo / rrnewl + hdt * srcpass;
+      if (reset_state_l) {
+        qm(ivpn, nqp) = qnormm(ivpn, nqp) + hdt * srcpass;
+      } else {
+        compo = rrl * qnormm(ivpn, nqp) - compn;
+        qm(ivpn, nqp) = compo / rrnewl + hdt * srcpass;
+      }
     } else {
       qm(ivpn, nqp) = qnormm(ivpn, nqp);
     }
@@ -397,15 +421,14 @@ hydro_transdd (
     amrex::Real rwnewr = rwr - flxw;
     amrex::Real renewr = rer - flxe;
 
-    bool reset_state = false;
+    const bool reset_state = reset_state_r;
 
-    if (transverse_reset_density == 1 && rrnewr < 0.) {
+    if (reset_state) {
       rrnewr = rrr;
       runewr = rur;
       rvnewr = rvr;
       rwnewr = rwr;
       renewr = rer;
-      reset_state = true;
     }
 
     qp(iv, QRHO) = rrnewr + hdt * srcrho;
@@ -445,14 +468,13 @@ hydro_transdd (
     amrex::Real rwnewl = rwl - flxw;
     amrex::Real renewl = rel - flxe;
 
-    bool reset_state = false;
-    if (transverse_reset_density == 1 && rrnewl < 0.) {
+    const bool reset_state = reset_state_l;
+    if (reset_state) {
       rrnewl = rrl;
       runewl = rul;
       rvnewl = rvl;
       rwnewl = rwl;
       renewl = rel;
-      reset_state = true;
     }
 
     qm(ivpn, QRHO) = rrnewl + hdt * srcrho;
