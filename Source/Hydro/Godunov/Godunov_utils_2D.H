@@ -90,6 +90,16 @@ hydro_transd (
     dAu = ugp - ugm;
   }
 
+  // If the transverse update would make the density negative then we reset the
+  // state below.  We must test for that here as well so that the passive
+  // variables are reset along with the rest of the state -- otherwise they
+  // would be divided by the negative pre-reset density.  These predicates must
+  // stay identical to the ones used in the QP / QM blocks below.
+  const bool reset_state_r = (transverse_reset_density == 1 &&
+                              qnormp(iv  , QRHO) - flxrho < amrex::Real(0.0));
+  const bool reset_state_l = (transverse_reset_density == 1 &&
+                              qnormm(ivpn, QRHO) - flxrho < amrex::Real(0.0));
+
   // ****************************************************************************
   // Update passive variables
   // ****************************************************************************
@@ -102,19 +112,27 @@ hydro_transd (
     amrex::Real rr, rrnew, compo;
 
     if (lo_face_not_covered) {
-        rr = qnormp(iv, QRHO);
-        rrnew = rr - flxrho;
-        compo = rr * qnormp(iv, nqp) - compn;
-        qp(iv, nqp) = compo / rrnew + hdt * srcpass;
+        if (reset_state_r) {
+            qp(iv, nqp) = qnormp(iv, nqp) + hdt * srcpass;
+        } else {
+            rr = qnormp(iv, QRHO);
+            rrnew = rr - flxrho;
+            compo = rr * qnormp(iv, nqp) - compn;
+            qp(iv, nqp) = compo / rrnew + hdt * srcpass;
+        }
     } else {
         qp(iv, nqp) = qnormp(iv, nqp);
     }
 
     if (hi_face_not_covered) {
-        rr = qnormm(ivpn, QRHO);
-        rrnew = rr - flxrho;
-        compo = rr * qnormm(ivpn, nqp) - compn;
-        qm(ivpn, nqp) = compo / rrnew + hdt * srcpass;
+        if (reset_state_l) {
+            qm(ivpn, nqp) = qnormm(ivpn, nqp) + hdt * srcpass;
+        } else {
+            rr = qnormm(ivpn, QRHO);
+            rrnew = rr - flxrho;
+            compo = rr * qnormm(ivpn, nqp) - compn;
+            qm(ivpn, nqp) = compo / rrnew + hdt * srcpass;
+        }
     } else {
         qm(ivpn, nqp) = qnormm(ivpn, nqp);
     }
@@ -143,13 +161,12 @@ hydro_transd (
       amrex::Real rvnewr = rvr - flxv;
       amrex::Real renewr = rer - flxe;
 
-      reset_state = false;
-      if (transverse_reset_density == 1 && rrnewr < 0.) {
+      reset_state = reset_state_r;
+      if (reset_state) {
          rrnewr = rrr;
          runewr = rur;
          rvnewr = rvr;
          renewr = rer;
-         reset_state = true;
       }
 
       // Convert back to primitive
@@ -200,13 +217,12 @@ hydro_transd (
       amrex::Real rvnewl = rvl - flxv;
       amrex::Real renewl = rel - flxe;
 
-      reset_state=false;
-      if (transverse_reset_density == 1 && rrnewl < 0.) {
+      reset_state = reset_state_l;
+      if (reset_state) {
          rrnewl = rrl;
          runewl = rul;
          rvnewl = rvl;
          renewl = rel;
-         reset_state = true;
       }
 
       qm(ivpn, QRHO) = rrnewl + hdt * srcr;

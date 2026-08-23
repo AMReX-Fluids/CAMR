@@ -395,7 +395,7 @@ trace_ppm(
       qm(ivp1, QPRES) = p_ref + (alphap + alpham) * csq_ref;
 
       qm(ivp1, QRHO)  = std::max( qm(ivp1, QRHO), small_dens);
-      qm(ivp1, QPRES) = std::max( qm(ivp1, QPRES), small_dens);
+      qm(ivp1, QPRES) = std::max( qm(ivp1, QPRES), small_pres);
 
       // transverse velocities
       qm(ivp1, QUT) = Ip[QUT][1] /*+ hdt * Ip_src[QUT][1]*/;
