@@ -1312,13 +1312,17 @@ CAMR::ZeroingOutForPlotting(amrex::MultiFab& S)
     amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
         if (vfrac_arr(i,j,k) == 0.0)
         {
-               for (int n = 0; n < ncomp; ++n) {
-                 Sarr(i, j, k, n) = 0.0;
-            }
-       }
-       {
             for (int n = 0; n < ncomp; ++n) {
-                if(Sarr(i, j, k, n) < 1e-12){
+                Sarr(i, j, k, n) = 0.0;
+            }
+        }
+        else
+        {
+            // Clean up denormal-scale noise only.  Note that we must test the
+            // magnitude here -- a signed test would zero every legitimately
+            // negative value, e.g. all negative momenta and velocities.
+            for (int n = 0; n < ncomp; ++n) {
+                if (amrex::Math::abs(Sarr(i, j, k, n)) < 1.e-12) {
                     Sarr(i, j, k, n) = 0.0;
                 }
             }
