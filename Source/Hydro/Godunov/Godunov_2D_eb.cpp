@@ -182,7 +182,7 @@ Godunov_umeth_eb (
 
   // This box must be grown by one in transverse direction so we can
   // do tangential interpolation when taking divergence later
-  const Box& xfxbx = surroundingNodes( grow(bx_to_fill, 1, 1-cdir), cdir);
+  const Box& xfxbx = surroundingNodes( grow(bx_to_fill, 1-cdir, 1), cdir);
 
   // Final Riemann problem X
   ParallelFor(xfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
@@ -209,7 +209,7 @@ Godunov_umeth_eb (
 
   // This box must be grown by one in transverse direction so we can
   // do tangential interpolation when taking divergence later
-  const Box& yfxbx = surroundingNodes( grow(bx_to_fill, 1, 1-cdir), cdir);
+  const Box& yfxbx = surroundingNodes( grow(bx_to_fill, 1-cdir, 1), cdir);
 
   // Final Riemann problem Y
   ParallelFor(yfxbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
