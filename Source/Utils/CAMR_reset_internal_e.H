@@ -110,11 +110,16 @@ CAMR_reset_internal_e(
                 S(i, j, k, UEDEN) = S(i,j,k,UEINT) + rho * ke;
 
             } else if (S(i,j,k,UEINT) <= 0.) {
+                // Note that we must take the delta against the (rho e) from
+                // before the floor is applied, so we hold on to it rather than
+                // relying on the order of the two writes below.
+                const amrex::Real rhoe_old = S(i, j, k, UEINT);
+
                 EOS::RTY2E(rho,small_T,massfrac,e_out);
                 S(i, j, k, UEINT) = rho * e_out;
 
                 if (l_dual_energy_update_E_from_e == 1) {
-                    S(i, j, k, UEDEN) += (rho * e_out - S(i,j,k,UEINT));
+                    S(i, j, k, UEDEN) += (rho * e_out - rhoe_old);
                 }
             }
         }
