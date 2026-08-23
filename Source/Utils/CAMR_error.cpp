@@ -70,7 +70,7 @@ CAMR::error_setup()
             int num_val = ppr.countval("vorticity_greater");
             Vector<Real> value(num_val);
             ppr.getarr("vorticity_greater",value,0,num_val);
-            const std::string field="mag_vort";
+            const std::string field="magvort";
             errtags.push_back(AMRErrorTag(value,AMRErrorTag::VORT,field,info));
         }
         else if (ppr.countval("adjacent_difference_greater")) {
@@ -109,6 +109,29 @@ CAMR::error_setup()
         // }
         else {
             Abort(std::string("Unrecognized refinement indicator for " + refinement_indicators[i]).c_str());
+        }
+    }
+
+    //
+    // Every tag's field must be something derive() can actually produce, i.e.
+    // either a state variable or a registered derived quantity.  Checking here
+    // turns a typo in field_name -- or a mismatch with a derive name -- into a
+    // clear message at setup rather than an "unknown variable" abort deep in
+    // AmrLevel::derive at the first regrid.  This runs at the end of
+    // variableSetUp, so desc_lst and derive_lst are already populated.
+    //
+    for (int i=0; i<errtags.size(); ++i)
+    {
+        const std::string& field = errtags[i].Field();
+        if (field.empty()) { continue; } // box-only or user-function tags
+
+        int state_indx, ncomp;
+        if ( !isStateVariable(field, state_indx, ncomp) &&
+             !derive_lst.canDerive(field) )
+        {
+            Abort("CAMR::error_setup: refinement indicator asks to tag on \""
+                  + field + "\", which is neither a state variable nor a "
+                  "registered derived quantity");
         }
     }
 

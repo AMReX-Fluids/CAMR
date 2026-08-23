@@ -90,12 +90,6 @@ CAMR::setPlotVariables()
 
   amrex::ParmParse pp("CAMR");
 
-  bool plot_cost = true;
-  pp.query("plot_cost", plot_cost);
-  if (plot_cost) {
-    amrex::Amr::addDerivePlotVar("WorkEstimate");
-  }
-
   bool plot_rhoy = false;
   pp.query("plot_rhoy", plot_rhoy);
   if (plot_rhoy) {

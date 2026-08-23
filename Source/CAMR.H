@@ -26,8 +26,6 @@
 #include "prob_parm.H"
 
 enum StateType { State_Type = 0,
-                 Source_Type,
-                 Work_Estimate_Type,
                  NUM_STATE_TYPE };
 
 // Create storage for all source terms.
@@ -132,10 +130,6 @@ public:
   // Initialize data on this level after regridding if old level did not
   // previously exist
   void init () override;
-
-  // Initialize EB geometry for finest_level and level grids for
-  // other levels for the Amr class to do timed load balances.
-  int WorkEstType () override { return Work_Estimate_Type; }
 
   // Proceed with next timestep?
   int okToContinue () override;
