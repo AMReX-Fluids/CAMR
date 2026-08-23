@@ -1,7 +1,9 @@
 #include "CAMR.H"
 
 void
-CAMR::construct_old_grav_source (amrex::Real /*time*/, amrex::Real /*dt*/)
+CAMR::construct_old_grav_source (const amrex::MultiFab& S,
+                                 amrex::Real /*time*/, amrex::Real /*dt*/,
+                                 int ng)
 {
   old_sources[grav_src]->setVal(0.0);
 
@@ -9,9 +11,13 @@ CAMR::construct_old_grav_source (amrex::Real /*time*/, amrex::Real /*dt*/)
     return;
   }
 
-  const amrex::MultiFab& S_old = get_old_data(State_Type);
-  int ng = S_old.nGrow();
-  fill_grav_source(S_old, *old_sources[grav_src], ng);
+  // Note that S must be a state with at least ng ghost cells filled (i.e.
+  // Sborder rather than the state data, which carries no ghost cells) because
+  // the hydro reads the source terms in the ghost cells as well, and neither
+  // FillBoundary here nor in construct_hydro_source can fill the ghost cells
+  // at a coarse-fine boundary.
+  AMREX_ASSERT(S.nGrow() >= ng);
+  fill_grav_source(S, *old_sources[grav_src], ng);
 
   old_sources[grav_src]->FillBoundary(geom.periodicity());
 }

@@ -2,19 +2,20 @@
 #include "IndexDefines.H"
 
 void
-CAMR::construct_old_ext_source(amrex::Real time, amrex::Real dt)
+CAMR::construct_old_ext_source(const amrex::MultiFab& S,
+                               amrex::Real time, amrex::Real dt, int ng)
 {
-  const amrex::MultiFab& S_old = get_old_data(State_Type);
-
-  int ng = 0; // None filled
-
   old_sources[ext_src]->setVal(0.0);
 
   if (!add_ext_src) {
     return;
   }
 
-  fill_ext_source(time, dt, S_old, S_old, *old_sources[ext_src], ng);
+  // Note that S must be a state with at least ng ghost cells filled (i.e.
+  // Sborder rather than the state data, which carries no ghost cells) because
+  // the hydro reads the source terms in the ghost cells as well.
+  AMREX_ASSERT(S.nGrow() >= ng);
+  fill_ext_source(time, dt, S, S, *old_sources[ext_src], ng);
 
   old_sources[ext_src]->FillBoundary(geom.periodicity());
 }
