@@ -479,29 +479,26 @@ CAMR::numGrow()
   int ng = 4;
 #ifdef AMREX_USE_EB
   // IF MOL     + FRD  then 5
-  // IF Godunov + FRD  then 6
+  // IF Godunov + FRD  then 7
   // IF MOL     + SRD  then 6
-  // IF Godunov + SRD  then 7
+  // IF Godunov + SRD  then 8
   // IF MOL     + none then 5
   // IF Godunov + none then 6
   //
-  // NoRedist takes the same ngrow_bx = 2 as FluxRedist in
-  //    construct_hydro_source, so it needs the same number of ghost cells
-  if (redistribution_type == "FluxRedist" || redistribution_type == "NoRedist")
+  // Godunov + redistribution needs one more than the PLM stencil: the traced
+  // states on the outer ring of the EB Godunov box feed the redistributed
+  // update, and flatten_eb() needs q at +-3 around that ring.
+  if (redistribution_type == "FluxRedist")
   {
-    if (do_mol) {
-        ng = 5;
-    } else {
-        ng = 6;
-    }
+    ng = (do_mol) ? 5 : 7;
+  }
+  else if (redistribution_type == "NoRedist")
+  {
+    ng = (do_mol) ? 5 : 6;
   }
   else if (redistribution_type == "StateRedist")
   {
-     if (do_mol) {
-        ng = 6;
-     } else {
-        ng = 7;
-     }
+    ng = (do_mol) ? 6 : 8;
   }
 #endif
   return ng;

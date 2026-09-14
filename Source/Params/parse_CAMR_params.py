@@ -157,9 +157,12 @@ class Param(object):
         # this is the line that goes into CAMR_params.H included
         # into CAMR.H
 
-        static = ""
+        # prob.H includes this header at file scope, so the declarations are
+        # also unused file-scope statics in several translation units; the
+        # attribute keeps -Wall -Werror builds quiet.
+        static = "[[maybe_unused]]"
         if self.static:
-            static = "static"
+            static = "[[maybe_unused]] static"
 
         if self.dtype == "int":
             tstr = "{} int {};\n".format(static, self.cpp_var_name)

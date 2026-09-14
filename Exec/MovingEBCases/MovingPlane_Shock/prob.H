@@ -6,7 +6,6 @@
 
 #include "IndexDefines.H"
 #include "prob_parm.H"
-#include "CAMR_params.H"
 #include "EOS.H"
 
 AMREX_GPU_DEVICE
@@ -22,7 +21,6 @@ CAMR_initdata( int i, int j, int k,
     const amrex::Real*      dx = geomdata.CellSize();
 
     amrex::Real x = prob_lo[0] + (i+amrex::Real(0.5))*dx[0];
-    amrex::Real y = prob_lo[1] + (j+amrex::Real(0.5))*dx[1];
 
     amrex::Real Pt, rhot, uxt;
     if (x < amrex::Real(0.5)) {

@@ -14,6 +14,13 @@ using namespace amrex;
  ********************************************************************************/
 void make_eb_converging_nozzle (const Geometry& geom, int required_coarsening_level)
 {
+#if (AMREX_SPACEDIM != 3)
+  // In 2D amrex's LatheIF revolves about the origin and RotationIF ignores the
+  // axis argument, so the same expression below builds an unrelated geometry
+  // rather than a nozzle.
+  amrex::ignore_unused(geom, required_coarsening_level);
+  amrex::Abort("CAMR.geometry = converging-nozzle is an axisymmetric (lathe) geometry and requires DIM = 3");
+#else
   amrex::Real d_inlet = 8;
   amrex::Real l_inlet = 24;
   amrex::Real l_nozzle = 5;
@@ -52,4 +59,5 @@ void make_eb_converging_nozzle (const Geometry& geom, int required_coarsening_le
   auto polys = amrex::EB2::makeUnion(main, nozzle_exit);
   auto gshop = amrex::EB2::makeShop(polys);
   EB2::Build(gshop, geom, required_coarsening_level, required_coarsening_level);
+#endif
 }

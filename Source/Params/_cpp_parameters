@@ -60,8 +60,10 @@ const_grav                   Real           0.0
 # 2: extrema-preserving ppm (deprecated in C++)
 ppm_type                     int           0
 
-# to we reconstruct and trace under the parabolas of the source
-# terms to the velocity
+# do we reconstruct and trace under the parabolas of the source
+# terms to the velocity.  Not implemented for any ppm_type: the source
+# tracing in PPM.cpp is commented out and the sources are added in the
+# transverse step instead, so setting this to 1 warns and resets it to 0.
 ppm_trace_sources            int           0
 
 # for piecewise linear, reconstruction order to use
@@ -104,6 +106,8 @@ transverse_reset_density     int           1
 #-----------------------------------------------------------------------------
 # category: EB
 #-----------------------------------------------------------------------------
+# weights used to distribute the small-cell correction in flux redistribution:
+# 0: uniform; 1: total energy density; 2: density; 3: volume fraction
 eb_weights_type              int          2
 redistribution_type          string       "FluxRedist"
 
