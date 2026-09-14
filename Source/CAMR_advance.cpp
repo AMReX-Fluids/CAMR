@@ -80,7 +80,7 @@ CAMR::CAMR_advance (Real time,
     // trusted to respect the consistency between certain state variables
     // (e.g. UEINT and UEDEN) that we demand in every zone.
 
-    clean_state(get_old_data(State_Type));
+    clean_state(get_old_data(State_Type), 0);
 
     MultiFab& S_old = get_old_data(State_Type);
     amrex::ignore_unused(S_old);
@@ -158,14 +158,14 @@ CAMR::CAMR_advance (Real time,
     }
 
     // Sync up state after old sources and hydro source.
-    clean_state(S_new);
+    clean_state(S_new, 0);
 
 
     // "new source" is actually the correction to the old source we've already added
     for (int n = 0; n < src_list.size(); ++n) {
         construct_new_source(src_list[n], time, dt);
         MultiFab::Saxpy(S_new, dt, *new_sources[src_list[n]], 0, 0, NVAR, 0);
-        clean_state(S_new);
+        clean_state(S_new, 0);
     }
 
     Sborder.clear();

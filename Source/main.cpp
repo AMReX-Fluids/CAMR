@@ -116,6 +116,20 @@ main(int argc, char* argv[])
 
   amrptr->init(strt_time, stop_time);
 
+#ifdef CAMR_USE_MOVING_EB
+  {
+    // The geometry is rebuilt at the start of every coarse step; the level
+    // factories only pick it up when every level (level 0 included) is
+    // regridded at the top of that step.
+    int force_regrid_level_zero = 0;
+    amrex::ParmParse ppa("amr");
+    ppa.query("force_regrid_level_zero", force_regrid_level_zero);
+    if (amrptr->regridInt(0) != 1 || !force_regrid_level_zero) {
+      amrex::Abort("CAMR_USE_MOVING_EB requires amr.regrid_int = 1 and amr.force_regrid_level_zero = 1");
+    }
+  }
+#endif
+
   // If we set the regrid_on_restart flag and if we are *not* going to take
   // a time step then we want to go ahead and regrid here.
   if (
@@ -131,12 +145,23 @@ main(int argc, char* argv[])
          (amrptr->levelSteps(0) < max_step || max_step < 0) &&
          (amrptr->cumTime() < stop_time || stop_time < 0.0)) {
 #ifdef CAMR_USE_MOVING_EB
-    initialize_EB2(amrptr->Geom(amrptr->maxLevel()), amrptr->maxLevel(), amrptr->maxLevel(), amrptr->cumTime());
+    // Build the geometry for this step's start time.  The existing levels
+    // still point into the previous index space until the regrid inside
+    // coarseTimeStep replaces them, so it is erased only after the step.
+    // The initial index space (built above at strt_time) serves the first
+    // step, which does not regrid.
+    amrex::EB2::IndexSpace const* old_is = nullptr;
+    if (amrptr->cumTime() > strt_time) {
+      old_is = amrex::EB2::TopIndexSpaceIfPresent();
+      initialize_EB2(amrptr->Geom(amrptr->maxLevel()), amrptr->maxLevel(), amrptr->maxLevel(), amrptr->cumTime());
+    }
 #endif
     // Do a timestep
     amrptr->coarseTimeStep(stop_time);
 #ifdef CAMR_USE_MOVING_EB
-    finalize_EB2();
+    if (old_is) {
+      amrex::EB2::IndexSpace::erase(const_cast<amrex::EB2::IndexSpace*>(old_is));
+    }
 #endif
   }
 
