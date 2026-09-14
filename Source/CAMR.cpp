@@ -204,12 +204,13 @@ CAMR::read_params()
   }
 #endif
 
-  // for the moment, ppm_type = 0 does not support ppm_trace_sources --
-  // we need to add the momentum sources to the states (and not
-  // add it in trans_3d
-  if (ppm_type == 0 && ppm_trace_sources == 1) {
+  // Source tracing is not implemented for either reconstruction: the
+  // PPM source block in PPM.cpp is commented out and PLM never had one.
+  // Sources are added in hydro_transd/hydro_transdd instead.
+  if (ppm_trace_sources == 1) {
     amrex::Print()
-      << "WARNING: ppm_trace_sources = 1 not implemented for ppm_type = 0"
+      << "WARNING: ppm_trace_sources = 1 is not implemented (ppm_type = "
+      << ppm_type << "); sources are added in the transverse step instead"
       << std::endl;
     ppm_trace_sources = 0;
     pp.add("ppm_trace_sources", ppm_trace_sources);

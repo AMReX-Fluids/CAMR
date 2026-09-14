@@ -1,3 +1,7 @@
+# This is a 3D problem: the converging-nozzle geometry is axisymmetric (built
+# with a lathe), so it must be run with an executable built with DIM = 3.
+# Note that the GNUmakefile in this directory defaults to DIM = 2.
+
 amrex.fpe_trap_invalid = 1
 amrex.fpe_trap_zero = 1
 amrex.fpe_trap_overflow = 1

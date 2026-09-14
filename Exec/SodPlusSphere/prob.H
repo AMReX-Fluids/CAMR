@@ -6,7 +6,6 @@
 
 #include "IndexDefines.H"
 #include "prob_parm.H"
-#include "CAMR_params.H"
 #include "EOS.H"
 
 AMREX_GPU_DEVICE

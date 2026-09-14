@@ -65,8 +65,9 @@ MOL_umeth_eb (const Box& bx_to_fill,
     // ****************************************************************
     // Slopes -- we will compute divc on bxg2 so need slopes on bxg3
     // ****************************************************************
-    FArrayBox slopetmp;
-    slopetmp.resize(bxg_ii,QVAR);
+    // Async arena: the Riemann kernels that read the slopes are still in
+    // flight when this function returns and nothing here synchronizes.
+    FArrayBox slopetmp(bxg_ii, QVAR, amrex::The_Async_Arena());
     auto const& slope = slopetmp.array();
 
     AMREX_D_TERM(auto const& fx_arr = flux_tmp[0];,
