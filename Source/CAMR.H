@@ -388,7 +388,12 @@ protected:
   static void error_setup ();
 
   void expand_state(amrex::MultiFab& S, const amrex::Real time, const int ng);
-  void clean_state(amrex::MultiFab& S);
+
+  // Floor the density and renormalize the species on the valid region, then
+  // recompute T on the valid region plus ng ghost cells.  ng must not exceed
+  // the number of ghost cells that have actually been filled (0 for state
+  // data, numGrow() for Sborder).
+  void clean_state(amrex::MultiFab& S, int ng);
 #ifdef CAMR_USE_MOVING_EB
   void ZeroingOutForPlotting(amrex::MultiFab& S);
 #endif

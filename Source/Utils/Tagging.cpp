@@ -6,28 +6,28 @@
 void
 CAMR::read_tagging_params()
 {
+  // Nothing in CAMR reads TaggingParm: CAMR::errorEst tags only through the
+  // amr.refinement_indicators mechanism (CAMR_error.cpp).  Rather than query
+  // these keys -- which hides them from AMReX's unused-inputs report and
+  // silently ignores them -- refuse them with a pointer to what works.
   amrex::ParmParse pp("tagging");
 
-  pp.query("denerr", tagging_parm->denerr);
-  pp.query("max_denerr_lev", tagging_parm->max_denerr_lev);
-  pp.query("dengrad", tagging_parm->dengrad);
-  pp.query("max_dengrad_lev", tagging_parm->max_dengrad_lev);
+  static const char* const unsupported[] = {
+    "denerr",   "max_denerr_lev",   "dengrad",   "max_dengrad_lev",
+    "presserr", "max_presserr_lev", "pressgrad", "max_pressgrad_lev",
+    "velerr",   "max_velerr_lev",   "velgrad",   "max_velgrad_lev",
+    "vorterr",  "max_vorterr_lev",
+    "temperr",  "max_temperr_lev",  "tempgrad",  "max_tempgrad_lev",
+    "ftracerr", "max_ftracerr_lev", "ftracgrad", "max_ftracgrad_lev",
+    "vfracerr", "max_vfracerr_lev"};
 
-  pp.query("presserr", tagging_parm->presserr);
-  pp.query("max_presserr_lev", tagging_parm->max_presserr_lev);
-  pp.query("pressgrad", tagging_parm->pressgrad);
-  pp.query("max_pressgrad_lev", tagging_parm->max_pressgrad_lev);
-
-  pp.query("velerr", tagging_parm->velerr);
-  pp.query("max_velerr_lev", tagging_parm->max_velerr_lev);
-  pp.query("velgrad", tagging_parm->velgrad);
-  pp.query("max_velgrad_lev", tagging_parm->max_velgrad_lev);
-
-  pp.query("temperr", tagging_parm->temperr);
-  pp.query("max_temperr_lev", tagging_parm->max_temperr_lev);
-  pp.query("tempgrad", tagging_parm->tempgrad);
-  pp.query("max_tempgrad_lev", tagging_parm->max_tempgrad_lev);
-
-  pp.query("vfracerr", tagging_parm->vfracerr);
-  pp.query("max_vfracerr_lev", tagging_parm->max_vfracerr_lev);
+  for (const char* name : unsupported) {
+    if (pp.contains(name)) {
+      amrex::Abort(std::string("CAMR: input tagging.") + name +
+                   " is not supported -- CAMR::errorEst ignores all tagging.*"
+                   " keys.  Use amr.refinement_indicators with value_greater /"
+                   " value_less / adjacent_difference_greater / vorticity_greater"
+                   " (see Source/Utils/CAMR_error.cpp).");
+    }
+  }
 }

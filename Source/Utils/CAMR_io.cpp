@@ -90,13 +90,18 @@ CAMR::setPlotVariables()
 
   amrex::ParmParse pp("CAMR");
 
+  // Species are dropped from the default ("all state variables") plot list
+  // unless plot_rhoy is set.  If the user gave an explicit amr.plot_vars list
+  // and did not say anything about plot_rhoy, honor that list as written
+  // instead of silently removing the species from it.
   bool plot_rhoy = false;
-  pp.query("plot_rhoy", plot_rhoy);
+  const bool have_plot_rhoy = pp.query("plot_rhoy", plot_rhoy);
+  const bool have_plot_vars = amrex::ParmParse("amr").contains("plot_vars");
   if (plot_rhoy) {
     for (int i = 0; i < NUM_SPECIES; i++) {
       amrex::Amr::addStatePlotVar(desc_lst[State_Type].name(UFS + i));
     }
-  } else {
+  } else if (have_plot_rhoy || !have_plot_vars) {
     for (int i = 0; i < NUM_SPECIES; i++) {
       amrex::Amr::deleteStatePlotVar(desc_lst[State_Type].name(UFS + i));
     }

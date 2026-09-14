@@ -166,7 +166,14 @@ CAMR::construct_hydro_source (const MultiFab& S,
            ngrow_bx = 2;
         }
         const Box& bxg_i  = grow(bx,ngrow_bx);
-        if (flagfab.getType(bxg_i) != FabType::regular) {
+
+        // The non-EB kernels used in the fallback read q up to 4 cells outside
+        // bx (flatten: +-3 around the bxg1 ring) and flatten_eb() returns 1
+        // within 3 cells of a cut cell, so the two paths give the same fluxes
+        // on the faces of bx only if grow(bx,4) is entirely regular.  numGrow()
+        // is at least 5 in EB builds, so the flag fab covers this box.
+        const Box& bx_reg = grow(bx, amrex::max(ngrow_bx,4));
+        if (flagfab.getType(bx_reg) != FabType::regular) {
 
             EBFluxRegister* fr_as_crse = nullptr;
             if (do_reflux && level < parent->finestLevel()) {
